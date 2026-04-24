@@ -26,7 +26,7 @@
           "name": "Start Date",
           "description": "Select the employee start date",
           "type": "Date",
-          "width": "800px"
+          "width": "300px"
         },
         {
           "id": "emp-006",
@@ -47,7 +47,7 @@
       "sections": [
         {
           "name": "contact-details",
-          "layout-policy": "per-line",
+          "layout-policy": "flow",
           "is-collapsible": true,
           "fields": [
             {

@@ -100,6 +100,18 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         display: grid;
       }
 
+      .section-body.layout-flow {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .section-body.layout-flow > .field-row {
+        flex: 0 1 auto;
+      }
+
       .section-body.hidden {
         display: none;
       }
@@ -178,6 +190,10 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       }
 
       @media (max-width: 700px) {
+        .section-body.layout-flow > .field-row {
+          flex: 1 1 100%;
+        }
+
         .field-row .field-label {
           flex-direction: column;
           align-items: stretch;

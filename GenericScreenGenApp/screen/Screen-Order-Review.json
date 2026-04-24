@@ -7,7 +7,7 @@
       "sections": [
         {
           "name": "customer-summary",
-          "layout-policy": "per-line",
+          "layout-policy": "flow",
           "is-collapsible": true,
           "fields": [
             {

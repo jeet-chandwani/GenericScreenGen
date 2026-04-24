@@ -11,6 +11,7 @@ import { Injectable } from '@angular/core';
 export class LayoutPolicyService {
   private readonly m_mapPolicyCssClasses = new Map<string, string>([
     ['per-line', 'layout-per-line'],
+    ['flow', 'layout-flow'],
   ]);
 
   private readonly m_strFallbackCssClass = 'layout-per-line';

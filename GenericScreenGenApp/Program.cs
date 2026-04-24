@@ -37,6 +37,7 @@ namespace GenericScreenGenApp
 			});
 
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CPerLineLayoutPolicy>();
+			objBuilder.Services.AddSingleton<ILayoutPolicy, CFlowLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
 			objBuilder.Services.AddSingleton<IScreenConfigProvider>(sp =>
 			{
