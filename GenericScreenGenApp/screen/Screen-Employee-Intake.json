@@ -19,21 +19,21 @@
           "description": "Enter the internal employee identifier",
           "type": "Text",
           "type-info": "{min-chars=1;max-chars=20;lines=1;}",
-          "width": "220px"
+          "width": "180px"
         },
         {
           "id": "emp-005",
           "name": "Start Date",
           "description": "Select the employee start date",
           "type": "Date",
-          "width": "300px"
+          "width": "150px"
         },
         {
           "id": "emp-006",
           "name": "Last Review Meeting",
           "description": "Select date and time for the last review",
           "type": "date-time",
-          "width": "360px"
+          "width": "200px"
         },
         {
           "id": "emp-007",
@@ -41,7 +41,7 @@
           "description": "Select the employee department",
           "type": "Lookup",
           "type-info": "{Engineering;Operations;Human Resources;Finance}",
-          "width": "260px"
+          "width": "200px"
         }
       ],
       "sections": [
@@ -60,6 +60,14 @@
             },
             {
               "id": "emp-004",
+              "name": "Email Address",
+              "description": "Enter the employee email address",
+              "type": "Text",
+              "type-info": "{min-chars=0;max-chars=50;lines=1;}",
+              "width": "260px"
+            },
+            {
+              "id": "emp-005",
               "name": "Save Employee",
               "description": "Persist the employee details",
               "type": "Button",
