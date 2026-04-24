@@ -1,3 +1,27 @@
+# Branch: feat/layout-policy-changes
+**Branch Created**: 2026-04-24
+**Branch Status**: ACTIVE
+
+## 2026-04-24 10:47
+- Prompt: "Start implementation" (for BRD-02 Req 1)
+- Implemented Req 1 (per-line layout policy): label and corresponding control now render on the same line for standard viewport sizes in Angular section rendering
+- Updated section renderer template and CSS:
+  - Added explicit field label/input classes to support stable horizontal alignment
+  - Applied responsive behavior to stack label and control on narrow screens (mobile)
+  - Changed field description behavior to hidden by default, visible on field-row hover and focus-within
+  - Kept action field behavior unchanged
+- Scope decision: UI-only implementation for Req 1 (no backend API/model contract changes required)
+- Verification:
+  - `dotnet build GenericScreenGenSln.sln --no-incremental` succeeded
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 11:05
+- Prompt: "yes" (set up one-command workflow for separated Angular + .NET startup)
+- Added root VS Code full-stack run configuration:
+  - Created `.vscode/tasks.json` with background tasks `run-api`, `run-client`, and aggregate task `run-fullstack`
+  - Created `.vscode/launch.json` launch profile `Full Stack: API + Angular` that uses `run-fullstack` as pre-launch
+  - Result: one launch action now starts API and Angular together and opens the Angular app URL
+
 # Branch: feat/middle-tier-portability
 **Branch Created**: 2026-04-24
 **Branch Status**: ACTIVE

@@ -25,12 +25,12 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                 {{ objField.name }}
               </button>
             } @else {
-              <label>
-                <span>{{ objField.name }}</span>
-                <input [type]="objField.inputType" [placeholder]="objField.description" [title]="objField.description" />
+              <label class="field-label">
+                <span class="field-name">{{ objField.name }}</span>
+                <input class="field-input" [type]="objField.inputType" [placeholder]="objField.description" [title]="objField.description" />
               </label>
             }
-            <small>{{ objField.description }}</small>
+            <small class="field-description">{{ objField.description }}</small>
           </div>
         }
 
@@ -80,13 +80,26 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
       .field-row {
         display: grid;
-        gap: 8px;
+        gap: 6px;
+        align-items: start;
       }
 
-      .field-row label {
-        display: grid;
-        gap: 6px;
+      .field-row .field-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         font-weight: 700;
+        min-width: 0;
+      }
+
+      .field-name {
+        flex: 0 0 clamp(120px, 28%, 220px);
+        line-height: 1.2;
+      }
+
+      .field-input {
+        flex: 1 1 auto;
+        min-width: 0;
       }
 
       input,
@@ -103,8 +116,37 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         color: #fffaf2;
       }
 
-      small {
+      .field-description {
         color: #65584d;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transform: translateY(-2px);
+        transition: opacity 0.15s ease, max-height 0.15s ease, transform 0.15s ease;
+      }
+
+      .field-row:hover .field-description,
+      .field-row:focus-within .field-description {
+        opacity: 1;
+        max-height: 40px;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 700px) {
+        .field-row .field-label {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+
+        .field-name {
+          flex: 0 0 auto;
+        }
+
+        .field-row:hover .field-description,
+        .field-row:focus-within .field-description {
+          max-height: 64px;
+        }
       }
     `
   ]

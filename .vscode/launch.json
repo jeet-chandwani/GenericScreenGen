@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Full Stack: API + Angular",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "preLaunchTask": "run-fullstack",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/GenericScreenGenClientApp"
+    }
+  ]
+}
