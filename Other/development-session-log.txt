@@ -1,3 +1,28 @@
+# Branch: feat/middle-tier-portability
+**Branch Created**: 2026-04-24
+**Branch Status**: ACTIVE
+
+## 2026-04-24 11:30
+- Prompt: "I need the freedom to implement the middle tier in .net core or java or other language, while the angular front end should be separate. It should be easy for me to change the middle tier in future."
+- Implemented frontend/backend decoupling baseline:
+  - Angular API base URL moved to runtime configuration (`window.__GSG_CONFIG__.apiBaseUrl`) via `ClientApp/public/runtime-config.js`
+  - Added Angular API base URL injection token and switched API service calls to use configurable base URL
+  - Added script loading for runtime client config in Angular index file
+  - Added CORS policy configuration in ASP.NET Core using `Cors:AllowedOrigins`
+  - Made embedded Angular static hosting optional in ASP.NET Core using `ClientHosting:ServeEmbeddedAngularClient` (default false)
+  - Updated GenericScreenGenApp README with decoupled deployment guidance
+  - Verification: `dotnet build --no-incremental` succeeded with 0 errors and 0 warnings
+  - Verification: `npm run build` for Angular succeeded and updated `wwwroot/clientapp` output
+
+## 2026-04-24 12:10
+- Prompt: "Start implementation" (for physically separating Angular and .NET Core projects)
+- Moved Angular project folder from `GenericScreenGenApp/ClientApp` to solution root `GenericScreenGenClientApp`
+- Updated Angular build output path to `dist/clientapp` so frontend artifacts are no longer emitted into backend `wwwroot`
+- Updated ASP.NET Core host to API-only by removing embedded frontend static hosting code
+- Kept cross-origin integration via `Cors:AllowedOrigins` configuration
+- Removed stale embedded frontend artifacts under `GenericScreenGenApp/wwwroot/clientapp`
+- Updated backend README paths to reference the separate frontend project location
+
 # Branch: main
 **Branch Created**: 2026-04-23
 **Branch Status**: ACTIVE

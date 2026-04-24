@@ -100,6 +100,11 @@
 - **Update**: After every significant change
 
 ### Branch Organization
+
+## Branch creation and tracking
+- Always create a new branch for each new feature or change if on master, and update the session log with branch name, creation date, and status (ACTIVE/CLOSED)
+- if already on a branch, update the session log with the new prompt and timestamp for each change made on that branch.
+
 ```markdown
 # Branch: [branch-name]
 **Branch Created**: [date]

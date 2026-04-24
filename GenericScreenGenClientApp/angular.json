@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "../wwwroot/clientapp",
+            "outputPath": "dist/clientapp",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
