@@ -2,7 +2,7 @@ using GenericScreenGenFactoryLib;
 using GenericScreenGenImplementationsLib;
 using GenericScreenGenInterfacesLib;
 using GenericScreenGenUtilsLib;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace GenericScreenGenApp
 {
@@ -20,6 +20,21 @@ namespace GenericScreenGenApp
 		{
 			WebApplicationBuilder objBuilder = WebApplication.CreateBuilder(arrArgs);
 			CGenericScreenGenFactory objFactory = CreateFactory(objBuilder.Environment.ContentRootPath);
+			string[] arrAllowedCorsOrigins = objBuilder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+			objBuilder.Services.AddCors(delegate (CorsOptions objCorsOptions)
+			{
+				objCorsOptions.AddPolicy("ClientAppCorsPolicy", delegate (CorsPolicyBuilder objCorsPolicyBuilder)
+				{
+					if (arrAllowedCorsOrigins.Length == 0 || arrAllowedCorsOrigins.Any(strOrigin => strOrigin == "*"))
+					{
+						objCorsPolicyBuilder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+						return;
+					}
+
+					objCorsPolicyBuilder.WithOrigins(arrAllowedCorsOrigins).AllowAnyHeader().AllowAnyMethod();
+				});
+			});
 
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CPerLineLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
@@ -32,8 +47,7 @@ namespace GenericScreenGenApp
 			objBuilder.Services.AddSingleton<IScreenRenderModelFactory>(delegate { return CreateScreenRenderModelFactory(objFactory); });
 
 			WebApplication objApp = objBuilder.Build();
-
-			ConfigureClientHosting(objApp, objBuilder.Environment.ContentRootPath);
+			objApp.UseCors("ClientAppCorsPolicy");
 
 			objApp.MapGet("/api/screens", delegate (IScreenConfigProvider itfScreenConfigProvider)
 			{
@@ -158,53 +172,6 @@ namespace GenericScreenGenApp
 			}
 
 			return itfScreenRenderModelFactory;
-		}
-
-		private static void ConfigureClientHosting(WebApplication objApp, string strContentRootPath)
-		{
-			string? strAngularBrowserPath = ResolveAngularClientRoot(strContentRootPath);
-
-			if (!string.IsNullOrWhiteSpace(strAngularBrowserPath))
-			{
-				PhysicalFileProvider objFileProvider = new PhysicalFileProvider(strAngularBrowserPath);
-
-				objApp.UseDefaultFiles(new DefaultFilesOptions
-				{
-					FileProvider = objFileProvider
-				});
-
-				objApp.UseStaticFiles(new StaticFileOptions
-				{
-					FileProvider = objFileProvider
-				});
-
-				objApp.MapFallbackToFile("index.html", new StaticFileOptions
-				{
-					FileProvider = objFileProvider
-				});
-				return;
-			}
-
-			objApp.UseDefaultFiles();
-			objApp.UseStaticFiles();
-		}
-
-		private static string? ResolveAngularClientRoot(string strContentRootPath)
-		{
-			string strClientAppRoot = Path.Combine(strContentRootPath, "wwwroot", "clientapp");
-			string strBrowserSubFolder = Path.Combine(strClientAppRoot, "browser");
-
-			if (File.Exists(Path.Combine(strBrowserSubFolder, "index.html")))
-			{
-				return strBrowserSubFolder;
-			}
-
-			if (File.Exists(Path.Combine(strClientAppRoot, "index.html")))
-			{
-				return strClientAppRoot;
-			}
-
-			return null;
 		}
 	}
 }
