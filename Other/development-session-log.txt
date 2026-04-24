@@ -22,6 +22,33 @@
   - Created `.vscode/launch.json` launch profile `Full Stack: API + Angular` that uses `run-fullstack` as pre-launch
   - Result: one launch action now starts API and Angular together and opens the Angular app URL
 
+## 2026-04-24 11:20
+- Prompt: "Start implementation" (for BRD-02 Req 2 home page and navigation changes)
+- Implemented Req 2 in Angular app shell:
+  - Replaced large home controls with compact home panel (centered one-line title, fixed divider, two-column screen list)
+  - Added scrollable screen list area with max visible rows and clickable lines for navigation to selected screen
+  - Added status rendering on each screen row with green valid and red invalid color coding
+  - Added explicit screen view mode with `Back to Home` button and retained screen reload action
+  - Kept screen rendering via existing section renderer while moving validation report behavior into home list statuses
+- Updated state handling in app component:
+  - Added view mode state (`home`/`screen`)
+  - Added computed merged list of available screens + validation status
+  - Updated screen open flow to navigate to screen view only after render model load succeeds
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+  - `dotnet build GenericScreenGenSln.sln --no-incremental` succeeded
+
+## 2026-04-24 11:32
+- Prompt: "show home page title even when you show a specific screen"
+- Updated app shell template so page title and divider render above both home view and specific screen view
+- Added shared title container styling to keep consistent centered header across view modes
+
+## 2026-04-24 11:40
+- Prompt: "set the port # for angular app as 45287 always"
+- Set Angular dev server port to `45287` in `GenericScreenGenClientApp/angular.json`
+- Updated launch URLs to `http://localhost:45287` in both solution and client `.vscode/launch.json`
+- Updated client README development server URL note to reflect fixed port `45287`
+
 # Branch: feat/middle-tier-portability
 **Branch Created**: 2026-04-24
 **Branch Status**: ACTIVE

@@ -6,7 +6,7 @@
       "type": "pwa-chrome",
       "request": "launch",
       "preLaunchTask": "run-fullstack",
-      "url": "http://localhost:4200",
+      "url": "http://localhost:45287",
       "webRoot": "${workspaceFolder}/GenericScreenGenClientApp"
     }
   ]
