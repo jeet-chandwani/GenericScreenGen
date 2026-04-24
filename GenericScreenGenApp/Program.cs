@@ -1,4 +1,5 @@
 using GenericScreenGenFactoryLib;
+using GenericScreenGenImplementationsLib;
 using GenericScreenGenInterfacesLib;
 using GenericScreenGenUtilsLib;
 using Microsoft.Extensions.FileProviders;
@@ -20,7 +21,13 @@ namespace GenericScreenGenApp
 			WebApplicationBuilder objBuilder = WebApplication.CreateBuilder(arrArgs);
 			CGenericScreenGenFactory objFactory = CreateFactory(objBuilder.Environment.ContentRootPath);
 
-			objBuilder.Services.AddSingleton<IScreenConfigProvider>(delegate { return CreateScreenConfigProvider(objFactory); });
+			objBuilder.Services.AddSingleton<ILayoutPolicy, CPerLineLayoutPolicy>();
+			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
+			objBuilder.Services.AddSingleton<IScreenConfigProvider>(sp =>
+			{
+				ILayoutPolicyRegistry itfRegistry = sp.GetRequiredService<ILayoutPolicyRegistry>();
+				return CreateScreenConfigProvider(objFactory, itfRegistry);
+			});
 			objBuilder.Services.AddSingleton<IScreenSchemaValidator>(delegate { return CreateScreenSchemaValidator(objFactory); });
 			objBuilder.Services.AddSingleton<IScreenRenderModelFactory>(delegate { return CreateScreenRenderModelFactory(objFactory); });
 
@@ -123,9 +130,9 @@ namespace GenericScreenGenApp
 			return objFactory;
 		}
 
-		private static IScreenConfigProvider CreateScreenConfigProvider(CGenericScreenGenFactory objFactory)
+		private static IScreenConfigProvider CreateScreenConfigProvider(CGenericScreenGenFactory objFactory, ILayoutPolicyRegistry itfLayoutPolicyRegistry)
 		{
-			if (!objFactory.TryCreateScreenConfigProvider(out IScreenConfigProvider? itfScreenConfigProvider, out string strProviderError) || itfScreenConfigProvider is null)
+			if (!objFactory.TryCreateScreenConfigProvider(itfLayoutPolicyRegistry, out IScreenConfigProvider? itfScreenConfigProvider, out string strProviderError) || itfScreenConfigProvider is null)
 			{
 				throw new InvalidOperationException(strProviderError);
 			}

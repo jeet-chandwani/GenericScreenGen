@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
 
 import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/screen.models';
+import { LayoutPolicyService } from '../services/layout-policy.service';
 
 @Component({
   selector: 'app-section-renderer',
@@ -16,7 +17,7 @@ import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/scre
         </button>
       }
 
-      <div class="section-body" [class.hidden]="collapsed()">
+        <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
         @for (objField of section.fields; track objField.id) {
           <div class="field-row" [style.maxWidth]="objField.width">
             @if (objField.isActionField) {
@@ -65,9 +66,12 @@ import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/scre
       }
 
       .section-body {
-        display: grid;
         gap: 16px;
         padding: 18px;
+      }
+
+      .section-body.layout-per-line {
+        display: grid;
       }
 
       .section-body.hidden {
@@ -106,10 +110,16 @@ import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/scre
   ]
 })
 export class SectionRendererComponent {
+  private readonly m_itfLayoutPolicyService = inject(LayoutPolicyService);
+
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
   readonly collapsed = signal(false);
+
+  get layoutCssClass(): string {
+    return 'section-body ' + this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
+  }
 
   toggle(): void {
     if (this.section.isCollapsible) {

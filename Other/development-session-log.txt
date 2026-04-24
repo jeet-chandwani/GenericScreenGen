@@ -18,3 +18,15 @@
 - Added render-model workflow interfaces and implementations for UI-ready section and field models
 - Added JSON schema validation with ScreenConfigSchema.json and validation API endpoints
 - Added additional sample screen files: Screen-Employee-Intake.json and Screen-Order-Review.json
+
+## 2026-04-24
+- Added pluggable layout policy system:
+  - New interfaces in GenericScreenGenInterfacesLib: ILayoutPolicy, ILayoutPolicyRegistry
+  - New implementations in GenericScreenGenImplementationsLib: CPerLineLayoutPolicy (default per-line policy), CLayoutPolicyRegistry (DI-collected registry)
+  - Updated IGenericScreenGenFactory and CGenericScreenGenFactory: TryCreateScreenConfigProvider now accepts ILayoutPolicyRegistry
+  - Updated CScreenConfigProvider: constructor accepts ILayoutPolicyRegistry; validates layout-policy values against registry when parsing screen config files; returns a descriptive error listing valid policy IDs on unknown value
+  - Registered CPerLineLayoutPolicy and CLayoutPolicyRegistry as singletons in Program.cs; updated factory call to resolve registry from DI
+  - New Angular service LayoutPolicyService: maps policy ID strings to CSS class names; fallback to layout-per-line
+  - Updated SectionRendererComponent: injects LayoutPolicyService; applies layout CSS class to section-body div; added .layout-per-line CSS rule
+  - Updated ScreenConfigSchema.json: added description to layout-policy property explaining extension pattern
+  - Build: 0 errors, 0 warnings

@@ -15,7 +15,18 @@ namespace GenericScreenGenImplementationsLib
             PropertyNameCaseInsensitive = true
         };
 
+        private readonly ILayoutPolicyRegistry m_itfLayoutPolicyRegistry;
         private string? m_strScreenFolderPath;
+
+        /// <summary>
+        /// Initialises the provider with the supplied layout policy registry used to validate
+        /// <c>layout-policy</c> values in screen configuration files.
+        /// </summary>
+        /// <param name="itfLayoutPolicyRegistry">Registry of all registered layout policies.</param>
+        public CScreenConfigProvider(ILayoutPolicyRegistry itfLayoutPolicyRegistry)
+        {
+            m_itfLayoutPolicyRegistry = itfLayoutPolicyRegistry;
+        }
 
         private readonly Dictionary<string, IScreenDefinition> m_dictScreenDefinitions = new Dictionary<string, IScreenDefinition>(StringComparer.OrdinalIgnoreCase);
 
@@ -142,7 +153,7 @@ namespace GenericScreenGenImplementationsLib
             }
         }
 
-        private static bool TryCreateSectionDefinition(CScreenSectionDto objSection, out IScreenSectionDefinition? itfScreenSectionDefinition, out string strError)
+        private bool TryCreateSectionDefinition(CScreenSectionDto objSection, out IScreenSectionDefinition? itfScreenSectionDefinition, out string strError)
         {
             List<IScreenFieldDefinition> lstFields = new List<IScreenFieldDefinition>();
             List<IScreenSectionDefinition> lstSections = new List<IScreenSectionDefinition>();
@@ -181,6 +192,14 @@ namespace GenericScreenGenImplementationsLib
             string strLayoutPolicy = string.IsNullOrWhiteSpace(objSection.LayoutPolicy)
                 ? CScreenGeneratorConstants.DEFAULT_LAYOUT_POLICY
                 : objSection.LayoutPolicy;
+
+            if (!m_itfLayoutPolicyRegistry.IsValidPolicyId(strLayoutPolicy))
+            {
+                itfScreenSectionDefinition = null;
+                strError = $"Unknown layout-policy '{strLayoutPolicy}' in section '{strSectionName}'. " +
+                           $"Valid policies are: {string.Join(", ", m_itfLayoutPolicyRegistry.GetAllPolicies().Select(p => p.PolicyId))}";
+                return false;
+            }
 
             itfScreenSectionDefinition = new CScreenSectionDefinition(
                 strSectionName,
