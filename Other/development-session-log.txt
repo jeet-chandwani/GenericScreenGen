@@ -49,6 +49,26 @@
 - Updated launch URLs to `http://localhost:45287` in both solution and client `.vscode/launch.json`
 - Updated client README development server URL note to reflect fixed port `45287`
 
+## 2026-04-24 11:47
+- Prompt: "Start implementation" (for BRD-02 Req 3 responsive layout-policy support)
+- Hardened section renderer layout for dynamic resizing:
+  - Added shared single-column grid baseline to section body and field rows for stable width contraction
+  - Added overflow-safe wrapping behavior for long field labels
+  - Added intermediate tablet breakpoint adjustments before mobile stacking behavior
+  - Preserved existing per-line and mobile label/control behavior while improving resize resilience
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 11:55
+- Prompt: "i still see vertical scroll bar when content is not overflowing... please fix"
+- Fixed home page shell overflow behavior:
+  - Added global `html/body` reset (`margin: 0`, `height: 100%`) and centralized scrolling into app shell
+  - Updated app shell to fixed viewport height with auto vertical scrolling only when required
+  - Removed forced home panel minimum heights that caused unnecessary overflow
+  - Made page title panel sticky so title remains visible even in very small window heights
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
 # Branch: feat/middle-tier-portability
 **Branch Created**: 2026-04-24
 **Branch Status**: ACTIVE

@@ -66,6 +66,8 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       }
 
       .section-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
         padding: 18px;
       }
@@ -80,8 +82,10 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
       .field-row {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 6px;
         align-items: start;
+        min-width: 0;
       }
 
       .field-row .field-label {
@@ -95,6 +99,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       .field-name {
         flex: 0 0 clamp(120px, 28%, 220px);
         line-height: 1.2;
+        overflow-wrap: anywhere;
       }
 
       .field-input {
@@ -130,6 +135,16 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         opacity: 1;
         max-height: 40px;
         transform: translateY(0);
+      }
+
+      @media (max-width: 1024px) {
+        .section-body {
+          padding: 14px;
+        }
+
+        .field-name {
+          flex: 0 0 clamp(112px, 34%, 200px);
+        }
       }
 
       @media (max-width: 700px) {
