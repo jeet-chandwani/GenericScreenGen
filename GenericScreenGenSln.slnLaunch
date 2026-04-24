@@ -1,0 +1,11 @@
+[
+  {
+    "Name": "GenericScreenGenApp",
+    "Projects": [
+      {
+        "Path": "GenericScreenGenApp\\GenericScreenGenApp.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

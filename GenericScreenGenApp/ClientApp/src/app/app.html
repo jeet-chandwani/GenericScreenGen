@@ -1,0 +1,93 @@
+<main class="page-shell">
+  <section class="hero-panel">
+    <div>
+      <p class="eyebrow">Generic Screen Generator</p>
+      <h1>Angular client for dynamic JSON-driven screens</h1>
+      <p class="hero-copy">
+        Browse screen definitions, inspect schema validation, and render nested sections directly from the
+        .NET backend.
+      </p>
+    </div>
+    <div class="validation-chip" [class.invalid]="!isSchemaHealthy()">
+      <span class="chip-label">Schema status</span>
+      <strong>{{ isSchemaHealthy() ? 'valid' : 'attention needed' }}</strong>
+    </div>
+  </section>
+
+  <section class="control-panel">
+    <label class="select-block">
+      <span>Available screen</span>
+      <select [ngModel]="selectedScreenFileName()" (ngModelChange)="onScreenSelected($event)">
+        @for (objScreen of screens(); track objScreen.fileName) {
+          <option [value]="objScreen.fileName">{{ objScreen.displayName }}</option>
+        }
+      </select>
+    </label>
+
+    <div class="action-row">
+      <button type="button" (click)="reloadCurrentScreen()">Reload screen</button>
+      <button type="button" class="secondary" (click)="refreshValidation()">Refresh validation</button>
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <section class="message-panel error-panel">
+      {{ errorMessage() }}
+    </section>
+  }
+
+  <section class="content-grid">
+    <article class="screen-panel">
+      <div class="panel-header">
+        <div>
+          <p class="panel-kicker">Rendered screen</p>
+          <h2>{{ renderModel()?.displayName || 'No screen selected' }}</h2>
+        </div>
+        <div class="screen-meta">{{ renderModel()?.screenFileName }}</div>
+      </div>
+
+      @if (renderModel(); as objRenderModel) {
+        <div class="screen-sections">
+          @for (objSection of objRenderModel.sections; track objSection.name) {
+            <app-section-renderer [section]="objSection" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
+          }
+        </div>
+      } @else {
+        <div class="message-panel">Select a screen to render it.</div>
+      }
+
+      @if (actionMessage()) {
+        <div class="message-panel success-panel">{{ actionMessage() }}</div>
+      }
+    </article>
+
+    <aside class="validation-panel">
+      <div class="panel-header">
+        <div>
+          <p class="panel-kicker">Validation report</p>
+          <h2>Screen files</h2>
+        </div>
+      </div>
+
+      @for (objResult of validationResults(); track objResult.screenFileName) {
+        <section class="validation-item" [class.invalid]="!objResult.isValid">
+          <header>
+            <strong>{{ objResult.screenFileName }}</strong>
+            <span>{{ objResult.isValid ? 'valid' : 'invalid' }}</span>
+          </header>
+
+          @if (!objResult.isValid) {
+            <ul>
+              @for (objIssue of objResult.issues; track objIssue.code + objIssue.path) {
+                <li>
+                  <span class="issue-path">{{ objIssue.path }}</span>
+                  <span>{{ objIssue.message }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      }
+    </aside>
+  </section>
+</main>

@@ -1,0 +1,48 @@
+{
+  "sections": [
+    {
+      "name": "default-section",
+      "layout-policy": "per-line",
+      "is-collapsible": false,
+      "fields": [
+        {
+          "id": "emp-001",
+          "name": "Employee Name",
+          "description": "Enter the full name of the employee",
+          "type": "Text",
+          "width": "340px"
+        },
+        {
+          "id": "emp-002",
+          "name": "Employee Id",
+          "description": "Enter the internal employee identifier",
+          "type": "Text",
+          "width": "220px"
+        }
+      ],
+      "sections": [
+        {
+          "name": "contact-details",
+          "layout-policy": "per-line",
+          "is-collapsible": true,
+          "fields": [
+            {
+              "id": "emp-003",
+              "name": "Phone Number",
+              "description": "Enter the employee contact number",
+              "type": "Text",
+              "width": "260px"
+            },
+            {
+              "id": "emp-004",
+              "name": "Save Employee",
+              "description": "Persist the employee details",
+              "type": "Button",
+              "width": "180px"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

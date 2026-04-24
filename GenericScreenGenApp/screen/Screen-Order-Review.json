@@ -1,0 +1,53 @@
+{
+  "sections": [
+    {
+      "name": "default-section",
+      "layout-policy": "per-line",
+      "is-collapsible": false,
+      "sections": [
+        {
+          "name": "customer-summary",
+          "layout-policy": "per-line",
+          "is-collapsible": true,
+          "fields": [
+            {
+              "id": "ord-001",
+              "name": "Customer Name",
+              "description": "Display the customer name for review",
+              "type": "Text",
+              "width": "320px"
+            },
+            {
+              "id": "ord-002",
+              "name": "Order Number",
+              "description": "Display the sales order number",
+              "type": "Text",
+              "width": "220px"
+            }
+          ]
+        },
+        {
+          "name": "approval-actions",
+          "layout-policy": "per-line",
+          "is-collapsible": true,
+          "fields": [
+            {
+              "id": "ord-003",
+              "name": "Approve Order",
+              "description": "Approve the reviewed order",
+              "type": "Button",
+              "width": "180px"
+            },
+            {
+              "id": "ord-004",
+              "name": "Comments",
+              "description": "Enter optional approval comments",
+              "type": "Text",
+              "width": "360px"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

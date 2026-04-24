@@ -1,0 +1,32 @@
+{
+  "sections": [
+    {
+      "name": "default-section",
+      "layout-policy": "per-line",
+      "is-collapsible": false,
+      "fields": [
+        {
+          "id": "calc-001",
+          "name": "First Number",
+          "description": "Type first number to add",
+          "type": "Integer",
+          "width": "300px"
+        },
+        {
+          "id": "calc-002",
+          "name": "Second Number",
+          "description": "Type second number to add",
+          "type": "Integer",
+          "width": "300px"
+        },
+        {
+          "id": "calc-003",
+          "name": "Calculate",
+          "description": "Add these 2 numbers",
+          "type": "Button",
+          "width": "200px"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generic Screen Generator</title>
+    <style>
+        :root {
+            --bg: #f3efe7;
+            --panel: #fffaf2;
+            --line: #d8c8ab;
+            --text: #2a241c;
+            --accent: #9c5d34;
+            --accent-soft: #efe0d1;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            background: radial-gradient(circle at top, #fffaf2 0%, var(--bg) 58%);
+            color: var(--text);
+        }
+
+        main {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 32px 20px 64px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: 2.4rem;
+        }
+
+        .intro {
+            margin-bottom: 24px;
+            max-width: 700px;
+            line-height: 1.5;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            padding: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255, 250, 242, 0.85);
+            border-radius: 18px;
+        }
+
+        label {
+            display: grid;
+            gap: 8px;
+            min-width: 260px;
+            font-weight: 600;
+        }
+
+        select,
+        input,
+        button {
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        #screen-host {
+            display: grid;
+            gap: 18px;
+        }
+
+        .section {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--panel);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(80, 50, 20, 0.08);
+        }
+
+        .section.default-section {
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            padding: 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--accent-soft);
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .section.default-section > .section-header {
+            display: none;
+        }
+
+        .section-body {
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .field-row {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field-row label {
+            min-width: 0;
+            font-weight: 700;
+        }
+
+        .help {
+            font-size: 0.9rem;
+            color: #5d5246;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .status {
+            margin-bottom: 16px;
+            color: #5d5246;
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding-inline: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Generic Screen Generator</h1>
+        <p class="intro">This starter host reads screen JSON files from the <strong>screen</strong> folder, shows a menu of available screens, and renders sections and fields dynamically.</p>
+        <div class="toolbar">
+            <label>
+                Select Screen
+                <select id="screen-select"></select>
+            </label>
+            <button id="load-screen" type="button">Load Screen</button>
+        </div>
+        <div id="status" class="status"></div>
+        <section id="screen-host"></section>
+    </main>
+    <script>
+        const objScreenSelect = document.getElementById('screen-select');
+        const objLoadScreenButton = document.getElementById('load-screen');
+        const objScreenHost = document.getElementById('screen-host');
+        const objStatus = document.getElementById('status');
+
+        async function LoadScreenMenu() {
+            const objResponse = await fetch('/api/screens');
+            const arrScreens = await objResponse.json();
+            objScreenSelect.innerHTML = '';
+
+            for (const objScreen of arrScreens) {
+                const objOption = document.createElement('option');
+                objOption.value = objScreen.fileName;
+                objOption.textContent = objScreen.displayName;
+                objScreenSelect.appendChild(objOption);
+            }
+
+            if (arrScreens.length > 0) {
+                await LoadScreen(arrScreens[0].fileName);
+            }
+        }
+
+        async function LoadScreen(strScreenFileName) {
+            const objResponse = await fetch(`/api/screens/${encodeURIComponent(strScreenFileName)}`);
+            const objScreen = await objResponse.json();
+            objScreenHost.innerHTML = '';
+            objStatus.textContent = `Loaded screen: ${objScreen.displayName}`;
+
+            for (const objSection of objScreen.sections) {
+                objScreenHost.appendChild(RenderSection(objSection));
+            }
+        }
+
+        function RenderSection(objSection) {
+            const objSectionWrapper = document.createElement('section');
+            objSectionWrapper.className = `section ${objSection.name}`;
+
+            const objHeader = document.createElement('button');
+            objHeader.type = 'button';
+            objHeader.className = 'section-header';
+            objHeader.textContent = objSection.name;
+
+            const objBody = document.createElement('div');
+            objBody.className = 'section-body';
+
+            if (objSection.fields) {
+                for (const objField of objSection.fields) {
+                    objBody.appendChild(RenderField(objField));
+                }
+            }
+
+            if (objSection.sections) {
+                for (const objChildSection of objSection.sections) {
+                    objBody.appendChild(RenderSection(objChildSection));
+                }
+            }
+
+            if (objSection.isCollapsible) {
+                objHeader.addEventListener('click', function () {
+                    objBody.classList.toggle('hidden');
+                });
+            }
+
+            objSectionWrapper.appendChild(objHeader);
+            objSectionWrapper.appendChild(objBody);
+            return objSectionWrapper;
+        }
+
+        function RenderField(objField) {
+            const objRow = document.createElement('div');
+            objRow.className = 'field-row';
+            objRow.style.maxWidth = objField.width || '300px';
+
+            const objLabel = document.createElement('label');
+            objLabel.textContent = objField.name;
+            objLabel.title = objField.description || '';
+
+            let objControl;
+
+            if (objField.type === 'Button') {
+                objControl = document.createElement('button');
+                objControl.type = 'button';
+                objControl.textContent = objField.name;
+            } else {
+                objControl = document.createElement('input');
+                objControl.type = objField.type === 'Integer' ? 'number' : 'text';
+                objControl.placeholder = objField.description || '';
+                objControl.title = objField.description || '';
+            }
+
+            const objHelp = document.createElement('div');
+            objHelp.className = 'help';
+            objHelp.textContent = objField.description || '';
+
+            objLabel.appendChild(objControl);
+            objRow.appendChild(objLabel);
+            objRow.appendChild(objHelp);
+            return objRow;
+        }
+
+        objLoadScreenButton.addEventListener('click', function () {
+            LoadScreen(objScreenSelect.value);
+        });
+
+        LoadScreenMenu();
+    </script>
+</body>
+</html>
