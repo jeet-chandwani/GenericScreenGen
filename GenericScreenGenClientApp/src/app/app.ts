@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin, retry, switchMap } from 'rxjs';
 
 import { SectionRendererComponent } from './components/section-renderer.component';
 import { ScreenListItem, ScreenRenderModel, ScreenValidationResult } from './models/screen.models';
@@ -12,6 +13,9 @@ interface IScreenListStatusItem {
 }
 
 type EAppViewMode = 'home' | 'screen';
+
+const RETRY_COUNT = 3;
+const RETRY_DELAY_MS = 1000;
 
 @Component({
   selector: 'app-root',
@@ -64,8 +68,31 @@ export class App {
     }
   }
 
-  refreshValidation(): void {
-    this.loadValidation();
+  refreshScreens(): void {
+    this.errorMessage.set('');
+
+    this.screenApiService
+      .refreshScreens()
+      .pipe(
+        switchMap(() =>
+          forkJoin({
+            screens: this.screenApiService.getScreens(),
+            validationResults: this.screenApiService.getValidationResults()
+          })
+        ),
+        retry({ count: RETRY_COUNT, delay: RETRY_DELAY_MS }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: ({ screens, validationResults }) => {
+          this.screens.set(screens);
+          this.validationResults.set(validationResults);
+          this.ensureCurrentScreenIsValidAfterRefresh();
+        },
+        error: () => {
+          this.errorMessage.set('Failed to refresh screens and validation results.');
+        }
+      });
   }
 
   onActionInvoked(strActionName: string): void {
@@ -75,7 +102,10 @@ export class App {
   private loadInitialState(): void {
     this.screenApiService
       .getScreens()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        retry({ count: RETRY_COUNT, delay: RETRY_DELAY_MS }),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (arrScreens) => {
           this.screens.set(arrScreens);
@@ -112,7 +142,10 @@ export class App {
   private loadValidation(): void {
     this.screenApiService
       .getValidationResults()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        retry({ count: RETRY_COUNT, delay: RETRY_DELAY_MS }),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (arrValidationResults) => {
           this.validationResults.set(arrValidationResults);
@@ -121,5 +154,22 @@ export class App {
           this.errorMessage.set('Failed to load schema validation results.');
         }
       });
+  }
+
+  private ensureCurrentScreenIsValidAfterRefresh(): void {
+    const strSelectedScreenFileName = this.selectedScreenFileName();
+
+    if (!strSelectedScreenFileName) {
+      return;
+    }
+
+    const objSelectedScreenStatus: IScreenListStatusItem | undefined = this.screenListStatusItems()
+      .find((objScreenStatus) => objScreenStatus.fileName === strSelectedScreenFileName);
+
+    if (!objSelectedScreenStatus || !objSelectedScreenStatus.isValid) {
+      this.goToHome();
+      this.selectedScreenFileName.set('');
+      this.renderModel.set(null);
+    }
   }
 }

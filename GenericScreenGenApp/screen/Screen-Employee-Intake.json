@@ -10,6 +10,7 @@
           "name": "Employee Name",
           "description": "Enter the full name of the employee",
           "type": "Text",
+          "type-info": "{min-chars=0;max-chars=60;lines=1;}",
           "width": "340px"
         },
         {
@@ -17,7 +18,30 @@
           "name": "Employee Id",
           "description": "Enter the internal employee identifier",
           "type": "Text",
+          "type-info": "{min-chars=1;max-chars=20;lines=1;}",
           "width": "220px"
+        },
+        {
+          "id": "emp-005",
+          "name": "Start Date",
+          "description": "Select the employee start date",
+          "type": "Date",
+          "width": "800px"
+        },
+        {
+          "id": "emp-006",
+          "name": "Last Review Meeting",
+          "description": "Select date and time for the last review",
+          "type": "date-time",
+          "width": "360px"
+        },
+        {
+          "id": "emp-007",
+          "name": "Department",
+          "description": "Select the employee department",
+          "type": "Lookup",
+          "type-info": "{Engineering;Operations;Human Resources;Finance}",
+          "width": "260px"
         }
       ],
       "sections": [
@@ -31,6 +55,7 @@
               "name": "Phone Number",
               "description": "Enter the employee contact number",
               "type": "Text",
+              "type-info": "{min-chars=0;max-chars=14;lines=1;}",
               "width": "260px"
             },
             {

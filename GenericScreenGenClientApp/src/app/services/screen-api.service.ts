@@ -26,6 +26,10 @@ export class ScreenApiService {
     return this.httpClient.get<ScreenValidationResult[]>(this.getApiUrl('/screens/validation'));
   }
 
+  refreshScreens(): Observable<{ refreshedScreenCount: number; refreshedAtUtc: string }> {
+    return this.httpClient.post<{ refreshedScreenCount: number; refreshedAtUtc: string }>(this.getApiUrl('/screens/refresh'), {});
+  }
+
   private getApiUrl(strPath: string): string {
     return `${this.strApiBaseUrl}${strPath}`;
   }

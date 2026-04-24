@@ -8,8 +8,14 @@ export interface ScreenRenderFieldModel {
   name: string;
   description: string;
   type: string;
+  typeInfo: string;
   width: string;
+  controlType: string;
   inputType: string;
+  minChars: number;
+  maxChars: number;
+  lines: number;
+  lookupValues: string[];
   isActionField: boolean;
 }
 

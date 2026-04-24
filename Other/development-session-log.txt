@@ -69,6 +69,54 @@
 - Verification:
   - `npm run build` in `GenericScreenGenClientApp` succeeded
 
+## 2026-04-24 12:08
+- Prompt: "Start implementation" (for BRD-02 Req 4 field types)
+- Implemented Req 4 backend contract and parsing updates:
+  - Added field types in enum: `Date`, `DateTime`, `Lookup`
+  - Added `TypeInfo` to field definition and render field model contracts
+  - Added flexible field type parsing in config provider to support `date-time` JSON input
+  - Added `type-info` parsing support in config provider DTO
+- Implemented render metadata generation in render model factory:
+  - Added control type mapping (`input`, `textarea`, `select`, `button`)
+  - Added input type mapping for new field types (`date`, `datetime-local`)
+  - Added text `type-info` parsing with defaults (`min-chars=0`, `max-chars=10`, `lines=1`)
+  - Added lookup option parsing from semi-colon separated `type-info`
+- Implemented Angular rendering support:
+  - Extended frontend field model with `controlType`, `typeInfo`, min/max/lines, and `lookupValues`
+  - Updated section renderer template to support `textarea` and `select` controls
+  - Wired min/max/rows attributes for text controls and options rendering for lookup fields
+- Updated schema and sample config coverage:
+  - Extended schema enum and added `type-info` property description/examples
+  - Updated `Screen-Employee-Intake.json` with sample `Date`, `date-time`, and `Lookup` fields and text `type-info`
+- Verification:
+  - `dotnet build GenericScreenGenInterfacesLib.csproj --no-incremental` succeeded
+  - `dotnet build GenericScreenGenImplementationsLib.csproj --no-incremental` succeeded
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+  - Full solution build was blocked by file locks from a running `GenericScreenGenApp` process
+
+## 2026-04-24 12:15
+- Prompt: "getting an error - Failed to load schema validation results."
+- Investigated backend endpoint and confirmed `/api/screens/validation` returns valid payload when API is reachable
+- Added retry handling in Angular app startup API calls (`getScreens`, `getValidationResults`) to avoid transient failure when frontend starts before backend is ready
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 12:32
+- Prompt: "start implementation" (for BRD-02 Req 5 refresh screens reload + revalidate)
+- Implemented backend refresh workflow:
+  - Added `TryReloadScreens(out string strError)` to `IScreenConfigProvider`
+  - Implemented reload in `CScreenConfigProvider` with shared load method for init/reload
+  - Added `POST /api/screens/refresh` endpoint in `Program.cs` to reload from disk and return refresh metadata
+- Implemented frontend refresh workflow:
+  - Added `refreshScreens()` API call in `screen-api.service.ts`
+  - Replaced home action flow to call refresh endpoint then reload screens + validation results in one action
+  - Updated button label/action to `Refresh Screens`
+  - Added post-refresh guard: if currently selected screen is missing or invalid after refresh, auto-return to home and clear current render model
+- Verification:
+  - `dotnet build GenericScreenGenSln.sln --no-incremental` succeeded
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+  - `POST http://localhost:5074/api/screens/refresh` returned success payload with refreshed screen count
+
 # Branch: feat/middle-tier-portability
 **Branch Created**: 2026-04-24
 **Branch Status**: ACTIVE

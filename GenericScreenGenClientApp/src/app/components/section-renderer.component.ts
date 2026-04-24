@@ -27,7 +27,31 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
             } @else {
               <label class="field-label">
                 <span class="field-name">{{ objField.name }}</span>
-                <input class="field-input" [type]="objField.inputType" [placeholder]="objField.description" [title]="objField.description" />
+                @if (objField.controlType === 'textarea') {
+                  <textarea
+                    class="field-input"
+                    [rows]="objField.lines"
+                    [placeholder]="objField.description"
+                    [title]="objField.description"
+                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                  ></textarea>
+                } @else if (objField.controlType === 'select') {
+                  <select class="field-input" [title]="objField.description">
+                    @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                      <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input
+                    class="field-input"
+                    [type]="objField.inputType"
+                    [placeholder]="objField.description"
+                    [title]="objField.description"
+                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                  />
+                }
               </label>
             }
             <small class="field-description">{{ objField.description }}</small>
@@ -108,11 +132,17 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       }
 
       input,
+      textarea,
+      select,
       .field-action {
         font: inherit;
         border-radius: 12px;
         border: 1px solid rgba(94, 63, 34, 0.22);
         padding: 10px 12px;
+      }
+
+      textarea {
+        resize: vertical;
       }
 
       .field-action {

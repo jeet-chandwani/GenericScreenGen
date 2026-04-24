@@ -23,5 +23,12 @@ namespace GenericScreenGenInterfacesLib
         /// <param name="strError">Detailed error information when retrieval fails.</param>
         /// <returns>True when the screen definition is found; otherwise false.</returns>
         bool TryGetScreenDefinition(string strScreenFileName, out IScreenDefinition? itfScreenDefinition, out string strError);
+
+        /// <summary>
+        /// Reloads all screen configuration files from disk and refreshes the in-memory cache.
+        /// </summary>
+        /// <param name="strError">Detailed error information when reload fails.</param>
+        /// <returns>True when reload succeeds; otherwise false.</returns>
+        bool TryReloadScreens(out string strError);
     }
 }

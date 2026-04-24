@@ -21,12 +21,14 @@
     c. date-time -- should allow user to choose date and time from UI control
     d. lookup with type-info = {semi-colon separated list of values}
 
-5. For exisitng screen cofnig files, we should support both old and new layout policies. We can add a new field in screen config file to specify the layout policy to be used for that screen. If the field is not specified, we can default to old layout policy.
+5. On click of Refresh Screens button on home page, we should re-load and re-validate all screen config files and update the status of each screen file in the UI accordingly. The validation should check for required fields, field types, and any other constraints specified in the screen config schema.
 
-6. For exisiting screen config files, update as follows:
+6. For exisitng screen cofnig files, we should support both old and new layout policies. We can add a new field in screen config file to specify the layout policy to be used for that screen. If the field is not specified, we can default to old layout policy.
+
+7. For exisiting screen config files, update as follows:
     a. For fields with type = text, we should add type-info with default values as mentioned in point 4a.
     b. For fields with type = date or date-time, we should add the corresponding UI controls to allow user to select date and time.
     c. For fields with type = lookup, we should add the corresponding UI controls to allow user to select from the list of values specified in type-info.
 
-7. Add a new layout policy = flow. The fields should be displayed until they wrap to next line. The field label and corresponding control should be on same line. The fields should be left aligned and there should be a small gap between fields. The layout should adjust dynamically as screen size changes.
+8. Add a new layout policy = flow. The fields should be displayed until they wrap to next line. The field label and corresponding control should be on same line. The fields should be left aligned and there should be a small gap between fields. The layout should adjust dynamically as screen size changes.
 

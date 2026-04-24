@@ -68,8 +68,13 @@
         },
         "type": {
           "type": "string",
-          "enum": ["Integer", "Button", "Text"],
-          "examples": ["Integer", "Button"]
+          "enum": ["Integer", "Button", "Text", "Date", "DateTime", "Date-Time", "Lookup", "date", "date-time", "lookup", "text"],
+          "examples": ["Integer", "Button", "Date", "date-time", "Lookup"]
+        },
+        "type-info": {
+          "type": "string",
+          "description": "Optional type-specific configuration. Text format: {min-chars=0;max-chars=10;lines=1;} Lookup format: {value 1;value 2;value 3}",
+          "examples": ["{min-chars=0;max-chars=10;lines=1;}", "{Pending;Approved;Rejected}"]
         },
         "width": {
           "type": "string",
