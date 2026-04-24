@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
 
 import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/screen.models';
@@ -19,7 +19,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
         <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
         @for (objField of section.fields; track objField.id) {
-          <div class="field-row" [style.maxWidth]="objField.width">
+          <div class="field-row">
             @if (objField.isActionField) {
               <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
                 {{ objField.name }}
@@ -30,6 +30,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                 @if (objField.controlType === 'textarea') {
                   <textarea
                     class="field-input"
+                    [style.width]="objField.width"
                     [rows]="objField.lines"
                     [placeholder]="objField.description"
                     [title]="objField.description"
@@ -37,7 +38,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                     [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                   ></textarea>
                 } @else if (objField.controlType === 'select') {
-                  <select class="field-input" [title]="objField.description">
+                  <select class="field-input" [style.width]="objField.width" [title]="objField.description">
                     @for (strLookupValue of objField.lookupValues; track strLookupValue) {
                       <option [value]="strLookupValue">{{ strLookupValue }}</option>
                     }
@@ -45,6 +46,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                 } @else {
                   <input
                     class="field-input"
+                    [style.width]="objField.width"
                     [type]="objField.inputType"
                     [placeholder]="objField.description"
                     [title]="objField.description"
@@ -105,11 +107,20 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         flex-wrap: wrap;
         justify-content: flex-start;
         align-items: flex-start;
-        gap: 12px;
+        column-gap: 125px;
+        row-gap: 12px;
       }
 
       .section-body.layout-flow > .field-row {
-        flex: 0 1 auto;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .section-body.layout-flow > .field-row > .field-label {
+        min-width: max-content;
       }
 
       .section-body.hidden {
@@ -127,19 +138,26 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       .field-row .field-label {
         display: flex;
         align-items: center;
+        flex-wrap: nowrap;
         gap: 12px;
         font-weight: 700;
         min-width: 0;
       }
 
       .field-name {
-        flex: 0 0 clamp(120px, 28%, 220px);
+        flex: 0 0 auto;
         line-height: 1.2;
-        overflow-wrap: anywhere;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+      }
+
+      .section-body.layout-per-line .field-name {
+        flex: 0 0 160px;
       }
 
       .field-input {
-        flex: 1 1 auto;
+        flex: 0 0 auto;
         min-width: 0;
       }
 
@@ -184,24 +202,14 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
           padding: 14px;
         }
 
-        .field-name {
-          flex: 0 0 clamp(112px, 34%, 200px);
+        .section-body.layout-per-line .field-name {
+          flex: 0 0 130px;
         }
       }
 
       @media (max-width: 700px) {
         .section-body.layout-flow > .field-row {
           flex: 1 1 100%;
-        }
-
-        .field-row .field-label {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 8px;
-        }
-
-        .field-name {
-          flex: 0 0 auto;
         }
 
         .field-row:hover .field-description,
