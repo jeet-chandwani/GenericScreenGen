@@ -106,6 +106,7 @@ type TSortDirection = 'asc' | 'desc';
                         </button>
                       </th>
                     }
+                    <th class="tabular-action-header">Actions</th>
                   </tr>
                   <tr class="tabular-filter-row">
                     @for (objField of section.fields; track objField.id) {
@@ -121,6 +122,7 @@ type TSortDirection = 'asc' | 'desc';
                         }
                       </th>
                     }
+                    <th class="tabular-action-header"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -174,6 +176,9 @@ type TSortDirection = 'asc' | 'desc';
                         }
                       </td>
                     }
+                    <td class="tabular-row-actions">
+                      <button type="button" class="tabular-delete-btn" (click)="$event.stopPropagation(); deleteRow(objRow)">Delete</button>
+                    </td>
                   </tr>
                   }
                 </tbody>
@@ -413,6 +418,10 @@ type TSortDirection = 'asc' | 'desc';
         text-align: center;
       }
 
+      .tabular-action-header {
+        min-width: 90px;
+      }
+
       .tabular-filter-row th {
         background: #fff7ee;
         padding: 8px;
@@ -450,6 +459,19 @@ type TSortDirection = 'asc' | 'desc';
       .tabular-page-status {
         color: #5a4b3e;
         font-weight: 600;
+      }
+
+      .tabular-row-actions {
+        text-align: right;
+      }
+
+      .tabular-delete-btn {
+        border: 1px solid rgba(145, 39, 39, 0.35);
+        background: #fff4f4;
+        color: #8a2525;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font: inherit;
       }
 
       .tabular-table td .field-input,
@@ -760,6 +782,17 @@ export class SectionRendererComponent implements OnChanges {
     objAnchorElement.download = this.section.name + (fFilteredOnly ? '-filtered' : '-all') + '.csv';
     objAnchorElement.click();
     URL.revokeObjectURL(strObjectUrl);
+  }
+
+  deleteRow(objCurrentRow: TTabularRow): void {
+    if (!window.confirm('Delete this row?')) {
+      return;
+    }
+
+    this.allTabularRows.update((lstRows) => lstRows.filter(objRow => objRow !== objCurrentRow));
+    if (this.currentPageNumber() > this.totalPageCount()) {
+      this.currentPageNumber.set(this.totalPageCount());
+    }
   }
 
   updateCellValue(objCurrentRow: TTabularRow, strFieldId: string, strValue: string): void {
