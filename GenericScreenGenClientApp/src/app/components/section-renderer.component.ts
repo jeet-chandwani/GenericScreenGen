@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
 
 import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/screen.models';
@@ -19,18 +19,44 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
         <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
         @for (objField of section.fields; track objField.id) {
-          <div class="field-row" [style.maxWidth]="objField.width">
+          <div class="field-row">
             @if (objField.isActionField) {
               <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
                 {{ objField.name }}
               </button>
             } @else {
-              <label>
-                <span>{{ objField.name }}</span>
-                <input [type]="objField.inputType" [placeholder]="objField.description" [title]="objField.description" />
+              <label class="field-label">
+                <span class="field-name">{{ objField.name }}</span>
+                @if (objField.controlType === 'textarea') {
+                  <textarea
+                    class="field-input"
+                    [style.width]="objField.width"
+                    [rows]="objField.lines"
+                    [placeholder]="objField.description"
+                    [title]="objField.description"
+                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                  ></textarea>
+                } @else if (objField.controlType === 'select') {
+                  <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                    @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                      <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input
+                    class="field-input"
+                    [style.width]="objField.width"
+                    [type]="objField.inputType"
+                    [placeholder]="objField.description"
+                    [title]="objField.description"
+                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                  />
+                }
               </label>
             }
-            <small>{{ objField.description }}</small>
+            <small class="field-description">{{ objField.description }}</small>
           </div>
         }
 
@@ -66,6 +92,8 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       }
 
       .section-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
         padding: 18px;
       }
@@ -74,27 +102,77 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         display: grid;
       }
 
+      .section-body.layout-flow {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+        column-gap: 125px;
+        row-gap: 12px;
+      }
+
+      .section-body.layout-flow > .field-row {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .section-body.layout-flow > .field-row > .field-label {
+        min-width: max-content;
+      }
+
       .section-body.hidden {
         display: none;
       }
 
       .field-row {
         display: grid;
-        gap: 8px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+        align-items: start;
+        min-width: 0;
       }
 
-      .field-row label {
-        display: grid;
-        gap: 6px;
+      .field-row .field-label {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 12px;
         font-weight: 700;
+        min-width: 0;
+      }
+
+      .field-name {
+        flex: 0 0 auto;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+      }
+
+      .section-body.layout-per-line .field-name {
+        flex: 0 0 160px;
+      }
+
+      .field-input {
+        flex: 0 0 auto;
+        min-width: 0;
       }
 
       input,
+      textarea,
+      select,
       .field-action {
         font: inherit;
         border-radius: 12px;
         border: 1px solid rgba(94, 63, 34, 0.22);
         padding: 10px 12px;
+      }
+
+      textarea {
+        resize: vertical;
       }
 
       .field-action {
@@ -103,8 +181,41 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         color: #fffaf2;
       }
 
-      small {
+      .field-description {
         color: #65584d;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transform: translateY(-2px);
+        transition: opacity 0.15s ease, max-height 0.15s ease, transform 0.15s ease;
+      }
+
+      .field-row:hover .field-description,
+      .field-row:focus-within .field-description {
+        opacity: 1;
+        max-height: 40px;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 1024px) {
+        .section-body {
+          padding: 14px;
+        }
+
+        .section-body.layout-per-line .field-name {
+          flex: 0 0 130px;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .section-body.layout-flow > .field-row {
+          flex: 1 1 100%;
+        }
+
+        .field-row:hover .field-description,
+        .field-row:focus-within .field-description {
+          max-height: 64px;
+        }
       }
     `
   ]

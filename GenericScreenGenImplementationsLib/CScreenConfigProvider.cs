@@ -59,6 +59,24 @@ namespace GenericScreenGenImplementationsLib
         }
 
         /// <inheritdoc />
+        public bool TryReloadScreens(out string strError)
+        {
+            if (string.IsNullOrWhiteSpace(m_strScreenFolderPath))
+            {
+                strError = "Screen folder path was not initialized.";
+                return false;
+            }
+
+            if (!Directory.Exists(m_strScreenFolderPath))
+            {
+                strError = $"Screen folder '{m_strScreenFolderPath}' was not found.";
+                return false;
+            }
+
+            return TryLoadAllScreenDefinitions(m_strScreenFolderPath, out strError);
+        }
+
+        /// <inheritdoc />
         protected override bool TryInitCore(object objInputParam, out string strError)
         {
             if (objInputParam is not string strScreenFolderPath || string.IsNullOrWhiteSpace(strScreenFolderPath))
@@ -74,22 +92,8 @@ namespace GenericScreenGenImplementationsLib
             }
 
             m_strScreenFolderPath = strScreenFolderPath;
-            m_dictScreenDefinitions.Clear();
 
-            string[] arrScreenFiles = Directory.GetFiles(strScreenFolderPath, "Screen-*.json", SearchOption.TopDirectoryOnly);
-
-            foreach (string strJsonFilePath in arrScreenFiles)
-            {
-                if (!TryLoadScreenDefinition(strJsonFilePath, out IScreenDefinition? itfScreenDefinition, out strError) || itfScreenDefinition is null)
-                {
-                    return false;
-                }
-
-                m_dictScreenDefinitions[itfScreenDefinition.ScreenFileName] = itfScreenDefinition;
-            }
-
-            strError = string.Empty;
-            return true;
+            return TryLoadAllScreenDefinitions(strScreenFolderPath, out strError);
         }
 
         /// <inheritdoc />
@@ -99,6 +103,32 @@ namespace GenericScreenGenImplementationsLib
             {
                 strError = "Screen folder path was not initialized.";
                 return false;
+            }
+
+            strError = string.Empty;
+            return true;
+        }
+
+        private bool TryLoadAllScreenDefinitions(string strScreenFolderPath, out string strError)
+        {
+            Dictionary<string, IScreenDefinition> dictLoadedScreenDefinitions = new Dictionary<string, IScreenDefinition>(StringComparer.OrdinalIgnoreCase);
+            string[] arrScreenFiles = Directory.GetFiles(strScreenFolderPath, "Screen-*.json", SearchOption.TopDirectoryOnly);
+
+            foreach (string strJsonFilePath in arrScreenFiles)
+            {
+                if (!TryLoadScreenDefinition(strJsonFilePath, out IScreenDefinition? itfScreenDefinition, out strError) || itfScreenDefinition is null)
+                {
+                    return false;
+                }
+
+                dictLoadedScreenDefinitions[itfScreenDefinition.ScreenFileName] = itfScreenDefinition;
+            }
+
+            m_dictScreenDefinitions.Clear();
+
+            foreach (KeyValuePair<string, IScreenDefinition> kvpLoadedScreen in dictLoadedScreenDefinitions)
+            {
+                m_dictScreenDefinitions[kvpLoadedScreen.Key] = kvpLoadedScreen.Value;
             }
 
             strError = string.Empty;
@@ -220,7 +250,7 @@ namespace GenericScreenGenImplementationsLib
                 return false;
             }
 
-            if (!Enum.TryParse(objField.Type, true, out EFieldType enuFieldType))
+            if (!TryParseFieldType(objField.Type, out EFieldType enuFieldType))
             {
                 itfFieldDefinition = null;
                 strError = $"Unsupported field type '{objField.Type}'.";
@@ -232,9 +262,42 @@ namespace GenericScreenGenImplementationsLib
                 objField.Name,
                 objField.Description ?? string.Empty,
                 enuFieldType,
+                objField.TypeInfo ?? string.Empty,
                 string.IsNullOrWhiteSpace(objField.Width) ? "300px" : objField.Width);
             strError = string.Empty;
             return true;
+        }
+
+        private static bool TryParseFieldType(string strFieldType, out EFieldType enuFieldType)
+        {
+            enuFieldType = EFieldType.Text;
+
+            if (string.IsNullOrWhiteSpace(strFieldType))
+            {
+                return false;
+            }
+
+            string strNormalizedFieldType = strFieldType.Trim().Replace("_", "-", StringComparison.Ordinal).ToLowerInvariant();
+
+            if (strNormalizedFieldType == "date-time" || strNormalizedFieldType == "datetime")
+            {
+                enuFieldType = EFieldType.DateTime;
+                return true;
+            }
+
+            if (strNormalizedFieldType == "date")
+            {
+                enuFieldType = EFieldType.Date;
+                return true;
+            }
+
+            if (strNormalizedFieldType == "lookup")
+            {
+                enuFieldType = EFieldType.Lookup;
+                return true;
+            }
+
+            return Enum.TryParse(strFieldType, true, out enuFieldType);
         }
 
         private sealed class CScreenDocumentDto
@@ -274,6 +337,9 @@ namespace GenericScreenGenImplementationsLib
 
             [JsonPropertyName("type")]
             public string Type { get; set; } = string.Empty;
+
+            [JsonPropertyName("type-info")]
+            public string? TypeInfo { get; set; }
 
             [JsonPropertyName("width")]
             public string? Width { get; set; }

@@ -1,3 +1,122 @@
+# Branch: feat/layout-policy-changes
+**Branch Created**: 2026-04-24
+**Branch Status**: ACTIVE
+
+## 2026-04-24 10:47
+- Prompt: "Start implementation" (for BRD-02 Req 1)
+- Implemented Req 1 (per-line layout policy): label and corresponding control now render on the same line for standard viewport sizes in Angular section rendering
+- Updated section renderer template and CSS:
+  - Added explicit field label/input classes to support stable horizontal alignment
+  - Applied responsive behavior to stack label and control on narrow screens (mobile)
+  - Changed field description behavior to hidden by default, visible on field-row hover and focus-within
+  - Kept action field behavior unchanged
+- Scope decision: UI-only implementation for Req 1 (no backend API/model contract changes required)
+- Verification:
+  - `dotnet build GenericScreenGenSln.sln --no-incremental` succeeded
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 11:05
+- Prompt: "yes" (set up one-command workflow for separated Angular + .NET startup)
+- Added root VS Code full-stack run configuration:
+  - Created `.vscode/tasks.json` with background tasks `run-api`, `run-client`, and aggregate task `run-fullstack`
+  - Created `.vscode/launch.json` launch profile `Full Stack: API + Angular` that uses `run-fullstack` as pre-launch
+  - Result: one launch action now starts API and Angular together and opens the Angular app URL
+
+## 2026-04-24 11:20
+- Prompt: "Start implementation" (for BRD-02 Req 2 home page and navigation changes)
+- Implemented Req 2 in Angular app shell:
+  - Replaced large home controls with compact home panel (centered one-line title, fixed divider, two-column screen list)
+  - Added scrollable screen list area with max visible rows and clickable lines for navigation to selected screen
+  - Added status rendering on each screen row with green valid and red invalid color coding
+  - Added explicit screen view mode with `Back to Home` button and retained screen reload action
+  - Kept screen rendering via existing section renderer while moving validation report behavior into home list statuses
+- Updated state handling in app component:
+  - Added view mode state (`home`/`screen`)
+  - Added computed merged list of available screens + validation status
+  - Updated screen open flow to navigate to screen view only after render model load succeeds
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+  - `dotnet build GenericScreenGenSln.sln --no-incremental` succeeded
+
+## 2026-04-24 11:32
+- Prompt: "show home page title even when you show a specific screen"
+- Updated app shell template so page title and divider render above both home view and specific screen view
+- Added shared title container styling to keep consistent centered header across view modes
+
+## 2026-04-24 11:40
+- Prompt: "set the port # for angular app as 45287 always"
+- Set Angular dev server port to `45287` in `GenericScreenGenClientApp/angular.json`
+- Updated launch URLs to `http://localhost:45287` in both solution and client `.vscode/launch.json`
+- Updated client README development server URL note to reflect fixed port `45287`
+
+## 2026-04-24 11:47
+- Prompt: "Start implementation" (for BRD-02 Req 3 responsive layout-policy support)
+- Hardened section renderer layout for dynamic resizing:
+  - Added shared single-column grid baseline to section body and field rows for stable width contraction
+  - Added overflow-safe wrapping behavior for long field labels
+  - Added intermediate tablet breakpoint adjustments before mobile stacking behavior
+  - Preserved existing per-line and mobile label/control behavior while improving resize resilience
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 11:55
+- Prompt: "i still see vertical scroll bar when content is not overflowing... please fix"
+- Fixed home page shell overflow behavior:
+  - Added global `html/body` reset (`margin: 0`, `height: 100%`) and centralized scrolling into app shell
+  - Updated app shell to fixed viewport height with auto vertical scrolling only when required
+  - Removed forced home panel minimum heights that caused unnecessary overflow
+  - Made page title panel sticky so title remains visible even in very small window heights
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 12:08
+- Prompt: "Start implementation" (for BRD-02 Req 4 field types)
+- Implemented Req 4 backend contract and parsing updates:
+  - Added field types in enum: `Date`, `DateTime`, `Lookup`
+  - Added `TypeInfo` to field definition and render field model contracts
+  - Added flexible field type parsing in config provider to support `date-time` JSON input
+  - Added `type-info` parsing support in config provider DTO
+- Implemented render metadata generation in render model factory:
+  - Added control type mapping (`input`, `textarea`, `select`, `button`)
+  - Added input type mapping for new field types (`date`, `datetime-local`)
+  - Added text `type-info` parsing with defaults (`min-chars=0`, `max-chars=10`, `lines=1`)
+  - Added lookup option parsing from semi-colon separated `type-info`
+- Implemented Angular rendering support:
+  - Extended frontend field model with `controlType`, `typeInfo`, min/max/lines, and `lookupValues`
+  - Updated section renderer template to support `textarea` and `select` controls
+  - Wired min/max/rows attributes for text controls and options rendering for lookup fields
+- Updated schema and sample config coverage:
+  - Extended schema enum and added `type-info` property description/examples
+  - Updated `Screen-Employee-Intake.json` with sample `Date`, `date-time`, and `Lookup` fields and text `type-info`
+- Verification:
+  - `dotnet build GenericScreenGenInterfacesLib.csproj --no-incremental` succeeded
+  - `dotnet build GenericScreenGenImplementationsLib.csproj --no-incremental` succeeded
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+  - Full solution build was blocked by file locks from a running `GenericScreenGenApp` process
+
+## 2026-04-24 12:15
+- Prompt: "getting an error - Failed to load schema validation results."
+- Investigated backend endpoint and confirmed `/api/screens/validation` returns valid payload when API is reachable
+- Added retry handling in Angular app startup API calls (`getScreens`, `getValidationResults`) to avoid transient failure when frontend starts before backend is ready
+- Verification:
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+
+## 2026-04-24 12:32
+- Prompt: "start implementation" (for BRD-02 Req 5 refresh screens reload + revalidate)
+- Implemented backend refresh workflow:
+  - Added `TryReloadScreens(out string strError)` to `IScreenConfigProvider`
+  - Implemented reload in `CScreenConfigProvider` with shared load method for init/reload
+  - Added `POST /api/screens/refresh` endpoint in `Program.cs` to reload from disk and return refresh metadata
+- Implemented frontend refresh workflow:
+  - Added `refreshScreens()` API call in `screen-api.service.ts`
+  - Replaced home action flow to call refresh endpoint then reload screens + validation results in one action
+  - Updated button label/action to `Refresh Screens`
+  - Added post-refresh guard: if currently selected screen is missing or invalid after refresh, auto-return to home and clear current render model
+- Verification:
+  - `dotnet build GenericScreenGenSln.sln --no-incremental` succeeded
+  - `npm run build` in `GenericScreenGenClientApp` succeeded
+  - `POST http://localhost:5074/api/screens/refresh` returned success payload with refreshed screen count
+
 # Branch: feat/middle-tier-portability
 **Branch Created**: 2026-04-24
 **Branch Status**: ACTIVE

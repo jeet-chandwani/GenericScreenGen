@@ -37,6 +37,7 @@ namespace GenericScreenGenApp
 			});
 
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CPerLineLayoutPolicy>();
+			objBuilder.Services.AddSingleton<ILayoutPolicy, CFlowLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
 			objBuilder.Services.AddSingleton<IScreenConfigProvider>(sp =>
 			{
@@ -48,6 +49,25 @@ namespace GenericScreenGenApp
 
 			WebApplication objApp = objBuilder.Build();
 			objApp.UseCors("ClientAppCorsPolicy");
+
+			objApp.MapPost("/api/screens/refresh", delegate (IScreenConfigProvider itfScreenConfigProvider)
+			{
+				if (!itfScreenConfigProvider.TryReloadScreens(out string strReloadError))
+				{
+					return Results.Problem(strReloadError);
+				}
+
+				if (!itfScreenConfigProvider.TryGetAvailableScreens(out IReadOnlyList<string> lstScreenFileNames, out string strListError))
+				{
+					return Results.Problem(strListError);
+				}
+
+				return Results.Ok(new
+				{
+					refreshedScreenCount = lstScreenFileNames.Count,
+					refreshedAtUtc = DateTime.UtcNow
+				});
+			});
 
 			objApp.MapGet("/api/screens", delegate (IScreenConfigProvider itfScreenConfigProvider)
 			{

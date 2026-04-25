@@ -1,14 +1,25 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin, retry, switchMap } from 'rxjs';
 
 import { SectionRendererComponent } from './components/section-renderer.component';
 import { ScreenListItem, ScreenRenderModel, ScreenValidationResult } from './models/screen.models';
 import { ScreenApiService } from './services/screen-api.service';
 
+interface IScreenListStatusItem {
+  fileName: string;
+  displayName: string;
+  isValid: boolean;
+}
+
+type EAppViewMode = 'home' | 'screen';
+
+const RETRY_COUNT = 3;
+const RETRY_DELAY_MS = 1000;
+
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, SectionRendererComponent],
+  imports: [SectionRendererComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -22,15 +33,33 @@ export class App {
   readonly validationResults = signal<ScreenValidationResult[]>([]);
   readonly errorMessage = signal('');
   readonly actionMessage = signal('');
+  readonly viewMode = signal<EAppViewMode>('home');
   readonly isSchemaHealthy = computed(() => this.validationResults().every((objResult) => objResult.isValid));
+  readonly screenListStatusItems = computed<IScreenListStatusItem[]>(() => {
+    const mapValidationByScreen = new Map(
+      this.validationResults().map((objValidationResult) => [objValidationResult.screenFileName, objValidationResult.isValid])
+    );
+
+    return this.screens().map((objScreen) => ({
+      fileName: objScreen.fileName,
+      displayName: objScreen.displayName,
+      isValid: mapValidationByScreen.get(objScreen.fileName) ?? false
+    }));
+  });
 
   constructor() {
     this.loadInitialState();
   }
 
-  onScreenSelected(strScreenFileName: string): void {
+  openScreen(strScreenFileName: string): void {
     this.selectedScreenFileName.set(strScreenFileName);
-    this.loadRenderModel(strScreenFileName);
+    this.loadRenderModel(strScreenFileName, true);
+  }
+
+  goToHome(): void {
+    this.viewMode.set('home');
+    this.errorMessage.set('');
+    this.actionMessage.set('');
   }
 
   reloadCurrentScreen(): void {
@@ -39,8 +68,31 @@ export class App {
     }
   }
 
-  refreshValidation(): void {
-    this.loadValidation();
+  refreshScreens(): void {
+    this.errorMessage.set('');
+
+    this.screenApiService
+      .refreshScreens()
+      .pipe(
+        switchMap(() =>
+          forkJoin({
+            screens: this.screenApiService.getScreens(),
+            validationResults: this.screenApiService.getValidationResults()
+          })
+        ),
+        retry({ count: RETRY_COUNT, delay: RETRY_DELAY_MS }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: ({ screens, validationResults }) => {
+          this.screens.set(screens);
+          this.validationResults.set(validationResults);
+          this.ensureCurrentScreenIsValidAfterRefresh();
+        },
+        error: () => {
+          this.errorMessage.set('Failed to refresh screens and validation results.');
+        }
+      });
   }
 
   onActionInvoked(strActionName: string): void {
@@ -50,15 +102,13 @@ export class App {
   private loadInitialState(): void {
     this.screenApiService
       .getScreens()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        retry({ count: RETRY_COUNT, delay: RETRY_DELAY_MS }),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (arrScreens) => {
           this.screens.set(arrScreens);
-
-          if (arrScreens.length > 0) {
-            this.selectedScreenFileName.set(arrScreens[0].fileName);
-            this.loadRenderModel(arrScreens[0].fileName);
-          }
         },
         error: () => {
           this.errorMessage.set('Failed to load screen list from the backend.');
@@ -68,7 +118,7 @@ export class App {
     this.loadValidation();
   }
 
-  private loadRenderModel(strScreenFileName: string): void {
+  private loadRenderModel(strScreenFileName: string, fNavigateOnSuccess = false): void {
     this.errorMessage.set('');
     this.actionMessage.set('');
 
@@ -78,6 +128,10 @@ export class App {
       .subscribe({
         next: (objRenderModel) => {
           this.renderModel.set(objRenderModel);
+
+          if (fNavigateOnSuccess) {
+            this.viewMode.set('screen');
+          }
         },
         error: () => {
           this.errorMessage.set(`Failed to load render model for ${strScreenFileName}.`);
@@ -88,7 +142,10 @@ export class App {
   private loadValidation(): void {
     this.screenApiService
       .getValidationResults()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        retry({ count: RETRY_COUNT, delay: RETRY_DELAY_MS }),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (arrValidationResults) => {
           this.validationResults.set(arrValidationResults);
@@ -97,5 +154,22 @@ export class App {
           this.errorMessage.set('Failed to load schema validation results.');
         }
       });
+  }
+
+  private ensureCurrentScreenIsValidAfterRefresh(): void {
+    const strSelectedScreenFileName = this.selectedScreenFileName();
+
+    if (!strSelectedScreenFileName) {
+      return;
+    }
+
+    const objSelectedScreenStatus: IScreenListStatusItem | undefined = this.screenListStatusItems()
+      .find((objScreenStatus) => objScreenStatus.fileName === strSelectedScreenFileName);
+
+    if (!objSelectedScreenStatus || !objSelectedScreenStatus.isValid) {
+      this.goToHome();
+      this.selectedScreenFileName.set('');
+      this.renderModel.set(null);
+    }
   }
 }

@@ -7,6 +7,9 @@ namespace GenericScreenGenInterfacesLib
     {
         Integer = 0,
         Button = 1,
-        Text = 2
+        Text = 2,
+        Date = 3,
+        DateTime = 4,
+        Lookup = 5
     }
 }
