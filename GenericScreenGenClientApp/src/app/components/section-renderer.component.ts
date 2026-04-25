@@ -24,6 +24,11 @@ type TSortDirection = 'asc' | 'desc';
       <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
         @if (isTabularLayout) {
           <div class="tabular-shell">
+            <div class="tabular-toolbar">
+              <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(true)">Export Filtered CSV</button>
+              <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(false)">Export All CSV</button>
+            </div>
+
             <div class="tabular-scroll">
               <table class="tabular-table" [attr.aria-label]="section.name + ' table view'">
                 <thead>
@@ -235,6 +240,23 @@ type TSortDirection = 'asc' | 'desc';
 
       .tabular-shell {
         width: 100%;
+      }
+
+      .tabular-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .tabular-toolbar-btn {
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        background: #f8efe2;
+        color: #4f4135;
+        border-radius: 8px;
+        padding: 7px 10px;
+        font: inherit;
+        font-weight: 600;
       }
 
       .tabular-scroll {
@@ -583,6 +605,32 @@ export class SectionRendererComponent implements OnChanges {
     return this.columnFilters()[strColumnId] ?? '';
   }
 
+  exportCsv(fFilteredOnly: boolean): void {
+    let lstExportFields = this.section.fields.filter(objField => !objField.isActionField);
+    if (lstExportFields.length === 0) {
+      return;
+    }
+
+    let lstRowsToExport = fFilteredOnly ? this.displayedTabularRows() : this.allTabularRows();
+    let lstCsvLines: string[] = [];
+
+    lstCsvLines.push(lstExportFields.map(objField => this.escapeCsvCell(objField.name)).join(','));
+    for (let objRow of lstRowsToExport) {
+      let lstCsvCells = lstExportFields.map(objField => this.escapeCsvCell(String(objRow[objField.id] ?? '')));
+      lstCsvLines.push(lstCsvCells.join(','));
+    }
+
+    let strCsvContents = lstCsvLines.join('\r\n');
+    let objCsvBlob = new Blob([strCsvContents], { type: 'text/csv;charset=utf-8;' });
+    let strObjectUrl = URL.createObjectURL(objCsvBlob);
+
+    let objAnchorElement = document.createElement('a');
+    objAnchorElement.href = strObjectUrl;
+    objAnchorElement.download = this.section.name + (fFilteredOnly ? '-filtered' : '-all') + '.csv';
+    objAnchorElement.click();
+    URL.revokeObjectURL(strObjectUrl);
+  }
+
   updateCellValue(objCurrentRow: TTabularRow, strFieldId: string, strValue: string): void {
     this.allTabularRows.update((lstRows) => {
       let iRowIndex = lstRows.findIndex(objRow => objRow === objCurrentRow);
@@ -649,6 +697,11 @@ export class SectionRendererComponent implements OnChanges {
     }
 
     return objField.name + ' ' + String(iRowIndex + 1);
+  }
+
+  private escapeCsvCell(strValue: string): string {
+    let strEscapedValue = strValue.replaceAll('"', '""');
+    return '"' + strEscapedValue + '"';
   }
 
   toggle(): void {
