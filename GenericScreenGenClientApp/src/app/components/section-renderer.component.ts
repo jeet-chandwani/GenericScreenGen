@@ -24,13 +24,65 @@ type TSortDirection = 'asc' | 'desc';
       <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
         @if (isTabularLayout) {
           <div class="tabular-shell">
-            <div class="tabular-toolbar">
-              <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(true)">Export Filtered CSV</button>
-              <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(false)">Export All CSV</button>
-            </div>
+            @if (editingRow(); as objEditingRow) {
+              <div class="tabular-edit-screen">
+                <div class="tabular-edit-header">
+                  <h3>Edit Record</h3>
+                  <button type="button" class="tabular-toolbar-btn" (click)="closeEditRow()">Back to Tabular View</button>
+                </div>
 
-            <div class="tabular-scroll">
-              <table class="tabular-table" [attr.aria-label]="section.name + ' table view'">
+                <div class="tabular-edit-fields">
+                  @for (objField of section.fields; track objField.id) {
+                    @if (!objField.isActionField) {
+                      <label class="field-label tabular-edit-field-label">
+                        <span class="field-name">{{ objField.name }}</span>
+                        @if (objField.controlType === 'textarea') {
+                          <textarea
+                            class="field-input"
+                            [rows]="objField.lines"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="objEditingRow[objField.id]"
+                            (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          ></textarea>
+                        } @else if (objField.controlType === 'select') {
+                          <select
+                            class="field-input"
+                            [title]="objField.description"
+                            [ngModel]="objEditingRow[objField.id]"
+                            (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                          >
+                            @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                              <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                            }
+                          </select>
+                        } @else {
+                          <input
+                            class="field-input"
+                            [type]="objField.inputType"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="objEditingRow[objField.id]"
+                            (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          />
+                        }
+                      </label>
+                    }
+                  }
+                </div>
+              </div>
+            } @else {
+              <div class="tabular-toolbar">
+                <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(true)">Export Filtered CSV</button>
+                <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(false)">Export All CSV</button>
+              </div>
+
+              <div class="tabular-scroll">
+                <table class="tabular-table" [attr.aria-label]="section.name + ' table view'">
                 <thead>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
@@ -65,11 +117,11 @@ type TSortDirection = 'asc' | 'desc';
                 </thead>
                 <tbody>
                   @for (objRow of pagedTabularRows(); track $index) {
-                  <tr>
+                  <tr (click)="openEditRow(objRow)">
                     @for (objField of section.fields; track objField.id) {
                       <td [style.min-width]="objField.width">
                         @if (objField.isActionField) {
-                          <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
+                          <button type="button" class="field-action" [title]="objField.description" (click)="$event.stopPropagation(); emitAction(objField)">
                             {{ objField.name }}
                           </button>
                         } @else if (objField.controlType === 'textarea') {
@@ -80,6 +132,7 @@ type TSortDirection = 'asc' | 'desc';
                             [placeholder]="objField.description + ' ' + ($index + 1)"
                             [title]="objField.description"
                             [ngModel]="objRow[objField.id]"
+                            (click)="$event.stopPropagation()"
                             (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
@@ -90,6 +143,7 @@ type TSortDirection = 'asc' | 'desc';
                             [style.width]="'100%'"
                             [title]="objField.description"
                             [ngModel]="objRow[objField.id]"
+                            (click)="$event.stopPropagation()"
                             (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
                           >
                             @for (strLookupValue of objField.lookupValues; track strLookupValue) {
@@ -104,6 +158,7 @@ type TSortDirection = 'asc' | 'desc';
                             [placeholder]="objField.description + ' ' + ($index + 1)"
                             [title]="objField.description"
                             [ngModel]="objRow[objField.id]"
+                            (click)="$event.stopPropagation()"
                             (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
@@ -114,17 +169,18 @@ type TSortDirection = 'asc' | 'desc';
                   </tr>
                   }
                 </tbody>
-              </table>
-            </div>
-
-            @if (shouldShowPagination()) {
-              <div class="tabular-pagination">
-                <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToFirstPage()">First</button>
-                <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToPreviousPage()">Previous</button>
-                <span class="tabular-page-status">Page {{ currentPageNumber() }} of {{ totalPageCount() }}</span>
-                <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToNextPage()">Next</button>
-                <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToLastPage()">Last</button>
+                </table>
               </div>
+
+              @if (shouldShowPagination()) {
+                <div class="tabular-pagination">
+                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToFirstPage()">First</button>
+                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToPreviousPage()">Previous</button>
+                  <span class="tabular-page-status">Page {{ currentPageNumber() }} of {{ totalPageCount() }}</span>
+                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToNextPage()">Next</button>
+                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToLastPage()">Last</button>
+                </div>
+              }
             }
           </div>
         } @else {
@@ -257,6 +313,35 @@ type TSortDirection = 'asc' | 'desc';
         padding: 7px 10px;
         font: inherit;
         font-weight: 600;
+      }
+
+      .tabular-edit-screen {
+        border: 1px solid rgba(94, 63, 34, 0.18);
+        border-radius: 12px;
+        background: #fffaf2;
+        padding: 14px;
+      }
+
+      .tabular-edit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .tabular-edit-header h3 {
+        margin: 0;
+      }
+
+      .tabular-edit-fields {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .tabular-edit-field-label {
+        align-items: flex-start;
       }
 
       .tabular-scroll {
@@ -469,6 +554,7 @@ export class SectionRendererComponent implements OnChanges {
   readonly sortColumnId = signal<string | null>(null);
   readonly sortDirection = signal<TSortDirection>('asc');
   readonly currentPageNumber = signal(1);
+  readonly editingRow = signal<TTabularRow | null>(null);
   readonly pageSize = 50;
 
   ngOnChanges(objChanges: SimpleChanges): void {
@@ -591,6 +677,14 @@ export class SectionRendererComponent implements OnChanges {
 
   goToLastPage(): void {
     this.currentPageNumber.set(this.totalPageCount());
+  }
+
+  openEditRow(objRow: TTabularRow): void {
+    this.editingRow.set(objRow);
+  }
+
+  closeEditRow(): void {
+    this.editingRow.set(null);
   }
 
   setColumnFilter(strColumnId: string, strFilterValue: string): void {
