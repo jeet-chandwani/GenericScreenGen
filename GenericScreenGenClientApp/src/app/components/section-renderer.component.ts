@@ -208,39 +208,46 @@ type TSortDirection = 'asc' | 'desc';
                   } @else {
                     <label class="field-label">
                       <span class="field-name">{{ objField.name }}</span>
-                      @if (objField.controlType === 'textarea') {
-                        <textarea
-                          class="field-input"
-                          [style.width]="objField.width"
-                          [rows]="objField.lines"
-                          [placeholder]="objField.description"
-                          [title]="objField.description"
-                          [ngModel]="recordDetailValues()[objField.id]"
-                          (ngModelChange)="updateRecordDetailField(objField.id, $event)"
-                          [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                          [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                        ></textarea>
-                      } @else if (objField.controlType === 'select') {
-                        <select class="field-input" [style.width]="objField.width" [title]="objField.description"
-                          [ngModel]="recordDetailValues()[objField.id]"
-                          (ngModelChange)="updateRecordDetailField(objField.id, $event)">
-                          @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                            <option [value]="strLookupValue">{{ strLookupValue }}</option>
-                          }
-                        </select>
-                      } @else {
-                        <input
-                          class="field-input"
-                          [style.width]="objField.width"
-                          [type]="objField.inputType"
-                          [placeholder]="objField.description"
-                          [title]="objField.description"
-                          [ngModel]="recordDetailValues()[objField.id]"
-                          (ngModelChange)="updateRecordDetailField(objField.id, $event)"
-                          [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                          [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                        />
-                      }
+                      <div class="record-detail-input-group">
+                        @if (objField.controlType === 'textarea') {
+                          <textarea
+                            class="field-input"
+                            [style.width]="objField.width"
+                            [rows]="objField.lines"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="recordDetailValues()[objField.id]"
+                            (ngModelChange)="updateRecordDetailField(objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          ></textarea>
+                        } @else if (objField.controlType === 'select') {
+                          <select class="field-input" [style.width]="objField.width" [title]="objField.description"
+                            [ngModel]="recordDetailValues()[objField.id]"
+                            (ngModelChange)="updateRecordDetailField(objField.id, $event)">
+                            @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                              <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                            }
+                          </select>
+                        } @else {
+                          <input
+                            class="field-input"
+                            [style.width]="objField.width"
+                            [type]="objField.inputType"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="recordDetailValues()[objField.id]"
+                            (ngModelChange)="updateRecordDetailField(objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          />
+                        }
+                        @if (showOriginalValues() && recordDetailOriginal()[objField.id] !== undefined) {
+                          <span class="record-detail-original-value" [title]="'Original: ' + recordDetailOriginal()[objField.id]">
+                            Original: <em>{{ recordDetailOriginal()[objField.id] || '(empty)' }}</em>
+                          </span>
+                        }
+                      </div>
                     </label>
                   }
                   <small class="field-description">{{ objField.description }}</small>
@@ -250,6 +257,9 @@ type TSortDirection = 'asc' | 'desc';
             <div class="record-detail-actions">
               <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
               <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
+              <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
+                {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+              </button>
             </div>
           </div>
         } @else {
@@ -573,6 +583,31 @@ type TSortDirection = 'asc' | 'desc';
         font: inherit;
       }
 
+      .record-detail-toggle-orig-btn {
+        border: 1px solid rgba(63, 94, 120, 0.35);
+        background: #f2f7ff;
+        color: #2a4a6a;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font: inherit;
+      }
+
+      .record-detail-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 auto;
+      }
+
+      .record-detail-original-value {
+        font-size: 0.82em;
+        color: #6b5b4e;
+        padding: 2px 6px;
+        background: rgba(255, 240, 200, 0.6);
+        border-radius: 6px;
+        border-left: 3px solid rgba(180, 130, 50, 0.5);
+      }
+
       .section-body.hidden {
         display: none;
       }
@@ -689,7 +724,12 @@ export class SectionRendererComponent implements OnChanges {
 
   // ── record-detail state ──
   readonly recordDetailValues = signal<Record<string, string>>({});
+  readonly showOriginalValues = signal(false);
   private m_dictRecordDetailOriginal: Record<string, string> = {};
+
+  recordDetailOriginal(): Record<string, string> {
+    return this.m_dictRecordDetailOriginal;
+  }
 
   ngOnChanges(objChanges: SimpleChanges): void {
     if (!objChanges['section']) {
@@ -744,6 +784,10 @@ export class SectionRendererComponent implements OnChanges {
   cancelRecordDetail(): void {
     this.recordDetailValues.set({ ...this.m_dictRecordDetailOriginal });
     this.actionInvoked.emit('cancel');
+  }
+
+  toggleShowOriginalValues(): void {
+    this.showOriginalValues.update(fShow => !fShow);
   }
 
   getSortIndicator(strColumnId: string): string {
