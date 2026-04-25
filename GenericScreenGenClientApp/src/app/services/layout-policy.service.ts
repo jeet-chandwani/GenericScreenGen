@@ -13,6 +13,7 @@ export class LayoutPolicyService {
     ['per-line', 'layout-per-line'],
     ['flow', 'layout-flow'],
     ['tabular', 'layout-tabular'],
+    ['record-detail', 'layout-record-detail'],
   ]);
 
   private readonly m_strFallbackCssClass = 'layout-per-line';
