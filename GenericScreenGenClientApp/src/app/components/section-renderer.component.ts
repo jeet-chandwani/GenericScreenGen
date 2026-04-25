@@ -465,12 +465,12 @@ export class SectionRendererComponent implements OnChanges {
     let dictFilters = this.columnFilters();
     let lstFilterColumns = Object.keys(dictFilters).filter(strFilterColumnId => (dictFilters[strFilterColumnId] ?? '').trim().length > 0);
     if (lstFilterColumns.length > 0) {
-      let strFilterColumnId = lstFilterColumns[0];
-      let strFilterValue = (dictFilters[strFilterColumnId] ?? '').trim().toLowerCase();
-
       lstRows = lstRows.filter((objRow) => {
-        let strCellValue = String(objRow[strFilterColumnId] ?? '');
-        return strCellValue.toLowerCase().includes(strFilterValue);
+        return lstFilterColumns.every((strFilterColumnId) => {
+          let strFilterValue = (dictFilters[strFilterColumnId] ?? '').trim().toLowerCase();
+          let strCellValue = String(objRow[strFilterColumnId] ?? '');
+          return strCellValue.toLowerCase().includes(strFilterValue);
+        });
       });
     }
 
@@ -486,9 +486,10 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   setColumnFilter(strColumnId: string, strFilterValue: string): void {
-    this.columnFilters.set({
+    this.columnFilters.update((dictCurrentFilters) => ({
+      ...dictCurrentFilters,
       [strColumnId]: strFilterValue
-    });
+    }));
   }
 
   getColumnFilter(strColumnId: string): string {
