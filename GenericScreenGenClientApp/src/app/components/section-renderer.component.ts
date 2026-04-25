@@ -188,7 +188,9 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
       .tabular-scroll {
         width: 100%;
+        max-height: 360px;
         overflow-x: auto;
+        overflow-y: auto;
       }
 
       .tabular-table {
@@ -205,6 +207,10 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       }
 
       .tabular-table th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f8efe2;
         text-align: left;
         font-weight: 700;
         color: #4f4135;
