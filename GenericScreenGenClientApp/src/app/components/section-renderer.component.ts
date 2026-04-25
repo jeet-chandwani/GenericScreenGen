@@ -48,16 +48,47 @@ type TSortDirection = 'asc' | 'desc';
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <select
-                            class="field-input"
-                            [title]="objField.description"
-                            [ngModel]="objEditingRow[objField.id]"
-                            (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
-                          >
-                            @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                              <option [value]="strLookupValue">{{ strLookupValue }}</option>
-                            }
-                          </select>
+                          <div class="lookup-search-wrapper">
+                            <input class="lookup-search-input" type="text" placeholder="Search options…"
+                              [value]="getLookupSearch(objField.id)"
+                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            <select
+                              class="field-input"
+                              [title]="objField.description"
+                              [ngModel]="objEditingRow[objField.id]"
+                              (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                            >
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <option [value]="opt.value" [title]="opt.description">
+                                  {{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        } @else if (objField.controlType === 'multiselect') {
+                          <div class="lookup-search-wrapper">
+                            <input class="lookup-search-input" type="text" placeholder="Search options…"
+                              [value]="getLookupSearch(objField.id)"
+                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            <div class="lookup-multi-options">
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <label class="lookup-multi-option">
+                                  <input type="checkbox"
+                                    [checked]="isMultiSelected(objEditingRow, objField.id, opt.value)"
+                                    (change)="toggleMultiCellValue(objEditingRow, objField.id, opt.value)" />
+                                  @if (opt.image) { <img class="lookup-option-img" [src]="opt.image" [alt]="opt.value" /> }
+                                  <span>{{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}</span>
+                                </label>
+                              }
+                            </div>
+                            <div class="lookup-tags">
+                              @for (strTag of getMultiCellValues(objEditingRow, objField.id); track strTag) {
+                                <span class="lookup-tag">{{ strTag }}
+                                  <button type="button" class="lookup-tag-remove" (click)="toggleMultiCellValue(objEditingRow, objField.id, strTag)">×</button>
+                                </span>
+                              }
+                            </div>
+                          </div>
                         } @else {
                           <input
                             class="field-input"
@@ -222,13 +253,44 @@ type TSortDirection = 'asc' | 'desc';
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <select class="field-input" [style.width]="objField.width" [title]="objField.description"
-                            [ngModel]="recordDetailValues()[objField.id]"
-                            (ngModelChange)="updateRecordDetailField(objField.id, $event)">
-                            @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                              <option [value]="strLookupValue">{{ strLookupValue }}</option>
-                            }
-                          </select>
+                          <div class="lookup-search-wrapper">
+                            <input class="lookup-search-input" type="text" placeholder="Search options…"
+                              [value]="getLookupSearch(objField.id)"
+                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            <select class="field-input" [style.width]="objField.width" [title]="objField.description"
+                              [ngModel]="recordDetailValues()[objField.id]"
+                              (ngModelChange)="updateRecordDetailField(objField.id, $event)">
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <option [value]="opt.value" [title]="opt.description">
+                                  {{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        } @else if (objField.controlType === 'multiselect') {
+                          <div class="lookup-search-wrapper">
+                            <input class="lookup-search-input" type="text" placeholder="Search options…"
+                              [value]="getLookupSearch(objField.id)"
+                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            <div class="lookup-multi-options">
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <label class="lookup-multi-option">
+                                  <input type="checkbox"
+                                    [checked]="isMultiSelectedInRecord(objField.id, opt.value)"
+                                    (change)="toggleMultiRecordField(objField.id, opt.value)" />
+                                  @if (opt.image) { <img class="lookup-option-img" [src]="opt.image" [alt]="opt.value" /> }
+                                  <span>{{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}</span>
+                                </label>
+                              }
+                            </div>
+                            <div class="lookup-tags">
+                              @for (strTag of getMultiRecordValues(objField.id); track strTag) {
+                                <span class="lookup-tag">{{ strTag }}
+                                  <button type="button" class="lookup-tag-remove" (click)="toggleMultiRecordField(objField.id, strTag)">×</button>
+                                </span>
+                              }
+                            </div>
+                          </div>
                         } @else {
                           <input
                             class="field-input"
@@ -283,11 +345,30 @@ type TSortDirection = 'asc' | 'desc';
                       [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                     ></textarea>
                   } @else if (objField.controlType === 'select') {
-                    <select class="field-input" [style.width]="objField.width" [title]="objField.description">
-                      @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                        <option [value]="strLookupValue">{{ strLookupValue }}</option>
-                      }
-                    </select>
+                    <div class="lookup-search-wrapper">
+                      <input class="lookup-search-input" type="text" placeholder="Search options…"
+                        [value]="getLookupSearch(objField.id)"
+                        (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                        @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
+                          <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                        }
+                      </select>
+                    </div>
+                  } @else if (objField.controlType === 'multiselect') {
+                    <div class="lookup-search-wrapper">
+                      <input class="lookup-search-input" type="text" placeholder="Search options…"
+                        [value]="getLookupSearch(objField.id)"
+                        (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      <div class="lookup-multi-options">
+                        @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
+                          <label class="lookup-multi-option">
+                            <input type="checkbox" />
+                            {{ strLookupValue }}
+                          </label>
+                        }
+                      </div>
+                    </div>
                   } @else {
                     <input
                       class="field-input"
@@ -608,6 +689,78 @@ type TSortDirection = 'asc' | 'desc';
         border-left: 3px solid rgba(180, 130, 50, 0.5);
       }
 
+      /* ── lookup search & multi-select (Req 3.3) ── */
+      .lookup-search-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 auto;
+      }
+
+      .lookup-search-input {
+        font: inherit;
+        border-radius: 8px;
+        border: 1px solid rgba(94, 63, 34, 0.22);
+        padding: 6px 10px;
+        font-size: 0.88em;
+      }
+
+      .lookup-multi-options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 160px;
+        overflow-y: auto;
+        border: 1px solid rgba(94, 63, 34, 0.18);
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: #fffdf8;
+      }
+
+      .lookup-multi-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .lookup-option-img {
+        width: 24px;
+        height: 24px;
+        object-fit: cover;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+
+      .lookup-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .lookup-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(143, 78, 47, 0.12);
+        border: 1px solid rgba(143, 78, 47, 0.25);
+        color: #5a2e0e;
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.85em;
+      }
+
+      .lookup-tag-remove {
+        background: none;
+        border: none;
+        color: #8a3a1a;
+        cursor: pointer;
+        font-size: 1em;
+        line-height: 1;
+        padding: 0 2px;
+      }
+
       .section-body.hidden {
         display: none;
       }
@@ -727,6 +880,9 @@ export class SectionRendererComponent implements OnChanges {
   readonly showOriginalValues = signal(false);
   private m_dictRecordDetailOriginal: Record<string, string> = {};
 
+  // ── lookup search state (Req 3.3.1) ──
+  readonly lookupSearchTerms = signal<Record<string, string>>({});
+
   recordDetailOriginal(): Record<string, string> {
     return this.m_dictRecordDetailOriginal;
   }
@@ -788,6 +944,71 @@ export class SectionRendererComponent implements OnChanges {
 
   toggleShowOriginalValues(): void {
     this.showOriginalValues.update(fShow => !fShow);
+  }
+
+  // ── lookup search helpers (Req 3.3.1) ──
+  setLookupSearch(strFieldId: string, strTerm: string): void {
+    this.lookupSearchTerms.update(dict => ({ ...dict, [strFieldId]: strTerm }));
+  }
+
+  getLookupSearch(strFieldId: string): string {
+    return this.lookupSearchTerms()[strFieldId] ?? '';
+  }
+
+  getFilteredLookupValues(objField: ScreenRenderFieldModel): string[] {
+    let strTerm = this.getLookupSearch(objField.id).trim().toLowerCase();
+    if (!strTerm) {
+      return objField.lookupValues;
+    }
+
+    return objField.lookupValues.filter(strValue => strValue.toLowerCase().includes(strTerm));
+  }
+
+  getFilteredLookupOptions(objField: ScreenRenderFieldModel): { value: string; description: string; image: string }[] {
+    let strTerm = this.getLookupSearch(objField.id).trim().toLowerCase();
+    return objField.lookupValues
+      .map((strValue, iIndex) => ({
+        value: strValue,
+        description: objField.lookupOptionDescriptions?.[iIndex] ?? '',
+        image: objField.lookupOptionImages?.[iIndex] ?? ''
+      }))
+      .filter(opt => !strTerm || opt.value.toLowerCase().includes(strTerm) || opt.description.toLowerCase().includes(strTerm));
+  }
+
+  // ── multi-select helpers for tabular rows ──
+  isMultiSelected(objRow: TTabularRow, strFieldId: string, strValue: string): boolean {
+    return this.getMultiCellValues(objRow, strFieldId).includes(strValue);
+  }
+
+  getMultiCellValues(objRow: TTabularRow, strFieldId: string): string[] {
+    let strRaw = objRow[strFieldId] ?? '';
+    return strRaw ? strRaw.split('|').filter(s => s.length > 0) : [];
+  }
+
+  toggleMultiCellValue(objRow: TTabularRow, strFieldId: string, strValue: string): void {
+    let lstCurrent = this.getMultiCellValues(objRow, strFieldId);
+    let lstUpdated = lstCurrent.includes(strValue)
+      ? lstCurrent.filter(s => s !== strValue)
+      : [...lstCurrent, strValue];
+    objRow[strFieldId] = lstUpdated.join('|');
+  }
+
+  // ── multi-select helpers for record-detail ──
+  isMultiSelectedInRecord(strFieldId: string, strValue: string): boolean {
+    return this.getMultiRecordValues(strFieldId).includes(strValue);
+  }
+
+  getMultiRecordValues(strFieldId: string): string[] {
+    let strRaw = this.recordDetailValues()[strFieldId] ?? '';
+    return strRaw ? strRaw.split('|').filter(s => s.length > 0) : [];
+  }
+
+  toggleMultiRecordField(strFieldId: string, strValue: string): void {
+    let lstCurrent = this.getMultiRecordValues(strFieldId);
+    let lstUpdated = lstCurrent.includes(strValue)
+      ? lstCurrent.filter(s => s !== strValue)
+      : [...lstCurrent, strValue];
+    this.updateRecordDetailField(strFieldId, lstUpdated.join('|'));
   }
 
   getSortIndicator(strColumnId: string): string {
