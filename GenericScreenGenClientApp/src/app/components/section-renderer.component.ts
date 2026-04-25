@@ -25,14 +25,14 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                 <thead>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
-                      <th [title]="objField.description">{{ objField.name }}</th>
+                      <th [title]="objField.description" [style.min-width]="objField.width">{{ objField.name }}</th>
                     }
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
-                      <td>
+                      <td [style.min-width]="objField.width">
                         @if (objField.isActionField) {
                           <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
                             {{ objField.name }}
