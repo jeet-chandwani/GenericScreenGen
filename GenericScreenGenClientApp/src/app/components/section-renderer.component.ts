@@ -27,7 +27,7 @@ type TSortDirection = 'asc' | 'desc';
             @if (editingRow(); as objEditingRow) {
               <div class="tabular-edit-screen">
                 <div class="tabular-edit-header">
-                  <h3>Edit Record</h3>
+                  <h3>{{ isCreateRowMode() ? 'Add New Row' : 'Edit Record' }}</h3>
                   <button type="button" class="tabular-toolbar-btn" (click)="closeEditRow()">Back to Tabular View</button>
                 </div>
 
@@ -74,9 +74,17 @@ type TSortDirection = 'asc' | 'desc';
                     }
                   }
                 </div>
+
+                @if (isCreateRowMode()) {
+                  <div class="tabular-edit-actions">
+                    <button type="button" class="tabular-toolbar-btn" (click)="saveNewRow()">Save New Row</button>
+                    <button type="button" class="tabular-page-btn" (click)="cancelNewRow()">Cancel</button>
+                  </div>
+                }
               </div>
             } @else {
               <div class="tabular-toolbar">
+                <button type="button" class="tabular-toolbar-btn" (click)="startAddNewRow()">Add New Row</button>
                 <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(true)">Export Filtered CSV</button>
                 <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(false)">Export All CSV</button>
               </div>
@@ -340,6 +348,12 @@ type TSortDirection = 'asc' | 'desc';
         gap: 10px;
       }
 
+      .tabular-edit-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
       .tabular-edit-field-label {
         align-items: flex-start;
       }
@@ -555,6 +569,7 @@ export class SectionRendererComponent implements OnChanges {
   readonly sortDirection = signal<TSortDirection>('asc');
   readonly currentPageNumber = signal(1);
   readonly editingRow = signal<TTabularRow | null>(null);
+  readonly isCreateRowMode = signal(false);
   readonly pageSize = 50;
 
   ngOnChanges(objChanges: SimpleChanges): void {
@@ -680,11 +695,33 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   openEditRow(objRow: TTabularRow): void {
+    this.isCreateRowMode.set(false);
     this.editingRow.set(objRow);
   }
 
   closeEditRow(): void {
+    this.isCreateRowMode.set(false);
     this.editingRow.set(null);
+  }
+
+  startAddNewRow(): void {
+    this.isCreateRowMode.set(true);
+    this.editingRow.set(this.createBlankRow());
+  }
+
+  saveNewRow(): void {
+    let objEditingRow = this.editingRow();
+    if (!objEditingRow || !this.isCreateRowMode()) {
+      return;
+    }
+
+    this.allTabularRows.update((lstRows) => [...lstRows, { ...objEditingRow }]);
+    this.closeEditRow();
+    this.goToLastPage();
+  }
+
+  cancelNewRow(): void {
+    this.closeEditRow();
   }
 
   setColumnFilter(strColumnId: string, strFilterValue: string): void {
@@ -791,6 +828,15 @@ export class SectionRendererComponent implements OnChanges {
     }
 
     return objField.name + ' ' + String(iRowIndex + 1);
+  }
+
+  private createBlankRow(): TTabularRow {
+    let dictRow: TTabularRow = {};
+    for (let objField of this.section.fields) {
+      dictRow[objField.id] = '';
+    }
+
+    return dictRow;
   }
 
   private escapeCsvCell(strValue: string): string {
