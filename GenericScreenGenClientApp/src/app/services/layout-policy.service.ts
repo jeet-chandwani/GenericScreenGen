@@ -12,6 +12,7 @@ export class LayoutPolicyService {
   private readonly m_mapPolicyCssClasses = new Map<string, string>([
     ['per-line', 'layout-per-line'],
     ['flow', 'layout-flow'],
+    ['tabular', 'layout-tabular'],
   ]);
 
   private readonly m_strFallbackCssClass = 'layout-per-line';

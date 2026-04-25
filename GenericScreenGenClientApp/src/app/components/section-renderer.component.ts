@@ -17,47 +17,102 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         </button>
       }
 
-        <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
-        @for (objField of section.fields; track objField.id) {
-          <div class="field-row">
-            @if (objField.isActionField) {
-              <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
-                {{ objField.name }}
-              </button>
-            } @else {
-              <label class="field-label">
-                <span class="field-name">{{ objField.name }}</span>
-                @if (objField.controlType === 'textarea') {
-                  <textarea
-                    class="field-input"
-                    [style.width]="objField.width"
-                    [rows]="objField.lines"
-                    [placeholder]="objField.description"
-                    [title]="objField.description"
-                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                  ></textarea>
-                } @else if (objField.controlType === 'select') {
-                  <select class="field-input" [style.width]="objField.width" [title]="objField.description">
-                    @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                      <option [value]="strLookupValue">{{ strLookupValue }}</option>
+      <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
+        @if (isTabularLayout) {
+          <div class="tabular-shell">
+            <div class="tabular-scroll">
+              <table class="tabular-table" [attr.aria-label]="section.name + ' table view'">
+                <thead>
+                  <tr>
+                    @for (objField of section.fields; track objField.id) {
+                      <th [title]="objField.description">{{ objField.name }}</th>
                     }
-                  </select>
-                } @else {
-                  <input
-                    class="field-input"
-                    [style.width]="objField.width"
-                    [type]="objField.inputType"
-                    [placeholder]="objField.description"
-                    [title]="objField.description"
-                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                  />
-                }
-              </label>
-            }
-            <small class="field-description">{{ objField.description }}</small>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    @for (objField of section.fields; track objField.id) {
+                      <td>
+                        @if (objField.isActionField) {
+                          <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
+                            {{ objField.name }}
+                          </button>
+                        } @else if (objField.controlType === 'textarea') {
+                          <textarea
+                            class="field-input"
+                            [style.width]="objField.width"
+                            [rows]="objField.lines"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          ></textarea>
+                        } @else if (objField.controlType === 'select') {
+                          <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                            @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                              <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                            }
+                          </select>
+                        } @else {
+                          <input
+                            class="field-input"
+                            [style.width]="objField.width"
+                            [type]="objField.inputType"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          />
+                        }
+                      </td>
+                    }
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
+        } @else {
+          @for (objField of section.fields; track objField.id) {
+            <div class="field-row">
+              @if (objField.isActionField) {
+                <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
+                  {{ objField.name }}
+                </button>
+              } @else {
+                <label class="field-label">
+                  <span class="field-name">{{ objField.name }}</span>
+                  @if (objField.controlType === 'textarea') {
+                    <textarea
+                      class="field-input"
+                      [style.width]="objField.width"
+                      [rows]="objField.lines"
+                      [placeholder]="objField.description"
+                      [title]="objField.description"
+                      [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                      [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                    ></textarea>
+                  } @else if (objField.controlType === 'select') {
+                    <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                      @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                        <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <input
+                      class="field-input"
+                      [style.width]="objField.width"
+                      [type]="objField.inputType"
+                      [placeholder]="objField.description"
+                      [title]="objField.description"
+                      [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                      [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                    />
+                  }
+                </label>
+              }
+              <small class="field-description">{{ objField.description }}</small>
+            </div>
+          }
         }
 
         @for (objSection of section.sections; track objSection.name) {
@@ -121,6 +176,45 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
       .section-body.layout-flow > .field-row > .field-label {
         min-width: max-content;
+      }
+
+      .section-body.layout-tabular {
+        display: block;
+      }
+
+      .tabular-shell {
+        width: 100%;
+      }
+
+      .tabular-scroll {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .tabular-table {
+        border-collapse: collapse;
+        width: max-content;
+        min-width: 100%;
+      }
+
+      .tabular-table th,
+      .tabular-table td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(94, 63, 34, 0.16);
+        vertical-align: top;
+      }
+
+      .tabular-table th {
+        text-align: left;
+        font-weight: 700;
+        color: #4f4135;
+        white-space: nowrap;
+      }
+
+      .tabular-table td .field-input,
+      .tabular-table td .field-action {
+        width: 100%;
+        min-width: 120px;
       }
 
       .section-body.hidden {
@@ -230,6 +324,10 @@ export class SectionRendererComponent {
 
   get layoutCssClass(): string {
     return 'section-body ' + this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
+  }
+
+  get isTabularLayout(): boolean {
+    return this.section.layoutPolicy === 'tabular';
   }
 
   toggle(): void {

@@ -26,8 +26,8 @@
         "layout-policy": {
           "type": "string",
           "default": "per-line",
-          "description": "Controls how fields inside this section are arranged. Built-in values: 'per-line' (each field on its own line, vertical stack) and 'flow' (fields flow left-to-right with wrap). New policies can be added by implementing ILayoutPolicy and registering the implementation in the dependency-injection container — no schema change required.",
-          "examples": ["per-line", "flow"]
+          "description": "Controls how fields inside this section are arranged. Built-in values: 'per-line' (each field on its own line, vertical stack), 'flow' (fields flow left-to-right with wrap), and 'tabular' (fields are rendered as table columns with records as rows). New policies can be added by implementing ILayoutPolicy and registering the implementation in the dependency-injection container — no schema change required.",
+          "examples": ["per-line", "flow", "tabular"]
         },
         "is-collapsible": {
           "type": "boolean",
