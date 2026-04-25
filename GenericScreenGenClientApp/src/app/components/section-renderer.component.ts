@@ -42,9 +42,24 @@ type TSortDirection = 'asc' | 'desc';
                       </th>
                     }
                   </tr>
+                  <tr class="tabular-filter-row">
+                    @for (objField of section.fields; track objField.id) {
+                      <th [style.min-width]="objField.width">
+                        @if (!objField.isActionField) {
+                          <input
+                            class="tabular-filter-input"
+                            type="text"
+                            [placeholder]="'Filter ' + objField.name"
+                            [value]="getColumnFilter(objField.id)"
+                            (input)="setColumnFilter(objField.id, $any($event.target).value)"
+                          />
+                        }
+                      </th>
+                    }
+                  </tr>
                 </thead>
                 <tbody>
-                  @for (objRow of tabularRows(); track $index) {
+                  @for (objRow of displayedTabularRows(); track $index) {
                   <tr>
                     @for (objField of section.fields; track objField.id) {
                       <td [style.min-width]="objField.width">
@@ -60,7 +75,7 @@ type TSortDirection = 'asc' | 'desc';
                             [placeholder]="objField.description + ' ' + ($index + 1)"
                             [title]="objField.description"
                             [ngModel]="objRow[objField.id]"
-                            (ngModelChange)="updateCellValue($index, objField.id, $event)"
+                            (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           ></textarea>
@@ -70,7 +85,7 @@ type TSortDirection = 'asc' | 'desc';
                             [style.width]="'100%'"
                             [title]="objField.description"
                             [ngModel]="objRow[objField.id]"
-                            (ngModelChange)="updateCellValue($index, objField.id, $event)"
+                            (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
                           >
                             @for (strLookupValue of objField.lookupValues; track strLookupValue) {
                               <option [value]="strLookupValue">{{ strLookupValue }}</option>
@@ -84,7 +99,7 @@ type TSortDirection = 'asc' | 'desc';
                             [placeholder]="objField.description + ' ' + ($index + 1)"
                             [title]="objField.description"
                             [ngModel]="objRow[objField.id]"
-                            (ngModelChange)="updateCellValue($index, objField.id, $event)"
+                            (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           />
@@ -267,6 +282,20 @@ type TSortDirection = 'asc' | 'desc';
         text-align: center;
       }
 
+      .tabular-filter-row th {
+        background: #fff7ee;
+        padding: 8px;
+      }
+
+      .tabular-filter-input {
+        width: 100%;
+        min-width: 120px;
+        border-radius: 8px;
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        padding: 7px 8px;
+        font: inherit;
+      }
+
       .tabular-table td .field-input,
       .tabular-table td .field-action {
         width: 100%;
@@ -378,7 +407,8 @@ export class SectionRendererComponent implements OnChanges {
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
   readonly collapsed = signal(false);
-  readonly tabularRows = signal<TTabularRow[]>([]);
+  readonly allTabularRows = signal<TTabularRow[]>([]);
+  readonly columnFilters = signal<Record<string, string>>({});
   readonly sortColumnId = signal<string | null>(null);
   readonly sortDirection = signal<TSortDirection>('asc');
 
@@ -393,9 +423,10 @@ export class SectionRendererComponent implements OnChanges {
     }
 
     this.m_strTabularShapeSignature = strCurrentShapeSignature;
+    this.columnFilters.set({});
     this.sortColumnId.set(null);
     this.sortDirection.set('asc');
-    this.tabularRows.set(this.createInitialRows());
+    this.allTabularRows.set(this.createInitialRows());
   }
 
   get layoutCssClass(): string {
@@ -427,16 +458,46 @@ export class SectionRendererComponent implements OnChanges {
 
     this.sortColumnId.set(strColumnId);
     this.sortDirection.set(strNextSortDirection);
-
-    let lstSortedRows = [...this.tabularRows()].sort((objLeftRow, objRightRow) =>
-      this.compareValues(objLeftRow[strColumnId] ?? '', objRightRow[strColumnId] ?? '', strNextSortDirection)
-    );
-
-    this.tabularRows.set(lstSortedRows);
   }
 
-  updateCellValue(iRowIndex: number, strFieldId: string, strValue: string): void {
-    this.tabularRows.update((lstRows) => {
+  displayedTabularRows(): TTabularRow[] {
+    let lstRows = [...this.allTabularRows()];
+    let dictFilters = this.columnFilters();
+    let lstFilterColumns = Object.keys(dictFilters).filter(strFilterColumnId => (dictFilters[strFilterColumnId] ?? '').trim().length > 0);
+    if (lstFilterColumns.length > 0) {
+      let strFilterColumnId = lstFilterColumns[0];
+      let strFilterValue = (dictFilters[strFilterColumnId] ?? '').trim().toLowerCase();
+
+      lstRows = lstRows.filter((objRow) => {
+        let strCellValue = String(objRow[strFilterColumnId] ?? '');
+        return strCellValue.toLowerCase().includes(strFilterValue);
+      });
+    }
+
+    let strSortColumnId = this.sortColumnId();
+    if (!strSortColumnId) {
+      return lstRows;
+    }
+
+    let strSortDirection = this.sortDirection();
+    return [...lstRows].sort((objLeftRow, objRightRow) =>
+      this.compareValues(objLeftRow[strSortColumnId] ?? '', objRightRow[strSortColumnId] ?? '', strSortDirection)
+    );
+  }
+
+  setColumnFilter(strColumnId: string, strFilterValue: string): void {
+    this.columnFilters.set({
+      [strColumnId]: strFilterValue
+    });
+  }
+
+  getColumnFilter(strColumnId: string): string {
+    return this.columnFilters()[strColumnId] ?? '';
+  }
+
+  updateCellValue(objCurrentRow: TTabularRow, strFieldId: string, strValue: string): void {
+    this.allTabularRows.update((lstRows) => {
+      let iRowIndex = lstRows.findIndex(objRow => objRow === objCurrentRow);
       if (iRowIndex < 0 || iRowIndex >= lstRows.length) {
         return lstRows;
       }
