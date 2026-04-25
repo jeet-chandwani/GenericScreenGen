@@ -196,6 +196,62 @@ type TSortDirection = 'asc' | 'desc';
               }
             }
           </div>
+        } @else if (isRecordDetailLayout) {
+          <div class="record-detail-shell">
+            <div class="record-detail-fields">
+              @for (objField of section.fields; track objField.id) {
+                <div class="field-row">
+                  @if (objField.isActionField) {
+                    <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
+                      {{ objField.name }}
+                    </button>
+                  } @else {
+                    <label class="field-label">
+                      <span class="field-name">{{ objField.name }}</span>
+                      @if (objField.controlType === 'textarea') {
+                        <textarea
+                          class="field-input"
+                          [style.width]="objField.width"
+                          [rows]="objField.lines"
+                          [placeholder]="objField.description"
+                          [title]="objField.description"
+                          [ngModel]="recordDetailValues()[objField.id]"
+                          (ngModelChange)="updateRecordDetailField(objField.id, $event)"
+                          [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                          [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                        ></textarea>
+                      } @else if (objField.controlType === 'select') {
+                        <select class="field-input" [style.width]="objField.width" [title]="objField.description"
+                          [ngModel]="recordDetailValues()[objField.id]"
+                          (ngModelChange)="updateRecordDetailField(objField.id, $event)">
+                          @for (strLookupValue of objField.lookupValues; track strLookupValue) {
+                            <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                          }
+                        </select>
+                      } @else {
+                        <input
+                          class="field-input"
+                          [style.width]="objField.width"
+                          [type]="objField.inputType"
+                          [placeholder]="objField.description"
+                          [title]="objField.description"
+                          [ngModel]="recordDetailValues()[objField.id]"
+                          (ngModelChange)="updateRecordDetailField(objField.id, $event)"
+                          [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                          [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                        />
+                      }
+                    </label>
+                  }
+                  <small class="field-description">{{ objField.description }}</small>
+                </div>
+              }
+            </div>
+            <div class="record-detail-actions">
+              <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
+              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
+            </div>
+          </div>
         } @else {
           @for (objField of section.fields; track objField.id) {
             <div class="field-row">
@@ -480,6 +536,43 @@ type TSortDirection = 'asc' | 'desc';
         min-width: 120px;
       }
 
+      /* ── record-detail layout ── */
+      .record-detail-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .record-detail-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .record-detail-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .record-detail-save-btn {
+        border: 1px solid rgba(63, 94, 34, 0.35);
+        background: #f2fff4;
+        color: #2a5a2e;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font: inherit;
+        font-weight: 600;
+      }
+
+      .record-detail-cancel-btn {
+        border: 1px solid rgba(94, 63, 34, 0.22);
+        background: #fffaf2;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font: inherit;
+      }
+
       .section-body.hidden {
         display: none;
       }
@@ -594,22 +687,36 @@ export class SectionRendererComponent implements OnChanges {
   readonly isCreateRowMode = signal(false);
   readonly pageSize = 50;
 
+  // ── record-detail state ──
+  readonly recordDetailValues = signal<Record<string, string>>({});
+  private m_dictRecordDetailOriginal: Record<string, string> = {};
+
   ngOnChanges(objChanges: SimpleChanges): void {
-    if (!objChanges['section'] || !this.isTabularLayout) {
+    if (!objChanges['section']) {
       return;
     }
 
-    let strCurrentShapeSignature = this.section.fields.map(objField => objField.id).join('|');
-    if (this.m_strTabularShapeSignature === strCurrentShapeSignature) {
-      return;
-    }
+    if (this.isTabularLayout) {
+      let strCurrentShapeSignature = this.section.fields.map(objField => objField.id).join('|');
+      if (this.m_strTabularShapeSignature !== strCurrentShapeSignature) {
+        this.m_strTabularShapeSignature = strCurrentShapeSignature;
+        this.columnFilters.set({});
+        this.sortColumnId.set(null);
+        this.sortDirection.set('asc');
+        this.currentPageNumber.set(1);
+        this.allTabularRows.set(this.createInitialRows());
+      }
+    } else if (this.isRecordDetailLayout) {
+      let dictInitial: Record<string, string> = {};
+      for (let objField of this.section.fields) {
+        if (!objField.isActionField) {
+          dictInitial[objField.id] = '';
+        }
+      }
 
-    this.m_strTabularShapeSignature = strCurrentShapeSignature;
-    this.columnFilters.set({});
-    this.sortColumnId.set(null);
-    this.sortDirection.set('asc');
-    this.currentPageNumber.set(1);
-    this.allTabularRows.set(this.createInitialRows());
+      this.m_dictRecordDetailOriginal = { ...dictInitial };
+      this.recordDetailValues.set({ ...dictInitial });
+    }
   }
 
   get layoutCssClass(): string {
@@ -618,6 +725,25 @@ export class SectionRendererComponent implements OnChanges {
 
   get isTabularLayout(): boolean {
     return this.section.layoutPolicy === 'tabular';
+  }
+
+  get isRecordDetailLayout(): boolean {
+    return this.section.layoutPolicy === 'record-detail';
+  }
+
+  updateRecordDetailField(strFieldId: string, strValue: string): void {
+    this.recordDetailValues.update((dictValues) => ({ ...dictValues, [strFieldId]: strValue }));
+  }
+
+  saveRecordDetail(): void {
+    // Persist current values as the new baseline; downstream consumers can subscribe to actionInvoked.
+    this.m_dictRecordDetailOriginal = { ...this.recordDetailValues() };
+    this.actionInvoked.emit('save');
+  }
+
+  cancelRecordDetail(): void {
+    this.recordDetailValues.set({ ...this.m_dictRecordDetailOriginal });
+    this.actionInvoked.emit('cancel');
   }
 
   getSortIndicator(strColumnId: string): string {
