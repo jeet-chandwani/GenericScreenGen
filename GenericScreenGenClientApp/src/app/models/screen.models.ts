@@ -16,6 +16,10 @@ export interface ScreenRenderFieldModel {
   maxChars: number;
   lines: number;
   lookupValues: string[];
+  lookupOptionDescriptions: string[];
+  lookupOptionImages: string[];
+  isMandatory: boolean;
+  isMultiple: boolean;
   isActionField: boolean;
 }
 

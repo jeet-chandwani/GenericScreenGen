@@ -71,6 +71,10 @@ namespace GenericScreenGenImplementationsLib
             int iMaxChars = 0;
             int iLines = 1;
             IReadOnlyList<string> lstLookupValues = Array.Empty<string>();
+            IReadOnlyList<string> lstLookupOptionDescriptions = Array.Empty<string>();
+            IReadOnlyList<string> lstLookupOptionImages = Array.Empty<string>();
+            bool fIsMandatory = false;
+            bool fIsMultiple = false;
 
             switch (itfFieldDefinition.Type)
             {
@@ -79,8 +83,8 @@ namespace GenericScreenGenImplementationsLib
                     strControlType = iLines > 1 ? "textarea" : "input";
                     break;
                 case EFieldType.Lookup:
-                    lstLookupValues = ParseLookupTypeInfo(itfFieldDefinition.TypeInfo);
-                    strControlType = "select";
+                    ParseLookupTypeInfo(itfFieldDefinition.TypeInfo, out lstLookupValues, out lstLookupOptionDescriptions, out lstLookupOptionImages, out fIsMandatory, out fIsMultiple);
+                    strControlType = fIsMultiple ? "multiselect" : "select";
                     break;
                 case EFieldType.Button:
                     strControlType = "button";
@@ -103,6 +107,10 @@ namespace GenericScreenGenImplementationsLib
                 iMaxChars,
                 iLines,
                 lstLookupValues,
+                lstLookupOptionDescriptions,
+                lstLookupOptionImages,
+                fIsMandatory,
+                fIsMultiple,
                 itfFieldDefinition.Type == EFieldType.Button);
         }
 
@@ -157,20 +165,66 @@ namespace GenericScreenGenImplementationsLib
             }
         }
 
-        private static IReadOnlyList<string> ParseLookupTypeInfo(string strTypeInfo)
+        private static void ParseLookupTypeInfo(
+            string strTypeInfo,
+            out IReadOnlyList<string> lstValues,
+            out IReadOnlyList<string> lstDescriptions,
+            out IReadOnlyList<string> lstImages,
+            out bool fIsMandatory,
+            out bool fIsMultiple)
         {
+            fIsMandatory = false;
+            fIsMultiple = false;
+
             if (string.IsNullOrWhiteSpace(strTypeInfo))
             {
-                return Array.Empty<string>();
+                lstValues = Array.Empty<string>();
+                lstDescriptions = Array.Empty<string>();
+                lstImages = Array.Empty<string>();
+                return;
             }
 
-            string strNormalizedTypeInfo = strTypeInfo.Trim().Trim('{', '}');
+            string strNormalized = strTypeInfo.Trim().Trim('{', '}');
+            string[] arrTokens = strNormalized.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            return strNormalizedTypeInfo
-                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(strItem => !string.IsNullOrWhiteSpace(strItem))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            List<string> lstValuesList = new();
+            List<string> lstDescriptionsList = new();
+            List<string> lstImagesList = new();
+            HashSet<string> setSeenValues = new(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string strToken in arrTokens)
+            {
+                if (strToken.Equals("mandatory", StringComparison.OrdinalIgnoreCase))
+                {
+                    fIsMandatory = true;
+                    continue;
+                }
+
+                if (strToken.Equals("multiple", StringComparison.OrdinalIgnoreCase))
+                {
+                    fIsMultiple = true;
+                    continue;
+                }
+
+                // Value format: value::description::imageUrl  (description and imageUrl are optional)
+                string[] arrParts = strToken.Split("::", 3, StringSplitOptions.None);
+                string strValue = arrParts[0].Trim();
+                string strDescription = arrParts.Length > 1 ? arrParts[1].Trim() : string.Empty;
+                string strImage = arrParts.Length > 2 ? arrParts[2].Trim() : string.Empty;
+
+                if (string.IsNullOrWhiteSpace(strValue) || !setSeenValues.Add(strValue))
+                {
+                    continue;
+                }
+
+                lstValuesList.Add(strValue);
+                lstDescriptionsList.Add(strDescription);
+                lstImagesList.Add(strImage);
+            }
+
+            lstValues = lstValuesList;
+            lstDescriptions = lstDescriptionsList;
+            lstImages = lstImagesList;
         }
     }
 }
