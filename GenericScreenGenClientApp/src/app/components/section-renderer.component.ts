@@ -1,13 +1,17 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, signal, SimpleChanges } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/screen.models';
 import { LayoutPolicyService } from '../services/layout-policy.service';
 
+type TTabularRow = Record<string, string>;
+type TSortDirection = 'asc' | 'desc';
+
 @Component({
   selector: 'app-section-renderer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <section class="section-card" [class.borderless]="!section.showBorder">
       @if (section.showBorder) {
@@ -25,11 +29,22 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                 <thead>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
-                      <th [title]="objField.description" [style.min-width]="objField.width">{{ objField.name }}</th>
+                      <th [title]="objField.description" [style.min-width]="objField.width">
+                        <button
+                          type="button"
+                          class="tabular-sort-button"
+                          [disabled]="objField.isActionField"
+                          (click)="sortByColumn(objField.id)"
+                        >
+                          <span>{{ objField.name }}</span>
+                          <span class="tabular-sort-indicator">{{ getSortIndicator(objField.id) }}</span>
+                        </button>
+                      </th>
                     }
                   </tr>
                 </thead>
                 <tbody>
+                  @for (objRow of tabularRows(); track $index) {
                   <tr>
                     @for (objField of section.fields; track objField.id) {
                       <td [style.min-width]="objField.width">
@@ -40,15 +55,23 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                         } @else if (objField.controlType === 'textarea') {
                           <textarea
                             class="field-input"
-                            [style.width]="objField.width"
+                            [style.width]="'100%'"
                             [rows]="objField.lines"
-                            [placeholder]="objField.description"
+                            [placeholder]="objField.description + ' ' + ($index + 1)"
                             [title]="objField.description"
+                            [ngModel]="objRow[objField.id]"
+                            (ngModelChange)="updateCellValue($index, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                          <select
+                            class="field-input"
+                            [style.width]="'100%'"
+                            [title]="objField.description"
+                            [ngModel]="objRow[objField.id]"
+                            (ngModelChange)="updateCellValue($index, objField.id, $event)"
+                          >
                             @for (strLookupValue of objField.lookupValues; track strLookupValue) {
                               <option [value]="strLookupValue">{{ strLookupValue }}</option>
                             }
@@ -56,10 +79,12 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                         } @else {
                           <input
                             class="field-input"
-                            [style.width]="objField.width"
+                            [style.width]="'100%'"
                             [type]="objField.inputType"
-                            [placeholder]="objField.description"
+                            [placeholder]="objField.description + ' ' + ($index + 1)"
                             [title]="objField.description"
+                            [ngModel]="objRow[objField.id]"
+                            (ngModelChange)="updateCellValue($index, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           />
@@ -67,6 +92,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
                       </td>
                     }
                   </tr>
+                  }
                 </tbody>
               </table>
             </div>
@@ -211,10 +237,34 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         top: 0;
         z-index: 1;
         background: #f8efe2;
+        padding: 0;
+      }
+
+      .tabular-sort-button {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: #4f4135;
         text-align: left;
         font-weight: 700;
-        color: #4f4135;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px;
+        cursor: pointer;
+      }
+
+      .tabular-sort-button:disabled {
+        opacity: 0.65;
+        cursor: default;
+      }
+
+      .tabular-sort-indicator {
+        color: #8f4e2f;
+        min-width: 14px;
+        text-align: center;
       }
 
       .tabular-table td .field-input,
@@ -320,13 +370,33 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
     `
   ]
 })
-export class SectionRendererComponent {
+export class SectionRendererComponent implements OnChanges {
   private readonly m_itfLayoutPolicyService = inject(LayoutPolicyService);
+  private m_strTabularShapeSignature = '';
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
   readonly collapsed = signal(false);
+  readonly tabularRows = signal<TTabularRow[]>([]);
+  readonly sortColumnId = signal<string | null>(null);
+  readonly sortDirection = signal<TSortDirection>('asc');
+
+  ngOnChanges(objChanges: SimpleChanges): void {
+    if (!objChanges['section'] || !this.isTabularLayout) {
+      return;
+    }
+
+    let strCurrentShapeSignature = this.section.fields.map(objField => objField.id).join('|');
+    if (this.m_strTabularShapeSignature === strCurrentShapeSignature) {
+      return;
+    }
+
+    this.m_strTabularShapeSignature = strCurrentShapeSignature;
+    this.sortColumnId.set(null);
+    this.sortDirection.set('asc');
+    this.tabularRows.set(this.createInitialRows());
+  }
 
   get layoutCssClass(): string {
     return 'section-body ' + this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
@@ -334,6 +404,102 @@ export class SectionRendererComponent {
 
   get isTabularLayout(): boolean {
     return this.section.layoutPolicy === 'tabular';
+  }
+
+  getSortIndicator(strColumnId: string): string {
+    if (this.sortColumnId() !== strColumnId) {
+      return '↕';
+    }
+
+    return this.sortDirection() === 'asc' ? '▲' : '▼';
+  }
+
+  sortByColumn(strColumnId: string): void {
+    if (!this.isTabularLayout) {
+      return;
+    }
+
+    let strCurrentSortColumnId = this.sortColumnId();
+    let strNextSortDirection: TSortDirection = 'asc';
+    if (strCurrentSortColumnId === strColumnId) {
+      strNextSortDirection = this.sortDirection() === 'asc' ? 'desc' : 'asc';
+    }
+
+    this.sortColumnId.set(strColumnId);
+    this.sortDirection.set(strNextSortDirection);
+
+    let lstSortedRows = [...this.tabularRows()].sort((objLeftRow, objRightRow) =>
+      this.compareValues(objLeftRow[strColumnId] ?? '', objRightRow[strColumnId] ?? '', strNextSortDirection)
+    );
+
+    this.tabularRows.set(lstSortedRows);
+  }
+
+  updateCellValue(iRowIndex: number, strFieldId: string, strValue: string): void {
+    this.tabularRows.update((lstRows) => {
+      if (iRowIndex < 0 || iRowIndex >= lstRows.length) {
+        return lstRows;
+      }
+
+      let lstUpdatedRows = [...lstRows];
+      lstUpdatedRows[iRowIndex] = {
+        ...lstUpdatedRows[iRowIndex],
+        [strFieldId]: strValue
+      };
+
+      return lstUpdatedRows;
+    });
+  }
+
+  private compareValues(strLeftValue: string, strRightValue: string, strSortDirection: TSortDirection): number {
+    let iLeftNumber = Number(strLeftValue);
+    let iRightNumber = Number(strRightValue);
+
+    let iCompareResult: number;
+    if (!Number.isNaN(iLeftNumber) && !Number.isNaN(iRightNumber)) {
+      iCompareResult = iLeftNumber - iRightNumber;
+    } else {
+      iCompareResult = strLeftValue.localeCompare(strRightValue, undefined, { sensitivity: 'base' });
+    }
+
+    return strSortDirection === 'asc' ? iCompareResult : -iCompareResult;
+  }
+
+  private createInitialRows(): TTabularRow[] {
+    let lstRows: TTabularRow[] = [];
+    for (let iRowIndex = 0; iRowIndex < 12; iRowIndex++) {
+      let dictRow: TTabularRow = {};
+
+      for (let objField of this.section.fields) {
+        dictRow[objField.id] = this.getInitialCellValue(objField, iRowIndex);
+      }
+
+      lstRows.push(dictRow);
+    }
+
+    return lstRows;
+  }
+
+  private getInitialCellValue(objField: ScreenRenderFieldModel, iRowIndex: number): string {
+    if (objField.isActionField) {
+      return '';
+    }
+
+    if (objField.controlType === 'select' && objField.lookupValues.length > 0) {
+      return objField.lookupValues[iRowIndex % objField.lookupValues.length];
+    }
+
+    if (objField.inputType === 'number') {
+      return String(iRowIndex + 1);
+    }
+
+    if (objField.inputType === 'date') {
+      let iDayValue = (iRowIndex % 28) + 1;
+      let strDayValue = iDayValue < 10 ? '0' + iDayValue : String(iDayValue);
+      return '2026-04-' + strDayValue;
+    }
+
+    return objField.name + ' ' + String(iRowIndex + 1);
   }
 
   toggle(): void {
