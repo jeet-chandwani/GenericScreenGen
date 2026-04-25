@@ -59,7 +59,7 @@ type TSortDirection = 'asc' | 'desc';
                   </tr>
                 </thead>
                 <tbody>
-                  @for (objRow of displayedTabularRows(); track $index) {
+                  @for (objRow of pagedTabularRows(); track $index) {
                   <tr>
                     @for (objField of section.fields; track objField.id) {
                       <td [style.min-width]="objField.width">
@@ -111,6 +111,16 @@ type TSortDirection = 'asc' | 'desc';
                 </tbody>
               </table>
             </div>
+
+            @if (shouldShowPagination()) {
+              <div class="tabular-pagination">
+                <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToFirstPage()">First</button>
+                <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToPreviousPage()">Previous</button>
+                <span class="tabular-page-status">Page {{ currentPageNumber() }} of {{ totalPageCount() }}</span>
+                <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToNextPage()">Next</button>
+                <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToLastPage()">Last</button>
+              </div>
+            }
           </div>
         } @else {
           @for (objField of section.fields; track objField.id) {
@@ -296,6 +306,31 @@ type TSortDirection = 'asc' | 'desc';
         font: inherit;
       }
 
+      .tabular-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .tabular-page-btn {
+        border: 1px solid rgba(94, 63, 34, 0.22);
+        background: #fffaf2;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font: inherit;
+      }
+
+      .tabular-page-btn:disabled {
+        opacity: 0.55;
+      }
+
+      .tabular-page-status {
+        color: #5a4b3e;
+        font-weight: 600;
+      }
+
       .tabular-table td .field-input,
       .tabular-table td .field-action {
         width: 100%;
@@ -411,6 +446,8 @@ export class SectionRendererComponent implements OnChanges {
   readonly columnFilters = signal<Record<string, string>>({});
   readonly sortColumnId = signal<string | null>(null);
   readonly sortDirection = signal<TSortDirection>('asc');
+  readonly currentPageNumber = signal(1);
+  readonly pageSize = 50;
 
   ngOnChanges(objChanges: SimpleChanges): void {
     if (!objChanges['section'] || !this.isTabularLayout) {
@@ -426,6 +463,7 @@ export class SectionRendererComponent implements OnChanges {
     this.columnFilters.set({});
     this.sortColumnId.set(null);
     this.sortDirection.set('asc');
+    this.currentPageNumber.set(1);
     this.allTabularRows.set(this.createInitialRows());
   }
 
@@ -458,6 +496,7 @@ export class SectionRendererComponent implements OnChanges {
 
     this.sortColumnId.set(strColumnId);
     this.sortDirection.set(strNextSortDirection);
+    this.currentPageNumber.set(1);
   }
 
   displayedTabularRows(): TTabularRow[] {
@@ -485,11 +524,59 @@ export class SectionRendererComponent implements OnChanges {
     );
   }
 
+  pagedTabularRows(): TTabularRow[] {
+    let lstFilteredRows = this.displayedTabularRows();
+    let iPageStartIndex = (this.currentPageNumber() - 1) * this.pageSize;
+    return lstFilteredRows.slice(iPageStartIndex, iPageStartIndex + this.pageSize);
+  }
+
+  totalPageCount(): number {
+    let iRowCount = this.displayedTabularRows().length;
+    return Math.max(1, Math.ceil(iRowCount / this.pageSize));
+  }
+
+  shouldShowPagination(): boolean {
+    return this.displayedTabularRows().length > this.pageSize;
+  }
+
+  canGoToPreviousPage(): boolean {
+    return this.currentPageNumber() > 1;
+  }
+
+  canGoToNextPage(): boolean {
+    return this.currentPageNumber() < this.totalPageCount();
+  }
+
+  goToFirstPage(): void {
+    this.currentPageNumber.set(1);
+  }
+
+  goToPreviousPage(): void {
+    if (!this.canGoToPreviousPage()) {
+      return;
+    }
+
+    this.currentPageNumber.update(iCurrentPage => iCurrentPage - 1);
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoToNextPage()) {
+      return;
+    }
+
+    this.currentPageNumber.update(iCurrentPage => iCurrentPage + 1);
+  }
+
+  goToLastPage(): void {
+    this.currentPageNumber.set(this.totalPageCount());
+  }
+
   setColumnFilter(strColumnId: string, strFilterValue: string): void {
     this.columnFilters.update((dictCurrentFilters) => ({
       ...dictCurrentFilters,
       [strColumnId]: strFilterValue
     }));
+    this.currentPageNumber.set(1);
   }
 
   getColumnFilter(strColumnId: string): string {
@@ -529,7 +616,7 @@ export class SectionRendererComponent implements OnChanges {
 
   private createInitialRows(): TTabularRow[] {
     let lstRows: TTabularRow[] = [];
-    for (let iRowIndex = 0; iRowIndex < 12; iRowIndex++) {
+    for (let iRowIndex = 0; iRowIndex < 120; iRowIndex++) {
       let dictRow: TTabularRow = {};
 
       for (let objField of this.section.fields) {
