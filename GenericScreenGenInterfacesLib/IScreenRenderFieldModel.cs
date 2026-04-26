@@ -24,5 +24,7 @@ namespace GenericScreenGenInterfacesLib
         bool IsMandatory { get; }
         bool IsMultiple { get; }
         bool IsActionField { get; }
+        /// <summary>When true the lookup field control shows a search/filter input.</summary>
+        bool IsSearchable { get; }
     }
 }

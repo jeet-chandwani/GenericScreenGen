@@ -23,6 +23,28 @@
 
 ## 2026-04-26
 - Prompt: "Start implementation" (REQ-4.1: Tabular layout refinements and fixes)
+## 2026-04-26
+- Prompt: "Start implementation" (REQ-4.4: Lookup searchable config, per-line header icon, compact gap)
+- Implemented all Req 4.4 sub-requirements — full-stack changes:
+  - REQ-4.4.1 (backend): Added IsSearchable to IScreenFieldDefinition, CScreenFieldDefinition (with default false), CScreenConfigProvider DTO (json key "is-searchable"), IScreenRenderFieldModel, CScreenRenderFieldModel, CScreenRenderModelFactory pipeline
+  - REQ-4.4.1 (Angular): Added isSearchable: boolean to ScreenRenderFieldModel interface; wrapped all 6 lookup-search-input elements in @if (objField.isSearchable) — tabular-edit select, tabular-edit multiselect, record-detail select, record-detail multiselect, per-line select, per-line multiselect
+  - REQ-4.4.2: Added @Input() screenFileName: string to section-renderer; added isPerLineLayout getter; added @if (isPerLineLayout && screenFileName) block in section-header-bar showing ℹ icon with Config tooltip; app.html binds [screenFileName]="objRenderModel.screenFileName"
+  - REQ-4.4.3: Added gap: 4px to .section-body.layout-per-line for compact row spacing
+- Files changed:
+  - GenericScreenGenInterfacesLib/IScreenFieldDefinition.cs (IsSearchable property)
+  - GenericScreenGenInterfacesLib/IScreenRenderFieldModel.cs (IsSearchable property)
+  - GenericScreenGenImplementationsLib/CScreenFieldDefinition.cs (IsSearchable + optional ctor param)
+  - GenericScreenGenImplementationsLib/CScreenRenderFieldModel.cs (IsSearchable + ctor param with default false)
+  - GenericScreenGenImplementationsLib/CScreenConfigProvider.cs (CScreenFieldDto.IsSearchable, json key "is-searchable")
+  - GenericScreenGenImplementationsLib/CScreenRenderModelFactory.cs (pass IsSearchable to ctor)
+  - GenericScreenGenClientApp/src/app/models/screen.models.ts (isSearchable field)
+  - GenericScreenGenClientApp/src/app/components/section-renderer.component.ts (6x isSearchable guards, screenFileName input, isPerLineLayout getter, per-line header icon, gap: 4px)
+  - GenericScreenGenClientApp/src/app/app.html ([screenFileName] binding on section-renderer)
+  - Docs/BRD-03-release-notes-REQ-4.4.md (created)
+- Build: no compile errors (dotnet build clean, Angular no errors)
+
+## 2026-04-26
+- Prompt: "Start implementation" (REQ-4.1: Tabular layout refinements and fixes)
 - Implemented all Req 4.1 sub-requirements in Angular client (no backend changes):
   - REQ-4.1.1: Removed inline editing from table cells; row click opens Edit Record screen (per-line layout)
   - REQ-4.1.2: Fixed tabular shell sizing (min-width: 0, overflow: hidden, removed layout-tabular body padding)

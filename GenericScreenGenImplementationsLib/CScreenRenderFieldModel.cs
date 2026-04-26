@@ -24,7 +24,8 @@ namespace GenericScreenGenImplementationsLib
             IReadOnlyList<string> lstLookupOptionImages,
             bool fIsMandatory,
             bool fIsMultiple,
-            bool fIsActionField)
+            bool fIsActionField,
+            bool fIsSearchable = false)
         {
             Id = strId;
             Name = strName;
@@ -43,6 +44,7 @@ namespace GenericScreenGenImplementationsLib
             IsMandatory = fIsMandatory;
             IsMultiple = fIsMultiple;
             IsActionField = fIsActionField;
+            IsSearchable = fIsSearchable;
         }
 
         public string Id { get; }
@@ -62,5 +64,6 @@ namespace GenericScreenGenImplementationsLib
         public bool IsMandatory { get; }
         public bool IsMultiple { get; }
         public bool IsActionField { get; }
+        public bool IsSearchable { get; }
     }
 }

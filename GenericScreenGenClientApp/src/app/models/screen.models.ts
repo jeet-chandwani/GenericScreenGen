@@ -21,6 +21,7 @@ export interface ScreenRenderFieldModel {
   isMandatory: boolean;
   isMultiple: boolean;
   isActionField: boolean;
+  isSearchable: boolean;
 }
 
 export interface ScreenRenderSectionModel {

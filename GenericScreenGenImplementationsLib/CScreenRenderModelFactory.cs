@@ -111,7 +111,8 @@ namespace GenericScreenGenImplementationsLib
                 lstLookupOptionImages,
                 fIsMandatory,
                 fIsMultiple,
-                itfFieldDefinition.Type == EFieldType.Button);
+                itfFieldDefinition.Type == EFieldType.Button,
+                itfFieldDefinition.IsSearchable);
         }
 
         private static void ParseTextTypeInfo(string strTypeInfo, out int iMinChars, out int iMaxChars, out int iLines)

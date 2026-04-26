@@ -263,7 +263,8 @@ namespace GenericScreenGenImplementationsLib
                 objField.Description ?? string.Empty,
                 enuFieldType,
                 objField.TypeInfo ?? string.Empty,
-                string.IsNullOrWhiteSpace(objField.Width) ? "300px" : objField.Width);
+                string.IsNullOrWhiteSpace(objField.Width) ? "300px" : objField.Width,
+                objField.IsSearchable);
             strError = string.Empty;
             return true;
         }
@@ -343,6 +344,9 @@ namespace GenericScreenGenImplementationsLib
 
             [JsonPropertyName("width")]
             public string? Width { get; set; }
+
+            [JsonPropertyName("is-searchable")]
+            public bool IsSearchable { get; set; }
         }
     }
 }
