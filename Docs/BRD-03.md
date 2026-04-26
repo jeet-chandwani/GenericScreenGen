@@ -1,6 +1,7 @@
 # This file has my requirements for adding more layout policies and field types.
 
 **Req 3.1.** Add new layout policy = tabular used for displaying multiple records in a table format. Detail actions and features are describved below for this layout policy:
+    **Req 3.1.0**. We should add a storage abstraction `IDataStore` for persisted row data operations and implement an initial JSON-backed data store (`CJsonDataStore`) under solution folder/project area `MyJsonDataStore`. The design should be pluggable so we can later swap the underlying store implementation (for example, database-backed) with minimal changes.
     **Req 3.1.1**. All fields should be displayed as one record per row, like cells in a table. The field label should be displayed as a header for each column and the corresponding controls should be displayed below the headers. The layout should adjust dynamically as screen size changes.
     **Req 3.1.2**. We should support vertical scroll as needed based upon # of rows. The headers should be fixed and should not scroll with the fields. 
     **Req 3.1.3**. We should support horizontal scroll as needed based upon # of columns and screen size. 
