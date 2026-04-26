@@ -1,6 +1,14 @@
 <main class="page-shell">
   <section class="page-title-panel">
-    <h1 class="home-title">Generic Screen Generator</h1>
+    <div class="title-bar-row">
+      <h1 class="home-title">Generic Screen Generator</h1>
+      @if (viewMode() === 'screen') {
+        <div class="title-bar-nav">
+          <button type="button" class="title-nav-btn" title="Back to Home" (click)="goToHome()">⌂</button>
+          <button type="button" class="title-nav-btn" title="Reload screen" (click)="reloadCurrentScreen()">↺</button>
+        </div>
+      }
+    </div>
     <div class="home-divider"></div>
   </section>
 
@@ -40,29 +48,18 @@
     </section>
   } @else {
     <section class="screen-view-panel">
-      <div class="screen-view-actions">
-        <button type="button" class="secondary" (click)="goToHome()">Back to Home</button>
-        <button type="button" (click)="reloadCurrentScreen()">Reload screen</button>
-        <div class="about-btn-wrapper">
-          <button type="button" class="about-icon-btn" title="About this screen" (click)="toggleAboutPanel()">ℹ</button>
-          @if (showAboutPanel()) {
-            <div class="about-panel" role="tooltip" aria-label="Screen information">
-              <strong>Rendered screen</strong><br>
-              Config: {{ renderModel()?.screenFileName }}
-            </div>
-          }
-        </div>
-      </div>
-
       @if (renderModel(); as objRenderModel) {
         <article class="screen-panel">
           <div class="panel-header">
             <h2>{{ objRenderModel.displayName }}</h2>
+            <button type="button" class="about-icon-btn"
+              [title]="'Rendered screen\nConfig: ' + objRenderModel.screenFileName"
+              aria-label="About this screen">ℹ</button>
           </div>
 
           <div class="screen-sections">
             @for (objSection of objRenderModel.sections; track objSection.name) {
-              <app-section-renderer [section]="objSection" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
+              <app-section-renderer [section]="objSection" [screenFileName]="objRenderModel.screenFileName" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
             }
           </div>
 

@@ -3,6 +3,25 @@
 **Branch Status**: ACTIVE
 
 ## 2026-04-26
+- Prompt: "Start implementation" (REQ-4.3: Full-screen layout, sticky nav, about button placement)
+- Implemented all Req 4.3 sub-requirements in Angular client (no backend changes):
+  - REQ-4.3.1: Removed max-width: 1100px from .page-title-panel and .screen-view-panel so layout fills full window width; min-width: 360px retained
+  - REQ-4.3.2: Changed .field-input from flex: 0 0 auto to flex: 1 1 auto so all field controls stretch uniformly in their row (vertical column alignment)
+  - REQ-4.3.3: Moved Back to Home (⌂) and Reload (↺) from .screen-view-actions into sticky .page-title-panel as icon buttons in .title-bar-nav; title= hover tooltips; shown only when viewMode === 'screen'; removed entire .screen-view-actions div
+  - REQ-4.3.4: Moved About ℹ icon from .about-btn-wrapper into .panel-header next to <h2>; uses native title= attribute (hover tooltip; no click needed); removed showAboutPanel signal, toggleAboutPanel() and .about-panel CSS
+- Removed showAboutPanel signal and toggleAboutPanel() from App component; goToHome() no longer resets it
+- Removed .about-btn-wrapper, .about-panel, .screen-view-actions CSS rules
+- Added .title-bar-row (flex row), .title-bar-nav, .title-nav-btn CSS
+- .panel-header align-items changed from start to center; .home-title text-align removed (now left in flex row)
+- Files changed:
+  - GenericScreenGenClientApp/src/app/app.html (title bar nav, panel-header about, removed screen-view-actions)
+  - GenericScreenGenClientApp/src/app/app.ts (removed showAboutPanel, toggleAboutPanel)
+  - GenericScreenGenClientApp/src/app/app.css (full-width, title bar flex, about-icon-btn in panel-header)
+  - GenericScreenGenClientApp/src/app/components/section-renderer.component.ts (field-input flex: 1 1 auto)
+  - Docs/BRD-03-release-notes-REQ-4.3.md (created)
+- Build: no compile errors
+
+## 2026-04-26
 - Prompt: "Start implementation" (REQ-4.1: Tabular layout refinements and fixes)
 - Implemented all Req 4.1 sub-requirements in Angular client (no backend changes):
   - REQ-4.1.1: Removed inline editing from table cells; row click opens Edit Record screen (per-line layout)

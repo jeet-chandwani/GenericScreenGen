@@ -26,13 +26,41 @@
 }
 
 .page-title-panel {
-  max-width: 1100px;
-  margin: 0 auto 16px;
+  margin: 0 0 16px;
   position: sticky;
   top: 0;
   z-index: 3;
   padding-top: 4px;
   background: linear-gradient(180deg, rgba(246, 239, 227, 0.98) 85%, rgba(246, 239, 227, 0));
+}
+
+.title-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title-bar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.title-nav-btn {
+  border: 1px solid rgba(94, 63, 34, 0.24);
+  background: #efe3d2;
+  color: #4b2e1b;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
 }
 
 .home-panel {
@@ -43,7 +71,6 @@
 
 .home-title {
   margin: 0;
-  text-align: center;
   font-family: Cambria, Georgia, serif;
   font-size: clamp(1.4rem, 2vw + 0.8rem, 2rem);
   line-height: 1.1;
@@ -145,77 +172,33 @@
 }
 
 .screen-view-panel {
-  max-width: 1100px;
-  margin: 0 auto;
+  margin: 0;
   padding: 16px;
 }
 
 .screen-view-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: flex-end;
-  margin-bottom: 14px;
-}
-
-.about-btn-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
 .about-icon-btn {
   border: 1px solid rgba(94, 63, 34, 0.24);
   background: #efe3d2;
   color: #4b2e1b;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 15px;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  cursor: pointer;
-}
-
-.about-panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 10;
-  background: #2e261f;
-  color: #fff8f2;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 0.82rem;
-  line-height: 1.6;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
+  cursor: default;
+  flex-shrink: 0;
 }
 
 .panel-kicker,
-.screen-meta,
-.issue-path {
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.72rem;
-}
-
-.panel-header h2 {
-  margin: 8px 0 8px;
-  font-family: Cambria, Georgia, serif;
-}
-
 button {
   font: inherit;
   border-radius: 14px;
   border: 1px solid rgba(94, 63, 34, 0.24);
-}
-
-button {
   cursor: pointer;
   padding: 12px 18px;
   background: #8f4e2f;
@@ -234,8 +217,8 @@ button.secondary {
 .panel-header {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  align-items: start;
+  gap: 12px;
+  align-items: center;
   margin-bottom: 18px;
 }
 
@@ -283,12 +266,6 @@ button.secondary {
   }
 
   .screen-view-actions {
-    justify-content: stretch;
-  }
-
-  .screen-view-actions button {
-    flex: 1 1 auto;
-  }
 }
 
 @media (max-width: 640px) {

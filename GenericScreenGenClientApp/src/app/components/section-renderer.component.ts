@@ -27,6 +27,11 @@ type TSortDirection = 'asc' | 'desc';
               <button type="button" class="tabular-icon-btn" title="Export All Rows as CSV" (click)="exportCsv(false)">↓A</button>
             </div>
           }
+          @if (isPerLineLayout && screenFileName) {
+            <div class="tabular-header-actions">
+              <button type="button" class="tabular-icon-btn" [title]="'Rendered screen\nConfig: ' + screenFileName" aria-label="About this screen">ℹ</button>
+            </div>
+          }
         </div>
       }
 
@@ -58,9 +63,11 @@ type TSortDirection = 'asc' | 'desc';
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
                           <div class="lookup-search-wrapper">
-                            <input class="lookup-search-input" type="text" placeholder="Search options…"
-                              [value]="getLookupSearch(objField.id)"
-                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
                             <select
                               class="field-input"
                               [title]="objField.description"
@@ -76,9 +83,11 @@ type TSortDirection = 'asc' | 'desc';
                           </div>
                         } @else if (objField.controlType === 'multiselect') {
                           <div class="lookup-search-wrapper">
-                            <input class="lookup-search-input" type="text" placeholder="Search options…"
-                              [value]="getLookupSearch(objField.id)"
-                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
                             <div class="lookup-multi-options">
                               @for (opt of getFilteredLookupOptions(objField); track opt.value) {
                                 <label class="lookup-multi-option">
@@ -236,9 +245,11 @@ type TSortDirection = 'asc' | 'desc';
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
                           <div class="lookup-search-wrapper">
-                            <input class="lookup-search-input" type="text" placeholder="Search options…"
-                              [value]="getLookupSearch(objField.id)"
-                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
                             <select class="field-input" [style.width]="objField.width" [title]="objField.description"
                               [ngModel]="recordDetailValues()[objField.id]"
                               (ngModelChange)="updateRecordDetailField(objField.id, $event)">
@@ -251,9 +262,11 @@ type TSortDirection = 'asc' | 'desc';
                           </div>
                         } @else if (objField.controlType === 'multiselect') {
                           <div class="lookup-search-wrapper">
-                            <input class="lookup-search-input" type="text" placeholder="Search options…"
-                              [value]="getLookupSearch(objField.id)"
-                              (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
                             <div class="lookup-multi-options">
                               @for (opt of getFilteredLookupOptions(objField); track opt.value) {
                                 <label class="lookup-multi-option">
@@ -330,9 +343,11 @@ type TSortDirection = 'asc' | 'desc';
                     ></textarea>
                   } @else if (objField.controlType === 'select') {
                     <div class="lookup-search-wrapper">
-                      <input class="lookup-search-input" type="text" placeholder="Search options…"
-                        [value]="getLookupSearch(objField.id)"
-                        (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      @if (objField.isSearchable) {
+                        <input class="lookup-search-input" type="text" placeholder="Search options…"
+                          [value]="getLookupSearch(objField.id)"
+                          (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      }
                       <select class="field-input" [style.width]="objField.width" [title]="objField.description">
                         @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
                           <option [value]="strLookupValue">{{ strLookupValue }}</option>
@@ -341,9 +356,11 @@ type TSortDirection = 'asc' | 'desc';
                     </div>
                   } @else if (objField.controlType === 'multiselect') {
                     <div class="lookup-search-wrapper">
-                      <input class="lookup-search-input" type="text" placeholder="Search options…"
-                        [value]="getLookupSearch(objField.id)"
-                        (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      @if (objField.isSearchable) {
+                        <input class="lookup-search-input" type="text" placeholder="Search options…"
+                          [value]="getLookupSearch(objField.id)"
+                          (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      }
                       <div class="lookup-multi-options">
                         @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
                           <label class="lookup-multi-option">
@@ -452,6 +469,7 @@ type TSortDirection = 'asc' | 'desc';
 
       .section-body.layout-per-line {
         display: grid;
+        gap: 4px;
       }
 
       .section-body.layout-flow {
@@ -886,7 +904,7 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .field-input {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         min-width: 0;
       }
 
@@ -972,6 +990,7 @@ export class SectionRendererComponent implements OnChanges {
   private m_strTabularShapeSignature = '';
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
+  @Input() screenFileName: string = '';
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
   readonly collapsed = signal(false);
@@ -1042,6 +1061,10 @@ export class SectionRendererComponent implements OnChanges {
 
   get isRecordDetailLayout(): boolean {
     return this.section.layoutPolicy === 'record-detail';
+  }
+
+  get isPerLineLayout(): boolean {
+    return this.section.layoutPolicy === 'per-line';
   }
 
   updateRecordDetailField(strFieldId: string, strValue: string): void {

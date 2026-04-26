@@ -34,7 +34,6 @@ export class App {
   readonly errorMessage = signal('');
   readonly actionMessage = signal('');
   readonly viewMode = signal<EAppViewMode>('home');
-  readonly showAboutPanel = signal(false);
   readonly isSchemaHealthy = computed(() => this.validationResults().every((objResult) => objResult.isValid));
   readonly screenListStatusItems = computed<IScreenListStatusItem[]>(() => {
     const mapValidationByScreen = new Map(
@@ -61,11 +60,6 @@ export class App {
     this.viewMode.set('home');
     this.errorMessage.set('');
     this.actionMessage.set('');
-    this.showAboutPanel.set(false);
-  }
-
-  toggleAboutPanel(): void {
-    this.showAboutPanel.update(fShow => !fShow);
   }
 
   reloadCurrentScreen(): void {
