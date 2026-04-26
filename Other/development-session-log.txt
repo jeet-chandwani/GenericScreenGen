@@ -27,6 +27,22 @@
   - Docs/BRD-03-release-notes-REQ-4.1.md (created)
 - Build: no compile errors
 
+## 2026-04-26
+- Prompt: "Start implementation" (REQ-4.2: All-screen improvements)
+- Implemented all Req 4.2 sub-requirements in Angular client (no backend changes):
+  - REQ-4.2.1: Removed <p class="panel-kicker">Rendered screen</p> and screen-meta config filename from panel-header; added ℹ About icon button in screen-view-actions toolbar that toggles a dark tooltip panel showing screen name and config file
+  - REQ-4.2.2: Replaced <small class="field-description"> in all layouts (per-line, record-detail) with ℹ field-info-btn icon; description placed in native title attribute; icon only rendered when description is non-empty; tabindex="-1" to preserve form keyboard flow
+  - REQ-4.2.3: about-panel uses dark bg (#2e261f) + white text for WCAG AA contrast; role="tooltip"; pointer-events:none; z-index:10; field-info-btn uses native browser title tooltip
+- Added showAboutPanel signal and toggleAboutPanel() method to App component
+- Added about-btn-wrapper, about-icon-btn, about-panel CSS to app.css
+- Files changed:
+  - GenericScreenGenClientApp/src/app/components/section-renderer.component.ts (field-info-btn)
+  - GenericScreenGenClientApp/src/app/app.ts (showAboutPanel, toggleAboutPanel, goToHome reset)
+  - GenericScreenGenClientApp/src/app/app.html (panel-header cleanup, about button)
+  - GenericScreenGenClientApp/src/app/app.css (about button and panel styles)
+  - Docs/BRD-03-release-notes-REQ-4.2.md (created)
+- Build: no compile errors
+
 # Branch: feat/layout-policy-changes
 
 ## 2026-04-24 10:47
