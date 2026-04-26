@@ -31,6 +31,7 @@ export interface ScreenRenderSectionModel {
   showBorder: boolean;
   fields: ScreenRenderFieldModel[];
   sections: ScreenRenderSectionModel[];
+  detailScreen: string;
 }
 
 export interface ScreenRenderModel {

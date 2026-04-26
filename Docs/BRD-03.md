@@ -1,7 +1,7 @@
 # This file has my requirements for adding more layout policies and field types.
 
 **Req 3.1.** Add new layout policy = tabular used for displaying multiple records in a table format. Detail actions and features are describved below for this layout policy:
-    **Req 3.1.0**. We should add a storage abstraction `IDataStore` for persisted row data operations and implement an initial JSON-backed data store (`CJsonDataStore`) under solution folder/project area `MyJsonDataStore`. The design should be pluggable so we can later swap the underlying store implementation (for example, database-backed) with minimal changes.
+    **Req 3.1.0**. We should add a storage abstraction `IDataStore` for persisted row data operations and implement an initial JSON-backed data store (`CJsonDataStore`) under solution folder/project area `MyDataStoreProviders`. The design should be pluggable so we can later swap the underlying store implementation (for example, database-backed) with minimal changes.
     **Req 3.1.1**. All fields should be displayed as one record per row, like cells in a table. The field label should be displayed as a header for each column and the corresponding controls should be displayed below the headers. The layout should adjust dynamically as screen size changes.
     **Req 3.1.2**. We should support vertical scroll as needed based upon # of rows. The headers should be fixed and should not scroll with the fields. 
     **Req 3.1.3**. We should support horizontal scroll as needed based upon # of columns and screen size. 
@@ -22,3 +22,57 @@
     **Req 3.3.1** The lookup field should also support search functionality to allow user to easily find the desired value from the list of options. The search functionality should be case-insensitive and should support partial matches. 
     **Req 3.3.2** The lookup field should also support displaying additional information about each option, such as a description or an image, to help user make informed decisions when selecting an option.
     **Req 3.3.3** For multiple selection lookup field, the selected values should be displayed in a clear and organized manner, such as using tags or a multi-select dropdown. The user should also have the ability to easily remove selected values if needed.
+
+**Req 4** Fixes/Refinements:
+**Req 4.1** For Tabular policy
+	**Req 4.1.1** Inline editing should be disabled - clicking or selecting a row should open a detail record display/edit screen.
+	**Req 4.1.2** Size of the tabular screen is exceeding the original box - the original box and new screen to be of same size or extend both, flex as physical screen/window size changes
+	**Req 4.1.3** Goal is to make this layout more compact - so change font size and/or line height accordingly. Prefer no or very little vertical gap between rows - more like a compact grid.
+	**Req 4.1.4** Move these 3 buttons (Add new row, Export Filter CSV, export All CSV) to right side of screen on same line as screen title to save space and compact button size layout. Use icon instead of wording, with full button name displayed on cursor hove as popup.
+	**Req 4.1.5** if all columns do not fit for screen width then present a horizontal scroll bar as needed.
+	**Req 4.1.6** Under Actions column, display icon instead of button "Delete", same functionality.
+	**Req 4.1.7** Reload screen button does not seem to load the data from data store again.
+    **Req 4.1.8** For the filter input box, we should use a smaller font size and reduce the vertical spacing between the filter input box and the column header to make it more compact. We should also consider using a placeholder text in the filter input box to indicate that it is a filter and what type of filtering it supports (e.g., "Filter by name..."). This will help users understand the purpose of the input box and encourage them to use it for filtering the data.
+    **Req 4.1.9** For the pagination controls, we should use smaller buttons and reduce the vertical spacing between the buttons and the data rows to make it more compact. We should also consider using icons for the pagination buttons (e.g., arrows for next/previous) instead of text to save space and create a more visually appealing layout. Additionally, we should ensure that the pagination controls are easily accessible and clearly indicate the current page number and total number of pages to help users navigate through the data effectively.
+    **Req 4.1.10** For the sorting functionality, we should use smaller icons for the sort indicators (e.g., up/down arrows) and reduce the vertical spacing between the column headers and the data rows to make it more compact. We should also ensure that the sort indicators are clearly visible and provide sufficient contrast for readability. Additionally, we should consider using a tooltip to provide additional information about the sorting functionality when users hover over the column headers, such as "Click to sort ascending/descending".
+    **Req 4.1.11** For the sort icons, show separate icons to denote ascending (up arrow) and descending (down arrow) sort order, and no icon if column is not currently sorted. This will provide a clearer visual indication of the current sort state for each column and make it easier for users to understand how the data is currently sorted.
+    **Req 4.1.12** When displaying/editing detail record after being selected on tabular view, the layout is not working and there is no space between fields and controls. The detail layout should use per-line layout policy. 
+    **Req 4.1.13** The detail screen should have Save & Discard buttons and also a "Show Original Values" button to show the original values of the fields before any changes were made. This will allow user to compare the current values with the original values and make informed decisions about saving or discarding changes.
+
+    
+
+**Req 4.2** For all screens
+    **Req 4.2.1** Remove the wording "Rendered screen" and {screen config file name on right} - instead make this information available upon About or help button being clicked for the screen (on same line as other 3 buttons) and use icon if possible instead of wording
+     **Req 4.2.2** For all descriptions and help text for all fields, display as a tooltip when the user hovers over the icon. Do not use static space as that changes the vertical spacing between fields and makes the layout less compact. This will allow us to maintain a more compact and consistent layout while still providing users with access to important information about each field when needed.
+     **Req 4.2.3** Ensure that all tooltips are accessible and provide sufficient contrast for readability.
+
+**Req 4.3** For all screens
+    **Req 4.3.1** Utilize maximum width and height of the available physical screen or window size for screen layout, and ensure that the screen layout adjusts dynamically as the screen or window size changes. This will allow us to make the most of the available space and provide users with an optimal viewing experience regardless of their device or screen size.
+    **Req 4.3.2** For detail record screen, the field controls should be vertically aligned. This will create a cleaner and more organized layout, making it easier for users to read and interact with the fields. We should ensure that the field labels and corresponding controls are aligned properly, with consistent spacing between them, to enhance the overall usability of the screen.
+    **Req 4.3.3** Move the Back to Home and Reload screen buttons to the top frame of title which is always visible and not part of the scrollable screen area. Use icons to save even more space, and show text on cursor hover. This will ensure that these important navigation buttons are always accessible to users, regardless of how far they have scrolled down the screen. By placing these buttons in a fixed position at the top of the screen, we can improve the overall user experience and make it easier for users to navigate back to the home screen or reload the current screen as needed.
+    **Req 4.3.4** The About button/icon should be on right side each individual screen, on same line as screen title for the screen being rendered. Show tool tip on cursor hover, no need to wait for click. This will provide users with easy access to important information about the screen, such as the screen configuration file name, without taking up valuable space in the main header area. By placing the About button/icon on the right side of each individual screen, we can ensure that it is easily discoverable and accessible to users when they need it.
+    
+**Req 4.4**  Field type changes
+    **Req 4.4.1** The lookup field controls are taking too much space with search options. Disable search option for now. In fact, lets make it configurable in json for lookup field type and default searchable as false. This will allow us to save space on the screen and create a more streamlined user interface, while still providing users with the ability to select from a list of options for the lookup field. By making the search option configurable, we can also provide flexibility for different use cases and user preferences, allowing us to tailor the experience to meet the needs of our users more effectively.
+    **Req 4.4.2** For the per-line layout policy, the about icon button and tooltip should be added to the right side of the screen title on the same line, similar to the tabular layout policy. This will provide a consistent user experience across different layout policies and make it easier for users to access important information about the screen regardless of the layout being used. By placing the about icon button and tooltip in a consistent location, we can improve the overall usability of the application and ensure that users can easily find the information they need when they need it.
+    **Req 4.4.3** For the per-line layout policy, reduce the vertical gap between 2 lines for making layout more compact. This will help to create a more streamlined and efficient user interface, allowing users to view more information on the screen without having to scroll as much. By reducing the vertical gap between lines, we can also improve the overall readability of the screen and make it easier for users to quickly scan and find the information they need. However, we should ensure that there is still enough spacing to prevent the layout from feeling too cramped or overwhelming for users.
+
+**Req 5** Additional refinements and behavior updates requested during current implementation cycle:
+    **Req 5.1** Continue planning and implementation for Req 4.3 and Req 4.4 with one commit/push strategy per logical batch.
+    **Req 5.2** Improve screen-height utilization in tabular view so available vertical space is not wasted.
+    **Req 5.3** Replace fixed row cap behavior with dynamic display behavior to avoid unnecessary inner vertical scrollbar and paging in tabular display.
+    **Req 5.4** Fix About icon placement issue where it rendered on the next line instead of staying aligned with the screen title line.
+    **Req 5.5** Ensure detail field controls are vertically aligned and stable.
+    **Req 5.6** Introduce a separate Employee detail screen (`Screen-Employee-Detail.json`) and use it as row-click target from Employee list screen.
+    **Req 5.7** Remove About/info icon buttons across layouts and show help/name/description as hover tooltips with no click required, without shifting field vertical positions.
+    **Req 5.8** If a screen is invalid, clicking it should show validation error details instead of attempting to render the screen.
+    **Req 5.9** Increase icon visibility by enlarging icon sizes and improving contrast scheme for better readability.
+    **Req 5.10** Move mandatory from lookup token parsing to explicit field-level JSON attribute (`is-mandatory`) applicable for all field types.
+    **Req 5.11** Minimize vertical gap between page title area and top border of the rendered screen container.
+    **Req 5.12** Restore detail-screen actions (Save, Cancel, Show Original Values) after introducing Employee detail screen.
+    **Req 5.13** Pass selected employee row values from Employee list to Employee detail on navigation/transition.
+    **Req 5.14** Rename all user-facing `Discard` action labels to `Cancel`.
+    **Req 5.15** On Cancel in detail view: if unchanged, close and navigate back; if changed, show confirmation modal (`Changes will be lost. Do you want to continue?`) with Yes/No handling.
+    **Req 5.16** Temporarily defer datastore persistence policy finalization; until finalized, Save should show `not implemented` acknowledgment and then close current screen and navigate back to source screen.
+
+

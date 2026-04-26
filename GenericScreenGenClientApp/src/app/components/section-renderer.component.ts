@@ -27,11 +27,6 @@ type TSortDirection = 'asc' | 'desc';
               <button type="button" class="tabular-icon-btn" title="Export All Rows as CSV" (click)="exportCsv(false)">↓A</button>
             </div>
           }
-          @if (isPerLineLayout && screenFileName) {
-            <div class="tabular-header-actions">
-              <button type="button" class="tabular-icon-btn" [title]="'Rendered screen\nConfig: ' + screenFileName" aria-label="About this screen">ℹ</button>
-            </div>
-          }
         </div>
       }
 
@@ -133,10 +128,10 @@ type TSortDirection = 'asc' | 'desc';
                 <div class="tabular-edit-actions">
                   @if (isCreateRowMode()) {
                     <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
-                    <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Discard</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Cancel</button>
                   } @else {
                     <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
-                    <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Discard</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Cancel</button>
                     <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
                       {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
                     </button>
@@ -186,7 +181,7 @@ type TSortDirection = 'asc' | 'desc';
                 </thead>
                 <tbody>
                   @for (objRow of pagedTabularRows(); track $index) {
-                  <tr class="tabular-data-row" (click)="openEditRow(objRow)">
+                  <tr class="tabular-data-row" (click)="onRowClick(objRow)">
                     @for (objField of section.fields; track objField.id) {
                       <td class="tabular-cell" [style.min-width]="objField.width">
                         @if (objField.isActionField) {
@@ -228,7 +223,7 @@ type TSortDirection = 'asc' | 'desc';
                       {{ objField.name }}
                     </button>
                   } @else {
-                    <label class="field-label">
+                    <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
                       <span class="field-name">{{ objField.name }}</span>
                       <div class="record-detail-input-group">
                         @if (objField.controlType === 'textarea') {
@@ -307,19 +302,28 @@ type TSortDirection = 'asc' | 'desc';
                       </div>
                     </label>
                   }
-                  @if (objField.description) {
-                    <button type="button" class="field-info-btn" [title]="objField.description" aria-label="Field description" tabindex="-1">ℹ</button>
-                  }
                 </div>
               }
             </div>
             <div class="record-detail-actions">
               <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
-              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Discard</button>
+              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
               <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
                 {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
               </button>
             </div>
+
+            @if (showCancelConfirmDialog()) {
+              <div class="confirm-modal-backdrop" role="dialog" aria-modal="true" aria-label="Discard changes confirmation">
+                <div class="confirm-modal-card">
+                  <p>Changes will be lost. Do you want to continue?</p>
+                  <div class="confirm-modal-actions">
+                    <button type="button" class="record-detail-save-btn" (click)="confirmDiscardAndCloseRecordDetail()">Yes</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="stayOnRecordDetail()">No</button>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         } @else {
           @for (objField of section.fields; track objField.id) {
@@ -329,7 +333,7 @@ type TSortDirection = 'asc' | 'desc';
                   {{ objField.name }}
                 </button>
               } @else {
-                <label class="field-label">
+                <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
                   <span class="field-name">{{ objField.name }}</span>
                   @if (objField.controlType === 'textarea') {
                     <textarea
@@ -383,15 +387,12 @@ type TSortDirection = 'asc' | 'desc';
                   }
                 </label>
               }
-              @if (objField.description) {
-                <button type="button" class="field-info-btn" [title]="objField.description" aria-label="Field description" tabindex="-1">ℹ</button>
-              }
             </div>
           }
         }
 
         @for (objSection of section.sections; track objSection.name) {
-          <app-section-renderer [section]="objSection" (actionInvoked)="forwardAction($event)"></app-section-renderer>
+          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
         }
       </div>
     </section>
@@ -441,13 +442,13 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .tabular-icon-btn {
-        border: 1px solid rgba(94, 63, 34, 0.24);
-        background: rgba(255, 255, 255, 0.6);
-        color: #4f4135;
+        border: 1px solid #3f2412;
+        background: #5a3217;
+        color: #fff8ef;
         border-radius: 6px;
-        width: 30px;
-        height: 30px;
-        font-size: 14px;
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
         font-weight: 700;
         line-height: 1;
         cursor: pointer;
@@ -457,7 +458,7 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .tabular-icon-btn:hover {
-        background: rgba(216, 192, 163, 0.6);
+        background: #704021;
       }
 
       .section-body {
@@ -577,9 +578,7 @@ type TSortDirection = 'asc' | 'desc';
 
       .tabular-scroll {
         width: 100%;
-        max-height: 360px;
         overflow-x: auto;
-        overflow-y: auto;
       }
 
       .tabular-table {
@@ -678,14 +677,17 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .tabular-page-btn {
-        border: 1px solid rgba(94, 63, 34, 0.22);
-        background: #fffaf2;
+        border: 1px solid #3f2412;
+        background: #f4e5d2;
+        color: #3f2412;
         border-radius: 6px;
-        padding: 2px 8px;
-        min-width: 28px;
-        font-size: 13px;
+        padding: 4px 10px;
+        min-width: 36px;
+        font-size: 16px;
+        font-weight: 700;
         font: inherit;
         line-height: 1.4;
+        cursor: pointer;
       }
 
       .tabular-page-btn:disabled {
@@ -702,18 +704,19 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .tabular-delete-btn {
-        border: none;
-        background: none;
-        color: #8a2525;
+        border: 1px solid #7a1d1d;
+        background: #fff0f0;
+        color: #7a1d1d;
         border-radius: 6px;
-        padding: 2px 4px;
-        font-size: 15px;
+        padding: 4px 6px;
+        font-size: 18px;
+        font-weight: 700;
         line-height: 1;
         cursor: pointer;
       }
 
       .tabular-delete-btn:hover {
-        background: rgba(145, 39, 39, 0.1);
+        background: #ffdede;
       }
 
       .tabular-table td .field-input,
@@ -753,6 +756,38 @@ type TSortDirection = 'asc' | 'desc';
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
+      }
+
+      .confirm-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(24, 18, 13, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+      }
+
+      .confirm-modal-card {
+        background: #fff8ef;
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(35, 24, 15, 0.25);
+        padding: 18px;
+        width: min(460px, calc(100vw - 28px));
+      }
+
+      .confirm-modal-card p {
+        margin: 0;
+        color: #3f2412;
+        font-weight: 600;
+      }
+
+      .confirm-modal-actions {
+        margin-top: 14px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
       }
 
       .record-detail-save-btn {
@@ -944,24 +979,6 @@ type TSortDirection = 'asc' | 'desc';
         transform: translateY(0);
       }
 
-      .field-info-btn {
-        background: none;
-        border: none;
-        color: #7a6657;
-        font-size: 12px;
-        line-height: 1;
-        cursor: default;
-        padding: 0 3px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        position: relative;
-      }
-
-      .field-info-btn:hover {
-        color: #4f4135;
-        background: rgba(94, 63, 34, 0.1);
-      }
-
       @media (max-width: 1024px) {
         .section-body {
           padding: 14px;
@@ -991,6 +1008,7 @@ export class SectionRendererComponent implements OnChanges {
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Input() screenFileName: string = '';
+  @Input() initialFieldValuesByName: Record<string, string> | null = null;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
   readonly collapsed = signal(false);
@@ -1001,11 +1019,15 @@ export class SectionRendererComponent implements OnChanges {
   readonly currentPageNumber = signal(1);
   readonly editingRow = signal<TTabularRow | null>(null);
   readonly isCreateRowMode = signal(false);
-  readonly pageSize = 50;
+
+  get pageSize(): number {
+    return this.displayedTabularRows().length || 1;
+  }
 
   // ── record-detail state ──
   readonly recordDetailValues = signal<Record<string, string>>({});
   readonly showOriginalValues = signal(false);
+  readonly showCancelConfirmDialog = signal(false);
   private m_dictRecordDetailOriginal: Record<string, string> = {};
 
   // ── tabular edit state (Req 4.1) ──
@@ -1024,7 +1046,7 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   ngOnChanges(objChanges: SimpleChanges): void {
-    if (!objChanges['section']) {
+    if (!objChanges['section'] && !objChanges['initialFieldValuesByName']) {
       return;
     }
 
@@ -1042,7 +1064,9 @@ export class SectionRendererComponent implements OnChanges {
       let dictInitial: Record<string, string> = {};
       for (let objField of this.section.fields) {
         if (!objField.isActionField) {
-          dictInitial[objField.id] = '';
+          let strPrefillByName = this.initialFieldValuesByName?.[objField.name] ?? '';
+          let strPrefillById = this.initialFieldValuesByName?.[objField.id] ?? '';
+          dictInitial[objField.id] = strPrefillByName || strPrefillById || '';
         }
       }
 
@@ -1078,12 +1102,39 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   cancelRecordDetail(): void {
+    if (!this.hasRecordDetailChanges()) {
+      this.actionInvoked.emit('navigate-back');
+      return;
+    }
+
+    this.showCancelConfirmDialog.set(true);
+  }
+
+  confirmDiscardAndCloseRecordDetail(): void {
     this.recordDetailValues.set({ ...this.m_dictRecordDetailOriginal });
-    this.actionInvoked.emit('cancel');
+    this.showCancelConfirmDialog.set(false);
+    this.actionInvoked.emit('navigate-back');
+  }
+
+  stayOnRecordDetail(): void {
+    this.showCancelConfirmDialog.set(false);
   }
 
   toggleShowOriginalValues(): void {
     this.showOriginalValues.update(fShow => !fShow);
+  }
+
+  private hasRecordDetailChanges(): boolean {
+    let dictCurrentValues = this.recordDetailValues();
+    let setAllKeys = new Set([...Object.keys(dictCurrentValues), ...Object.keys(this.m_dictRecordDetailOriginal)]);
+
+    for (let strKey of setAllKeys) {
+      if ((dictCurrentValues[strKey] ?? '') !== (this.m_dictRecordDetailOriginal[strKey] ?? '')) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // ── lookup search helpers (Req 3.3.1) ──
@@ -1255,6 +1306,22 @@ export class SectionRendererComponent implements OnChanges {
     this.currentPageNumber.set(this.totalPageCount());
   }
 
+  onRowClick(objRow: TTabularRow): void {
+    if (this.section.detailScreen) {
+      let dictPrefillByFieldName: Record<string, string> = {};
+      for (let objField of this.section.fields) {
+        if (!objField.isActionField) {
+          dictPrefillByFieldName[objField.name] = objRow[objField.id] ?? '';
+        }
+      }
+
+      let strPayload = encodeURIComponent(JSON.stringify(dictPrefillByFieldName));
+      this.actionInvoked.emit(`navigate:${this.section.detailScreen}|${strPayload}`);
+    } else {
+      this.openEditRow(objRow);
+    }
+  }
+
   openEditRow(objRow: TTabularRow): void {
     this.isCreateRowMode.set(false);
     this.m_dictTabularEditOriginal = { ...objRow };
@@ -1270,6 +1337,7 @@ export class SectionRendererComponent implements OnChanges {
   saveEditRow(): void {
     this.m_dictTabularEditOriginal = { ...this.editingRow()! };
     this.editingRow.set(null);
+    this.actionInvoked.emit('save');
   }
 
   discardEditRow(): void {
@@ -1310,6 +1378,7 @@ export class SectionRendererComponent implements OnChanges {
     this.allTabularRows.update((lstRows) => [...lstRows, { ...objEditingRow }]);
     this.closeEditRow();
     this.goToLastPage();
+    this.actionInvoked.emit('save');
   }
 
   cancelNewRow(): void {

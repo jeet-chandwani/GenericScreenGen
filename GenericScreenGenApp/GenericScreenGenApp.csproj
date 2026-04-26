@@ -9,7 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GenericScreenGenFactoryLib\GenericScreenGenFactoryLib.csproj" />
     <ProjectReference Include="..\GenericScreenGenInterfacesLib\GenericScreenGenInterfacesLib.csproj" />
-    <ProjectReference Include="..\MyJsonDataStore\MyJsonDataStore.csproj" />
+    <ProjectReference Include="..\MyDataStoreProviders\MyDataStoreProviders.csproj" />
     <ProjectReference Include="..\GenericScreenGenUtilsLib\GenericScreenGenUtilsLib.csproj" />
   </ItemGroup>
 

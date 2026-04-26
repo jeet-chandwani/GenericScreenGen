@@ -1,7 +1,7 @@
 using System.Text.Json;
 using GenericScreenGenInterfacesLib;
 
-namespace MyJsonDataStore
+namespace MyDataStoreProviders
 {
     /// <summary>
     /// JSON-backed implementation of IDataStore.

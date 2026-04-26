@@ -13,5 +13,6 @@ namespace GenericScreenGenInterfacesLib
         bool ShowBorder { get; }
         IReadOnlyList<IScreenRenderFieldModel> Fields { get; }
         IReadOnlyList<IScreenRenderSectionModel> Sections { get; }
+        string DetailScreen { get; }
     }
 }

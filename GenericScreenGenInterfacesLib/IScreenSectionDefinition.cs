@@ -31,5 +31,10 @@ namespace GenericScreenGenInterfacesLib
         /// Gets the nested child sections.
         /// </summary>
         IReadOnlyList<IScreenSectionDefinition> Sections { get; }
+
+        /// <summary>
+        /// Gets the file name of a detail screen to navigate to when a row is clicked in tabular layout. Empty string means use inline edit.
+        /// </summary>
+        string DetailScreen { get; }
     }
 }

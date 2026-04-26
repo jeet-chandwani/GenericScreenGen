@@ -51,7 +51,8 @@ namespace GenericScreenGenImplementationsLib
                 itfSectionDefinition.IsCollapsible,
                 !string.Equals(itfSectionDefinition.Name, CScreenGeneratorConstants.DEFAULT_SECTION_NAME, StringComparison.OrdinalIgnoreCase),
                 lstFields,
-                lstSections);
+                lstSections,
+                itfSectionDefinition.DetailScreen);
         }
 
         private static CScreenRenderFieldModel CreateFieldRenderModel(IScreenFieldDefinition itfFieldDefinition)
@@ -83,7 +84,7 @@ namespace GenericScreenGenImplementationsLib
                     strControlType = iLines > 1 ? "textarea" : "input";
                     break;
                 case EFieldType.Lookup:
-                    ParseLookupTypeInfo(itfFieldDefinition.TypeInfo, out lstLookupValues, out lstLookupOptionDescriptions, out lstLookupOptionImages, out fIsMandatory, out fIsMultiple);
+                    ParseLookupTypeInfo(itfFieldDefinition.TypeInfo, out lstLookupValues, out lstLookupOptionDescriptions, out lstLookupOptionImages, out fIsMultiple);
                     strControlType = fIsMultiple ? "multiselect" : "select";
                     break;
                 case EFieldType.Button:
@@ -109,7 +110,7 @@ namespace GenericScreenGenImplementationsLib
                 lstLookupValues,
                 lstLookupOptionDescriptions,
                 lstLookupOptionImages,
-                fIsMandatory,
+                itfFieldDefinition.IsMandatory,
                 fIsMultiple,
                 itfFieldDefinition.Type == EFieldType.Button,
                 itfFieldDefinition.IsSearchable);
@@ -171,10 +172,8 @@ namespace GenericScreenGenImplementationsLib
             out IReadOnlyList<string> lstValues,
             out IReadOnlyList<string> lstDescriptions,
             out IReadOnlyList<string> lstImages,
-            out bool fIsMandatory,
             out bool fIsMultiple)
         {
-            fIsMandatory = false;
             fIsMultiple = false;
 
             if (string.IsNullOrWhiteSpace(strTypeInfo))
@@ -195,12 +194,6 @@ namespace GenericScreenGenImplementationsLib
 
             foreach (string strToken in arrTokens)
             {
-                if (strToken.Equals("mandatory", StringComparison.OrdinalIgnoreCase))
-                {
-                    fIsMandatory = true;
-                    continue;
-                }
-
                 if (strToken.Equals("multiple", StringComparison.OrdinalIgnoreCase))
                 {
                     fIsMultiple = true;

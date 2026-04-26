@@ -1,4 +1,4 @@
-# MyJsonDataStore
+# MyDataStoreProviders
 
 JSON-backed data persistence project for GenericScreenGen.
 

@@ -36,6 +36,11 @@ namespace GenericScreenGenInterfacesLib
         string Width { get; }
 
         /// <summary>
+        /// Gets a value indicating whether the field is mandatory, regardless of field type.
+        /// </summary>
+        bool IsMandatory { get; }
+
+        /// <summary>
         /// Gets a value indicating whether the lookup field supports a search/filter input.
         /// Defaults to <see langword="false"/> when not specified in the screen config JSON.
         /// </summary>

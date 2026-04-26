@@ -34,6 +34,11 @@
           "default": true,
           "examples": [true, false]
         },
+        "detail-screen": {
+          "type": "string",
+          "description": "Optional target screen file name for row-click navigation in tabular sections.",
+          "examples": ["Screen-Employee-Detail.json"]
+        },
         "fields": {
           "type": "array",
           "items": {
@@ -80,6 +85,11 @@
           "type": "string",
           "pattern": "^[0-9]+px$",
           "examples": ["300px", "200px"]
+        },
+        "is-mandatory": {
+          "type": "boolean",
+          "default": false,
+          "examples": [true, false]
         }
       },
       "additionalProperties": false

@@ -30,6 +30,9 @@ export class App {
   readonly screens = signal<ScreenListItem[]>([]);
   readonly selectedScreenFileName = signal('');
   readonly renderModel = signal<ScreenRenderModel | null>(null);
+  readonly navigationPrefillByFieldName = signal<Record<string, string> | null>(null);
+  readonly returnScreenFileName = signal('');
+  readonly selectedInvalidScreenValidation = signal<ScreenValidationResult | null>(null);
   readonly validationResults = signal<ScreenValidationResult[]>([]);
   readonly errorMessage = signal('');
   readonly actionMessage = signal('');
@@ -51,20 +54,69 @@ export class App {
     this.loadInitialState();
   }
 
-  openScreen(strScreenFileName: string): void {
+  openScreenFromStatus(objScreenStatus: IScreenListStatusItem): void {
+    this.returnScreenFileName.set('');
+
+    if (!objScreenStatus.isValid) {
+      const objValidationResult = this.getValidationResultForScreen(objScreenStatus.fileName) ?? {
+        screenFileName: objScreenStatus.fileName,
+        isValid: false,
+        issues: [
+          {
+            code: 'VALIDATION-UNKNOWN',
+            path: '(root)',
+            message: 'Screen is marked invalid but issue details are not available yet. Try Refresh Screens.'
+          }
+        ]
+      };
+
+      this.selectedScreenFileName.set(objScreenStatus.fileName);
+      this.renderModel.set(null);
+      this.selectedInvalidScreenValidation.set(objValidationResult);
+      this.errorMessage.set('');
+      this.actionMessage.set('');
+      this.viewMode.set('screen');
+      return;
+    }
+
+    this.openScreen(objScreenStatus.fileName);
+  }
+
+  openScreen(strScreenFileName: string, dictPrefillByFieldName: Record<string, string> | null = null): void {
+    this.navigationPrefillByFieldName.set(dictPrefillByFieldName);
+    const objValidationResult = this.getValidationResultForScreen(strScreenFileName);
+    if (objValidationResult && !objValidationResult.isValid) {
+      this.selectedScreenFileName.set(strScreenFileName);
+      this.renderModel.set(null);
+      this.selectedInvalidScreenValidation.set(objValidationResult);
+      this.errorMessage.set('');
+      this.actionMessage.set('');
+      this.viewMode.set('screen');
+      return;
+    }
+
+    this.selectedInvalidScreenValidation.set(null);
     this.selectedScreenFileName.set(strScreenFileName);
     this.loadRenderModel(strScreenFileName, true);
   }
 
   goToHome(): void {
     this.viewMode.set('home');
+    this.navigationPrefillByFieldName.set(null);
+    this.selectedInvalidScreenValidation.set(null);
     this.errorMessage.set('');
     this.actionMessage.set('');
   }
 
   reloadCurrentScreen(): void {
     if (this.selectedScreenFileName()) {
+      if (this.selectedInvalidScreenValidation()) {
+        this.openScreen(this.selectedScreenFileName());
+        return;
+      }
+
       this.renderModel.set(null);
+      this.navigationPrefillByFieldName.set(null);
       this.loadRenderModel(this.selectedScreenFileName());
     }
   }
@@ -97,7 +149,34 @@ export class App {
   }
 
   onActionInvoked(strActionName: string): void {
-    this.actionMessage.set(`Action invoked: ${strActionName}`);
+    if (strActionName.startsWith('navigate:')) {
+      const strSourceScreenFileName = this.selectedScreenFileName();
+      const strNavigatePayload = strActionName.slice('navigate:'.length);
+      const arrNavigateParts = strNavigatePayload.split('|', 2);
+      const strTargetScreenFileName = arrNavigateParts[0] ?? '';
+
+      let dictPrefillByFieldName: Record<string, string> | null = null;
+      if (arrNavigateParts.length > 1) {
+        try {
+          dictPrefillByFieldName = JSON.parse(decodeURIComponent(arrNavigateParts[1])) as Record<string, string>;
+        } catch {
+          dictPrefillByFieldName = null;
+        }
+      }
+
+      if (strSourceScreenFileName && strSourceScreenFileName !== strTargetScreenFileName) {
+        this.returnScreenFileName.set(strSourceScreenFileName);
+      }
+
+      this.openScreen(strTargetScreenFileName, dictPrefillByFieldName);
+    } else if (strActionName === 'navigate-back') {
+      this.navigateBackToSourceOrHome();
+    } else if (strActionName === 'save') {
+      window.alert('Save functionality is not implemented yet.');
+      this.navigateBackToSourceOrHome();
+    } else {
+      this.actionMessage.set(`Action invoked: ${strActionName}`);
+    }
   }
 
   private loadInitialState(): void {
@@ -122,6 +201,7 @@ export class App {
   private loadRenderModel(strScreenFileName: string, fNavigateOnSuccess = false): void {
     this.errorMessage.set('');
     this.actionMessage.set('');
+    this.selectedInvalidScreenValidation.set(null);
 
     this.screenApiService
       .getRenderModel(strScreenFileName)
@@ -129,6 +209,7 @@ export class App {
       .subscribe({
         next: (objRenderModel) => {
           this.renderModel.set(objRenderModel);
+          this.selectedInvalidScreenValidation.set(null);
 
           if (fNavigateOnSuccess) {
             this.viewMode.set('screen');
@@ -168,9 +249,28 @@ export class App {
       .find((objScreenStatus) => objScreenStatus.fileName === strSelectedScreenFileName);
 
     if (!objSelectedScreenStatus || !objSelectedScreenStatus.isValid) {
+      if (objSelectedScreenStatus && !objSelectedScreenStatus.isValid) {
+        this.openScreen(strSelectedScreenFileName);
+      } else {
+        this.goToHome();
+        this.selectedScreenFileName.set('');
+        this.renderModel.set(null);
+      }
+    }
+  }
+
+  private getValidationResultForScreen(strScreenFileName: string): ScreenValidationResult | null {
+    return this.validationResults().find(objValidationResult => objValidationResult.screenFileName === strScreenFileName) ?? null;
+  }
+
+  private navigateBackToSourceOrHome(): void {
+    const strReturnScreenFileName = this.returnScreenFileName();
+    this.returnScreenFileName.set('');
+
+    if (strReturnScreenFileName) {
+      this.openScreen(strReturnScreenFileName, null);
+    } else {
       this.goToHome();
-      this.selectedScreenFileName.set('');
-      this.renderModel.set(null);
     }
   }
 }

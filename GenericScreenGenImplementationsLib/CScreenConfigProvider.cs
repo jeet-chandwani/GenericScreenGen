@@ -236,7 +236,8 @@ namespace GenericScreenGenImplementationsLib
                 strLayoutPolicy,
                 objSection.IsCollapsible ?? true,
                 lstFields,
-                lstSections);
+                lstSections,
+                objSection.DetailScreen ?? string.Empty);
             strError = string.Empty;
             return true;
         }
@@ -264,6 +265,7 @@ namespace GenericScreenGenImplementationsLib
                 enuFieldType,
                 objField.TypeInfo ?? string.Empty,
                 string.IsNullOrWhiteSpace(objField.Width) ? "300px" : objField.Width,
+                objField.IsMandatory,
                 objField.IsSearchable);
             strError = string.Empty;
             return true;
@@ -318,6 +320,9 @@ namespace GenericScreenGenImplementationsLib
             [JsonPropertyName("is-collapsible")]
             public bool? IsCollapsible { get; set; }
 
+            [JsonPropertyName("detail-screen")]
+            public string? DetailScreen { get; set; }
+
             [JsonPropertyName("fields")]
             public List<CScreenFieldDto>? Fields { get; set; }
 
@@ -344,6 +349,9 @@ namespace GenericScreenGenImplementationsLib
 
             [JsonPropertyName("width")]
             public string? Width { get; set; }
+
+            [JsonPropertyName("is-mandatory")]
+            public bool IsMandatory { get; set; }
 
             [JsonPropertyName("is-searchable")]
             public bool IsSearchable { get; set; }
