@@ -43,16 +43,21 @@
       <div class="screen-view-actions">
         <button type="button" class="secondary" (click)="goToHome()">Back to Home</button>
         <button type="button" (click)="reloadCurrentScreen()">Reload screen</button>
+        <div class="about-btn-wrapper">
+          <button type="button" class="about-icon-btn" title="About this screen" (click)="toggleAboutPanel()">ℹ</button>
+          @if (showAboutPanel()) {
+            <div class="about-panel" role="tooltip" aria-label="Screen information">
+              <strong>Rendered screen</strong><br>
+              Config: {{ renderModel()?.screenFileName }}
+            </div>
+          }
+        </div>
       </div>
 
       @if (renderModel(); as objRenderModel) {
         <article class="screen-panel">
           <div class="panel-header">
-            <div>
-              <p class="panel-kicker">Rendered screen</p>
-              <h2>{{ objRenderModel.displayName }}</h2>
-            </div>
-            <div class="screen-meta">{{ objRenderModel.screenFileName }}</div>
+            <h2>{{ objRenderModel.displayName }}</h2>
           </div>
 
           <div class="screen-sections">

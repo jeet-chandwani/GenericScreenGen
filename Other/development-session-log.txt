@@ -1,6 +1,33 @@
-# Branch: feat/layout-policy-changes
-**Branch Created**: 2026-04-24
+# Branch: feat/brd-03-new-layout-policies-and-field-types
+**Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE
+
+## 2026-04-26
+- Prompt: "Start implementation" (REQ-4.1: Tabular layout refinements and fixes)
+- Implemented all Req 4.1 sub-requirements in Angular client (no backend changes):
+  - REQ-4.1.1: Removed inline editing from table cells; row click opens Edit Record screen (per-line layout)
+  - REQ-4.1.2: Fixed tabular shell sizing (min-width: 0, overflow: hidden, removed layout-tabular body padding)
+  - REQ-4.1.3: Compact grid — 12px font, 2px 6px padding, line-height 1.2, no row gap
+  - REQ-4.1.4: Moved Add / Export buttons to section header bar as icon buttons (＋ ↓F ↓A) with title tooltips
+  - REQ-4.1.5: Horizontal scroll confirmed via tabular-scroll overflow-x:auto (parent no longer clips)
+  - REQ-4.1.6: Delete "Delete" text button → 🗑 icon button with title="Delete row"
+  - REQ-4.1.7: reloadCurrentScreen() now sets renderModel to null first, forcing SectionRendererComponent destroy/recreate and data reload
+  - REQ-4.1.8: Filter inputs — 11px font, 22px height, placeholder "Filter by {label}…"
+  - REQ-4.1.9: Pagination — « ‹ › » icon chars; compact padding; title tooltips
+  - REQ-4.1.10: Sort button compact (12px, 4px 6px padding), title tooltip with sort state
+  - REQ-4.1.11: Sort indicators — empty (unsorted), ↑ (asc), ↓ (desc)
+  - REQ-4.1.12: Edit record screen uses per-line field layout (.tabular-edit-field-label, .tabular-edit-field-name 160px); record-detail shell also gets 160px label
+  - REQ-4.1.13: Edit record has Save / Discard / Show Original Values buttons; Cancel → Discard everywhere; discardEditRow() reverts in-memory row
+- Also implemented REQ-4.2.1, 4.2.2, 4.2.3 in same session (see next entry)
+- Files changed:
+  - GenericScreenGenClientApp/src/app/components/section-renderer.component.ts
+  - GenericScreenGenClientApp/src/app/app.ts
+  - GenericScreenGenClientApp/src/app/app.html
+  - GenericScreenGenClientApp/src/app/app.css
+  - Docs/BRD-03-release-notes-REQ-4.1.md (created)
+- Build: no compile errors
+
+# Branch: feat/layout-policy-changes
 
 ## 2026-04-24 10:47
 - Prompt: "Start implementation" (for BRD-02 Req 1)

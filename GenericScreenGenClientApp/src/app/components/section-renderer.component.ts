@@ -15,10 +15,19 @@ type TSortDirection = 'asc' | 'desc';
   template: `
     <section class="section-card" [class.borderless]="!section.showBorder">
       @if (section.showBorder) {
-        <button type="button" class="section-header" (click)="toggle()" [disabled]="!section.isCollapsible">
-          <span>{{ section.name }}</span>
-          <span>{{ section.isCollapsible ? (collapsed() ? '+' : '-') : '•' }}</span>
-        </button>
+        <div class="section-header-bar">
+          <button type="button" class="section-header" (click)="toggle()" [disabled]="!section.isCollapsible">
+            <span>{{ section.name }}</span>
+            @if (section.isCollapsible) { <span class="section-collapse-icon">{{ collapsed() ? '+' : '-' }}</span> }
+          </button>
+          @if (isTabularLayout && !editingRow()) {
+            <div class="tabular-header-actions">
+              <button type="button" class="tabular-icon-btn" title="Add New Row" (click)="startAddNewRow()">＋</button>
+              <button type="button" class="tabular-icon-btn" title="Export Filtered Rows as CSV" (click)="exportCsv(true)">↓F</button>
+              <button type="button" class="tabular-icon-btn" title="Export All Rows as CSV" (click)="exportCsv(false)">↓A</button>
+            </div>
+          }
+        </div>
       }
 
       <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
@@ -28,14 +37,14 @@ type TSortDirection = 'asc' | 'desc';
               <div class="tabular-edit-screen">
                 <div class="tabular-edit-header">
                   <h3>{{ isCreateRowMode() ? 'Add New Row' : 'Edit Record' }}</h3>
-                  <button type="button" class="tabular-toolbar-btn" (click)="closeEditRow()">Back to Tabular View</button>
                 </div>
 
                 <div class="tabular-edit-fields">
                   @for (objField of section.fields; track objField.id) {
                     @if (!objField.isActionField) {
+                      <div class="field-row tabular-edit-field-row">
                       <label class="field-label tabular-edit-field-label">
-                        <span class="field-name">{{ objField.name }}</span>
+                        <span class="field-name tabular-edit-field-name">{{ objField.name }}</span>
                         @if (objField.controlType === 'textarea') {
                           <textarea
                             class="field-input"
@@ -102,38 +111,48 @@ type TSortDirection = 'asc' | 'desc';
                           />
                         }
                       </label>
+                        @if (tabularShowOriginalValues() && !isCreateRowMode()) {
+                          <span class="record-detail-original-value" [title]="'Original: ' + tabularEditOriginal()[objField.id]">
+                            Original: <em>{{ tabularEditOriginal()[objField.id] || '(empty)' }}</em>
+                          </span>
+                        }
+                      </div>
                     }
                   }
                 </div>
 
-                @if (isCreateRowMode()) {
-                  <div class="tabular-edit-actions">
-                    <button type="button" class="tabular-toolbar-btn" (click)="saveNewRow()">Save New Row</button>
-                    <button type="button" class="tabular-page-btn" (click)="cancelNewRow()">Cancel</button>
-                  </div>
-                }
+                <div class="tabular-edit-actions">
+                  @if (isCreateRowMode()) {
+                    <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Discard</button>
+                  } @else {
+                    <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Discard</button>
+                    <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
+                      {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+                    </button>
+                  }
+                </div>
               </div>
             } @else {
-              <div class="tabular-toolbar">
-                <button type="button" class="tabular-toolbar-btn" (click)="startAddNewRow()">Add New Row</button>
-                <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(true)">Export Filtered CSV</button>
-                <button type="button" class="tabular-toolbar-btn" (click)="exportCsv(false)">Export All CSV</button>
-              </div>
 
               <div class="tabular-scroll">
                 <table class="tabular-table" [attr.aria-label]="section.name + ' table view'">
                 <thead>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
-                      <th [title]="objField.description" [style.min-width]="objField.width">
+                      <th [style.min-width]="objField.width">
                         <button
                           type="button"
                           class="tabular-sort-button"
                           [disabled]="objField.isActionField"
+                          [title]="objField.isActionField ? '' : getSortTitle(objField.id)"
                           (click)="sortByColumn(objField.id)"
                         >
                           <span>{{ objField.name }}</span>
-                          <span class="tabular-sort-indicator">{{ getSortIndicator(objField.id) }}</span>
+                          @if (!objField.isActionField && getSortIndicator(objField.id)) {
+                            <span class="tabular-sort-indicator">{{ getSortIndicator(objField.id) }}</span>
+                          }
                         </button>
                       </th>
                     }
@@ -146,7 +165,7 @@ type TSortDirection = 'asc' | 'desc';
                           <input
                             class="tabular-filter-input"
                             type="text"
-                            [placeholder]="'Filter ' + objField.name"
+                            [placeholder]="'Filter by ' + objField.name + '…'"
                             [value]="getColumnFilter(objField.id)"
                             (input)="setColumnFilter(objField.id, $any($event.target).value)"
                           />
@@ -158,57 +177,20 @@ type TSortDirection = 'asc' | 'desc';
                 </thead>
                 <tbody>
                   @for (objRow of pagedTabularRows(); track $index) {
-                  <tr (click)="openEditRow(objRow)">
+                  <tr class="tabular-data-row" (click)="openEditRow(objRow)">
                     @for (objField of section.fields; track objField.id) {
-                      <td [style.min-width]="objField.width">
+                      <td class="tabular-cell" [style.min-width]="objField.width">
                         @if (objField.isActionField) {
                           <button type="button" class="field-action" [title]="objField.description" (click)="$event.stopPropagation(); emitAction(objField)">
                             {{ objField.name }}
                           </button>
-                        } @else if (objField.controlType === 'textarea') {
-                          <textarea
-                            class="field-input"
-                            [style.width]="'100%'"
-                            [rows]="objField.lines"
-                            [placeholder]="objField.description + ' ' + ($index + 1)"
-                            [title]="objField.description"
-                            [ngModel]="objRow[objField.id]"
-                            (click)="$event.stopPropagation()"
-                            (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
-                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                          ></textarea>
-                        } @else if (objField.controlType === 'select') {
-                          <select
-                            class="field-input"
-                            [style.width]="'100%'"
-                            [title]="objField.description"
-                            [ngModel]="objRow[objField.id]"
-                            (click)="$event.stopPropagation()"
-                            (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
-                          >
-                            @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                              <option [value]="strLookupValue">{{ strLookupValue }}</option>
-                            }
-                          </select>
                         } @else {
-                          <input
-                            class="field-input"
-                            [style.width]="'100%'"
-                            [type]="objField.inputType"
-                            [placeholder]="objField.description + ' ' + ($index + 1)"
-                            [title]="objField.description"
-                            [ngModel]="objRow[objField.id]"
-                            (click)="$event.stopPropagation()"
-                            (ngModelChange)="updateCellValue(objRow, objField.id, $event)"
-                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                          />
+                          {{ objRow[objField.id] }}
                         }
                       </td>
                     }
                     <td class="tabular-row-actions">
-                      <button type="button" class="tabular-delete-btn" (click)="$event.stopPropagation(); deleteRow(objRow)">Delete</button>
+                      <button type="button" class="tabular-delete-btn" title="Delete row" (click)="$event.stopPropagation(); deleteRow(objRow)">🗑</button>
                     </td>
                   </tr>
                   }
@@ -218,11 +200,11 @@ type TSortDirection = 'asc' | 'desc';
 
               @if (shouldShowPagination()) {
                 <div class="tabular-pagination">
-                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToFirstPage()">First</button>
-                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToPreviousPage()" (click)="goToPreviousPage()">Previous</button>
+                  <button type="button" class="tabular-page-btn" title="First page" [disabled]="!canGoToPreviousPage()" (click)="goToFirstPage()">«</button>
+                  <button type="button" class="tabular-page-btn" title="Previous page" [disabled]="!canGoToPreviousPage()" (click)="goToPreviousPage()">‹</button>
                   <span class="tabular-page-status">Page {{ currentPageNumber() }} of {{ totalPageCount() }}</span>
-                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToNextPage()">Next</button>
-                  <button type="button" class="tabular-page-btn" [disabled]="!canGoToNextPage()" (click)="goToLastPage()">Last</button>
+                  <button type="button" class="tabular-page-btn" title="Next page" [disabled]="!canGoToNextPage()" (click)="goToNextPage()">›</button>
+                  <button type="button" class="tabular-page-btn" title="Last page" [disabled]="!canGoToNextPage()" (click)="goToLastPage()">»</button>
                 </div>
               }
             }
@@ -312,13 +294,15 @@ type TSortDirection = 'asc' | 'desc';
                       </div>
                     </label>
                   }
-                  <small class="field-description">{{ objField.description }}</small>
+                  @if (objField.description) {
+                    <button type="button" class="field-info-btn" [title]="objField.description" aria-label="Field description" tabindex="-1">ℹ</button>
+                  }
                 </div>
               }
             </div>
             <div class="record-detail-actions">
               <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
-              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
+              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Discard</button>
               <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
                 {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
               </button>
@@ -382,7 +366,9 @@ type TSortDirection = 'asc' | 'desc';
                   }
                 </label>
               }
-              <small class="field-description">{{ objField.description }}</small>
+              @if (objField.description) {
+                <button type="button" class="field-info-btn" [title]="objField.description" aria-label="Field description" tabindex="-1">ℹ</button>
+              }
             </div>
           }
         }
@@ -400,6 +386,8 @@ type TSortDirection = 'asc' | 'desc';
         border-radius: 20px;
         background: rgba(255, 255, 255, 0.7);
         overflow: hidden;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       .section-card.borderless {
@@ -407,15 +395,52 @@ type TSortDirection = 'asc' | 'desc';
         background: transparent;
       }
 
+      .section-header-bar {
+        display: flex;
+        align-items: stretch;
+        background: rgba(216, 192, 163, 0.4);
+      }
+
       .section-header {
-        width: 100%;
+        flex: 1;
         display: flex;
         justify-content: space-between;
         gap: 16px;
         padding: 14px 18px;
         border: none;
-        background: rgba(216, 192, 163, 0.4);
+        background: transparent;
         color: inherit;
+      }
+
+      .section-collapse-icon {
+        flex-shrink: 0;
+      }
+
+      .tabular-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+      }
+
+      .tabular-icon-btn {
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        background: rgba(255, 255, 255, 0.6);
+        color: #4f4135;
+        border-radius: 6px;
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .tabular-icon-btn:hover {
+        background: rgba(216, 192, 163, 0.6);
       }
 
       .section-body {
@@ -452,10 +477,15 @@ type TSortDirection = 'asc' | 'desc';
 
       .section-body.layout-tabular {
         display: block;
+        padding: 0;
+        overflow: hidden;
       }
 
       .tabular-shell {
         width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: hidden;
       }
 
       .tabular-toolbar {
@@ -480,6 +510,7 @@ type TSortDirection = 'asc' | 'desc';
         border-radius: 12px;
         background: #fffaf2;
         padding: 14px;
+        margin: 8px;
       }
 
       .tabular-edit-header {
@@ -500,6 +531,12 @@ type TSortDirection = 'asc' | 'desc';
         gap: 10px;
       }
 
+      .tabular-edit-field-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
       .tabular-edit-actions {
         display: flex;
         gap: 8px;
@@ -507,7 +544,17 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .tabular-edit-field-label {
-        align-items: flex-start;
+        display: flex;
+        align-items: baseline;
+        flex-wrap: nowrap;
+        gap: 12px;
+        font-weight: 700;
+        min-width: 0;
+      }
+
+      .tabular-edit-field-name {
+        flex: 0 0 160px;
+        font-weight: 700;
       }
 
       .tabular-scroll {
@@ -525,9 +572,26 @@ type TSortDirection = 'asc' | 'desc';
 
       .tabular-table th,
       .tabular-table td {
-        padding: 10px;
-        border-bottom: 1px solid rgba(94, 63, 34, 0.16);
-        vertical-align: top;
+        padding: 2px 6px;
+        border-bottom: 1px solid rgba(94, 63, 34, 0.12);
+        vertical-align: middle;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .tabular-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+      }
+
+      .tabular-data-row {
+        cursor: pointer;
+      }
+
+      .tabular-data-row:hover {
+        background: rgba(216, 192, 163, 0.2);
       }
 
       .tabular-table th {
@@ -545,12 +609,13 @@ type TSortDirection = 'asc' | 'desc';
         color: #4f4135;
         text-align: left;
         font-weight: 700;
+        font-size: 12px;
         white-space: nowrap;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        padding: 10px;
+        gap: 4px;
+        padding: 4px 6px;
         cursor: pointer;
       }
 
@@ -571,32 +636,38 @@ type TSortDirection = 'asc' | 'desc';
 
       .tabular-filter-row th {
         background: #fff7ee;
-        padding: 8px;
+        padding: 2px 4px;
       }
 
       .tabular-filter-input {
         width: 100%;
-        min-width: 120px;
-        border-radius: 8px;
+        min-width: 80px;
+        border-radius: 6px;
         border: 1px solid rgba(94, 63, 34, 0.24);
-        padding: 7px 8px;
-        font: inherit;
+        padding: 2px 5px;
+        font-size: 11px;
+        height: 22px;
+        box-sizing: border-box;
       }
 
       .tabular-pagination {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 8px;
-        margin-top: 10px;
+        gap: 4px;
+        margin-top: 4px;
+        padding: 4px 8px;
       }
 
       .tabular-page-btn {
         border: 1px solid rgba(94, 63, 34, 0.22);
         background: #fffaf2;
-        border-radius: 8px;
-        padding: 6px 10px;
+        border-radius: 6px;
+        padding: 2px 8px;
+        min-width: 28px;
+        font-size: 13px;
         font: inherit;
+        line-height: 1.4;
       }
 
       .tabular-page-btn:disabled {
@@ -613,18 +684,24 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .tabular-delete-btn {
-        border: 1px solid rgba(145, 39, 39, 0.35);
-        background: #fff4f4;
+        border: none;
+        background: none;
         color: #8a2525;
-        border-radius: 8px;
-        padding: 6px 10px;
-        font: inherit;
+        border-radius: 6px;
+        padding: 2px 4px;
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .tabular-delete-btn:hover {
+        background: rgba(145, 39, 39, 0.1);
       }
 
       .tabular-table td .field-input,
       .tabular-table td .field-action {
         width: 100%;
-        min-width: 120px;
+        min-width: 80px;
       }
 
       /* ── record-detail layout ── */
@@ -632,12 +709,26 @@ type TSortDirection = 'asc' | 'desc';
         display: flex;
         flex-direction: column;
         gap: 16px;
+        padding: 18px;
       }
 
       .record-detail-fields {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
+      }
+
+      .record-detail-shell .field-row .field-label {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: nowrap;
+        gap: 12px;
+        font-weight: 700;
+        min-width: 0;
+      }
+
+      .record-detail-shell .field-name {
+        flex: 0 0 160px;
       }
 
       .record-detail-actions {
@@ -835,6 +926,24 @@ type TSortDirection = 'asc' | 'desc';
         transform: translateY(0);
       }
 
+      .field-info-btn {
+        background: none;
+        border: none;
+        color: #7a6657;
+        font-size: 12px;
+        line-height: 1;
+        cursor: default;
+        padding: 0 3px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        position: relative;
+      }
+
+      .field-info-btn:hover {
+        color: #4f4135;
+        background: rgba(94, 63, 34, 0.1);
+      }
+
       @media (max-width: 1024px) {
         .section-body {
           padding: 14px;
@@ -880,11 +989,19 @@ export class SectionRendererComponent implements OnChanges {
   readonly showOriginalValues = signal(false);
   private m_dictRecordDetailOriginal: Record<string, string> = {};
 
+  // ── tabular edit state (Req 4.1) ──
+  readonly tabularShowOriginalValues = signal(false);
+  private m_dictTabularEditOriginal: Record<string, string> = {};
+
   // ── lookup search state (Req 3.3.1) ──
   readonly lookupSearchTerms = signal<Record<string, string>>({});
 
   recordDetailOriginal(): Record<string, string> {
     return this.m_dictRecordDetailOriginal;
+  }
+
+  tabularEditOriginal(): Record<string, string> {
+    return this.m_dictTabularEditOriginal;
   }
 
   ngOnChanges(objChanges: SimpleChanges): void {
@@ -894,7 +1011,7 @@ export class SectionRendererComponent implements OnChanges {
 
     if (this.isTabularLayout) {
       let strCurrentShapeSignature = this.section.fields.map(objField => objField.id).join('|');
-      if (this.m_strTabularShapeSignature !== strCurrentShapeSignature) {
+      if (this.m_strTabularShapeSignature !== strCurrentShapeSignature || objChanges['section'].firstChange) {
         this.m_strTabularShapeSignature = strCurrentShapeSignature;
         this.columnFilters.set({});
         this.sortColumnId.set(null);
@@ -1013,10 +1130,18 @@ export class SectionRendererComponent implements OnChanges {
 
   getSortIndicator(strColumnId: string): string {
     if (this.sortColumnId() !== strColumnId) {
-      return '↕';
+      return '';
     }
 
-    return this.sortDirection() === 'asc' ? '▲' : '▼';
+    return this.sortDirection() === 'asc' ? '↑' : '↓';
+  }
+
+  getSortTitle(strColumnId: string): string {
+    if (this.sortColumnId() === strColumnId) {
+      return this.sortDirection() === 'asc' ? 'Sorted ascending — click to sort descending' : 'Sorted descending — click to remove sort';
+    }
+
+    return 'Click to sort ascending';
   }
 
   sortByColumn(strColumnId: string): void {
@@ -1109,12 +1234,43 @@ export class SectionRendererComponent implements OnChanges {
 
   openEditRow(objRow: TTabularRow): void {
     this.isCreateRowMode.set(false);
+    this.m_dictTabularEditOriginal = { ...objRow };
+    this.tabularShowOriginalValues.set(false);
     this.editingRow.set(objRow);
   }
 
   closeEditRow(): void {
     this.isCreateRowMode.set(false);
     this.editingRow.set(null);
+  }
+
+  saveEditRow(): void {
+    this.m_dictTabularEditOriginal = { ...this.editingRow()! };
+    this.editingRow.set(null);
+  }
+
+  discardEditRow(): void {
+    let objEditingRow = this.editingRow();
+    if (!objEditingRow) {
+      return;
+    }
+
+    this.allTabularRows.update((lstRows) => {
+      let iIndex = lstRows.findIndex(objRow => objRow === objEditingRow);
+      if (iIndex < 0) {
+        return lstRows;
+      }
+
+      let lstUpdated = [...lstRows];
+      lstUpdated[iIndex] = { ...this.m_dictTabularEditOriginal };
+      return lstUpdated;
+    });
+
+    this.editingRow.set(null);
+  }
+
+  toggleTabularShowOriginalValues(): void {
+    this.tabularShowOriginalValues.update(fShow => !fShow);
   }
 
   startAddNewRow(): void {
