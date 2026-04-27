@@ -10,6 +10,7 @@ export interface ScreenRenderFieldModel {
   type: string;
   typeInfo: string;
   width: string;
+  maxWidth: string;
   controlType: string;
   inputType: string;
   minChars: number;

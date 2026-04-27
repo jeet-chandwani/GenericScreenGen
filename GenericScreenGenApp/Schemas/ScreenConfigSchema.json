@@ -86,6 +86,11 @@
           "pattern": "^[0-9]+px$",
           "examples": ["300px", "200px"]
         },
+        "max-width": {
+          "type": "string",
+          "pattern": "^[0-9]+(px|%)$",
+          "examples": ["300px", "60%"]
+        },
         "is-mandatory": {
           "type": "boolean",
           "default": false,

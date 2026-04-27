@@ -48,6 +48,8 @@ type TSortDirection = 'asc' | 'desc';
                         @if (objField.controlType === 'textarea') {
                           <textarea
                             class="field-input"
+                            [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [rows]="objField.lines"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -57,7 +59,7 @@ type TSortDirection = 'asc' | 'desc';
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
@@ -65,6 +67,8 @@ type TSortDirection = 'asc' | 'desc';
                             }
                             <select
                               class="field-input"
+                              [style.width]="objField.width"
+                              [style.max-width]="objField.maxWidth"
                               [title]="objField.description"
                               [ngModel]="objEditingRow[objField.id]"
                               (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
@@ -77,7 +81,7 @@ type TSortDirection = 'asc' | 'desc';
                             </select>
                           </div>
                         } @else if (objField.controlType === 'multiselect') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
@@ -105,6 +109,8 @@ type TSortDirection = 'asc' | 'desc';
                         } @else {
                           <input
                             class="field-input"
+                            [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [type]="objField.inputType"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -145,7 +151,7 @@ type TSortDirection = 'asc' | 'desc';
                 <thead>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
-                      <th [style.min-width]="objField.width">
+                      <th [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         <button
                           type="button"
                           class="tabular-sort-button"
@@ -164,7 +170,7 @@ type TSortDirection = 'asc' | 'desc';
                   </tr>
                   <tr class="tabular-filter-row">
                     @for (objField of section.fields; track objField.id) {
-                      <th [style.min-width]="objField.width">
+                      <th [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         @if (!objField.isActionField) {
                           <input
                             class="tabular-filter-input"
@@ -183,7 +189,7 @@ type TSortDirection = 'asc' | 'desc';
                   @for (objRow of pagedTabularRows(); track $index) {
                   <tr class="tabular-data-row" (click)="onRowClick(objRow)">
                     @for (objField of section.fields; track objField.id) {
-                      <td class="tabular-cell" [style.min-width]="objField.width">
+                      <td class="tabular-cell" [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         @if (objField.isActionField) {
                           <button type="button" class="field-action" [title]="objField.description" (click)="$event.stopPropagation(); emitAction(objField)">
                             {{ objField.name }}
@@ -230,6 +236,7 @@ type TSortDirection = 'asc' | 'desc';
                           <textarea
                             class="field-input"
                             [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [rows]="objField.lines"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -239,13 +246,13 @@ type TSortDirection = 'asc' | 'desc';
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
                                 (input)="setLookupSearch(objField.id, $any($event.target).value)" />
                             }
-                            <select class="field-input" [style.width]="objField.width" [title]="objField.description"
+                            <select class="field-input" [style.width]="objField.width" [style.max-width]="objField.maxWidth" [title]="objField.description"
                               [ngModel]="recordDetailValues()[objField.id]"
                               (ngModelChange)="updateRecordDetailField(objField.id, $event)">
                               @for (opt of getFilteredLookupOptions(objField); track opt.value) {
@@ -256,7 +263,7 @@ type TSortDirection = 'asc' | 'desc';
                             </select>
                           </div>
                         } @else if (objField.controlType === 'multiselect') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
@@ -285,6 +292,7 @@ type TSortDirection = 'asc' | 'desc';
                           <input
                             class="field-input"
                             [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [type]="objField.inputType"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -339,6 +347,7 @@ type TSortDirection = 'asc' | 'desc';
                     <textarea
                       class="field-input"
                       [style.width]="objField.width"
+                      [style.max-width]="objField.maxWidth"
                       [rows]="objField.lines"
                       [placeholder]="objField.description"
                       [title]="objField.description"
@@ -346,20 +355,20 @@ type TSortDirection = 'asc' | 'desc';
                       [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
                     ></textarea>
                   } @else if (objField.controlType === 'select') {
-                    <div class="lookup-search-wrapper">
+                    <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                       @if (objField.isSearchable) {
                         <input class="lookup-search-input" type="text" placeholder="Search options…"
                           [value]="getLookupSearch(objField.id)"
                           (input)="setLookupSearch(objField.id, $any($event.target).value)" />
                       }
-                      <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                      <select class="field-input" [style.width]="objField.width" [style.max-width]="objField.maxWidth" [title]="objField.description">
                         @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
                           <option [value]="strLookupValue">{{ strLookupValue }}</option>
                         }
                       </select>
                     </div>
                   } @else if (objField.controlType === 'multiselect') {
-                    <div class="lookup-search-wrapper">
+                    <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                       @if (objField.isSearchable) {
                         <input class="lookup-search-input" type="text" placeholder="Search options…"
                           [value]="getLookupSearch(objField.id)"
@@ -378,6 +387,7 @@ type TSortDirection = 'asc' | 'desc';
                     <input
                       class="field-input"
                       [style.width]="objField.width"
+                      [style.max-width]="objField.maxWidth"
                       [type]="objField.inputType"
                       [placeholder]="objField.description"
                       [title]="objField.description"

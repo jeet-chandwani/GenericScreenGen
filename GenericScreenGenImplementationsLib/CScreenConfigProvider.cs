@@ -265,6 +265,7 @@ namespace GenericScreenGenImplementationsLib
                 enuFieldType,
                 objField.TypeInfo ?? string.Empty,
                 string.IsNullOrWhiteSpace(objField.Width) ? "300px" : objField.Width,
+                objField.MaxWidth ?? string.Empty,
                 objField.IsMandatory,
                 objField.IsSearchable);
             strError = string.Empty;
@@ -349,6 +350,9 @@ namespace GenericScreenGenImplementationsLib
 
             [JsonPropertyName("width")]
             public string? Width { get; set; }
+
+            [JsonPropertyName("max-width")]
+            public string? MaxWidth { get; set; }
 
             [JsonPropertyName("is-mandatory")]
             public bool IsMandatory { get; set; }

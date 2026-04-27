@@ -102,6 +102,7 @@ namespace GenericScreenGenImplementationsLib
                 itfFieldDefinition.Type,
                 itfFieldDefinition.TypeInfo,
                 itfFieldDefinition.Width,
+                itfFieldDefinition.MaxWidth,
                 strControlType,
                 strInputType,
                 iMinChars,
