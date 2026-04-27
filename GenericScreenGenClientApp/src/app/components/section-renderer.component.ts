@@ -44,7 +44,7 @@ type TSortDirection = 'asc' | 'desc';
                     @if (!objField.isActionField) {
                       <div class="field-row tabular-edit-field-row">
                       <label class="field-label tabular-edit-field-label">
-                        <span class="field-name tabular-edit-field-name">{{ objField.name }}</span>
+                        <span class="field-name tabular-edit-field-name">{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                         @if (objField.controlType === 'textarea') {
                           <textarea
                             class="field-input"
@@ -169,7 +169,7 @@ type TSortDirection = 'asc' | 'desc';
                           [title]="objField.isActionField ? '' : getSortTitle(objField.id)"
                           (click)="sortByColumn(objField.id)"
                         >
-                          <span>{{ objField.name }}</span>
+                          <span>{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                           @if (!objField.isActionField && getSortIndicator(objField.id)) {
                             <span class="tabular-sort-indicator">{{ getSortIndicator(objField.id) }}</span>
                           }
@@ -240,7 +240,7 @@ type TSortDirection = 'asc' | 'desc';
                     </button>
                   } @else {
                     <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
-                      <span class="field-name">{{ objField.name }}</span>
+                      <span class="field-name">{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                       <div class="record-detail-input-group">
                         @if (objField.controlType === 'textarea') {
                           <textarea
@@ -358,7 +358,7 @@ type TSortDirection = 'asc' | 'desc';
                 </button>
               } @else {
                 <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
-                  <span class="field-name">{{ objField.name }}</span>
+                  <span class="field-name">{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                   @if (objField.controlType === 'textarea') {
                     <textarea
                       class="field-input"
@@ -960,6 +960,12 @@ type TSortDirection = 'asc' | 'desc';
         text-overflow: clip;
       }
 
+      .mandatory-indicator {
+        color: #a72f2f;
+        font-weight: 800;
+        margin-left: 4px;
+      }
+
       .section-body.layout-per-line .field-name {
         flex: 0 0 160px;
       }
@@ -1135,6 +1141,10 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   saveRecordDetail(): void {
+    if (!this.validateMandatoryFields(this.recordDetailValues())) {
+      return;
+    }
+
     // Persist current values as the new baseline; downstream consumers can subscribe to actionInvoked.
     this.m_dictRecordDetailOriginal = { ...this.recordDetailValues() };
     this.actionInvoked.emit('save');
@@ -1374,6 +1384,11 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   saveEditRow(): void {
+    let objEditingRow = this.editingRow();
+    if (!objEditingRow || !this.validateMandatoryFields(objEditingRow)) {
+      return;
+    }
+
     this.m_dictTabularEditOriginal = { ...this.editingRow()! };
     this.editingRow.set(null);
     this.actionInvoked.emit('save');
@@ -1411,6 +1426,10 @@ export class SectionRendererComponent implements OnChanges {
   saveNewRow(): void {
     let objEditingRow = this.editingRow();
     if (!objEditingRow || !this.isCreateRowMode()) {
+      return;
+    }
+
+    if (!this.validateMandatoryFields(objEditingRow)) {
       return;
     }
 
@@ -1575,5 +1594,27 @@ export class SectionRendererComponent implements OnChanges {
     }
 
     return this.screenFeatures.some(strFeature => strFeature?.trim().toLowerCase() === strFeatureId);
+  }
+
+  private validateMandatoryFields(dictValues: Record<string, string>): boolean {
+    if (!this.canSaveFeature()) {
+      return true;
+    }
+
+    let lstMissingFields = this.section.fields
+      .filter(objField => objField.isMandatory && !objField.isActionField)
+      .filter(objField => !this.hasFieldValue(dictValues[objField.id]))
+      .map(objField => objField.name);
+
+    if (lstMissingFields.length === 0) {
+      return true;
+    }
+
+    window.alert('Please provide values for mandatory fields: ' + lstMissingFields.join(', '));
+    return false;
+  }
+
+  private hasFieldValue(strValue: string | undefined): boolean {
+    return (strValue ?? '').trim().length > 0;
   }
 }
