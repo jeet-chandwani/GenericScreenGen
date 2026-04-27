@@ -1,6 +1,14 @@
 <main class="page-shell">
   <section class="page-title-panel">
-    <h1 class="home-title">Generic Screen Generator</h1>
+    <div class="title-bar-row">
+      <h1 class="home-title">Generic Screen Generator</h1>
+      @if (viewMode() === 'screen') {
+        <div class="title-bar-nav">
+          <button type="button" class="title-nav-btn" title="Back to Home" (click)="goToHome()">⌂</button>
+          <button type="button" class="title-nav-btn" title="Reload screen" (click)="reloadCurrentScreen()">↺</button>
+        </div>
+      }
+    </div>
     <div class="home-divider"></div>
   </section>
 
@@ -20,7 +28,7 @@
 
         <div class="home-list-scroll">
           @for (objScreenStatus of screenListStatusItems(); track objScreenStatus.fileName) {
-            <button type="button" class="home-list-row" (click)="openScreen(objScreenStatus.fileName)">
+            <button type="button" class="home-list-row" (click)="openScreenFromStatus(objScreenStatus)">
               <span class="file-name">{{ objScreenStatus.fileName }}</span>
               <span class="status-pill" [class.invalid]="!objScreenStatus.isValid">
                 {{ objScreenStatus.isValid ? 'valid' : 'invalid' }}
@@ -40,30 +48,45 @@
     </section>
   } @else {
     <section class="screen-view-panel">
-      <div class="screen-view-actions">
-        <button type="button" class="secondary" (click)="goToHome()">Back to Home</button>
-        <button type="button" (click)="reloadCurrentScreen()">Reload screen</button>
-      </div>
-
       @if (renderModel(); as objRenderModel) {
         <article class="screen-panel">
           <div class="panel-header">
-            <div>
-              <p class="panel-kicker">Rendered screen</p>
-              <h2>{{ objRenderModel.displayName }}</h2>
-            </div>
-            <div class="screen-meta">{{ objRenderModel.screenFileName }}</div>
+            <h2 [title]="objRenderModel.displayName + '\nConfig: ' + objRenderModel.screenFileName">{{ objRenderModel.displayName }}</h2>
           </div>
 
           <div class="screen-sections">
             @for (objSection of objRenderModel.sections; track objSection.name) {
-              <app-section-renderer [section]="objSection" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
+              <app-section-renderer [section]="objSection" [screenFileName]="objRenderModel.screenFileName" [initialFieldValuesByName]="navigationPrefillByFieldName()" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
             }
           </div>
 
           @if (actionMessage()) {
             <div class="message-panel success-panel">{{ actionMessage() }}</div>
           }
+        </article>
+      } @else if (selectedInvalidScreenValidation(); as objInvalidScreenValidation) {
+        <article class="screen-panel">
+          <div class="panel-header">
+            <h2 [title]="'Config: ' + objInvalidScreenValidation.screenFileName">Invalid Screen Configuration</h2>
+          </div>
+
+          <div class="message-panel error-panel invalid-screen-details">
+            <p><strong>{{ objInvalidScreenValidation.screenFileName }}</strong> has validation errors.</p>
+
+            @if (objInvalidScreenValidation.issues.length > 0) {
+              <ul class="invalid-issues-list">
+                @for (objIssue of objInvalidScreenValidation.issues; track objIssue.path + objIssue.code + objIssue.message) {
+                  <li>
+                    <span class="invalid-issue-code">{{ objIssue.code }}</span>
+                    <span class="invalid-issue-path">{{ objIssue.path || '(root)' }}</span>
+                    <span class="invalid-issue-message">{{ objIssue.message }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p>No detailed issues were returned by the backend for this screen.</p>
+            }
+          </div>
         </article>
       }
     </section>

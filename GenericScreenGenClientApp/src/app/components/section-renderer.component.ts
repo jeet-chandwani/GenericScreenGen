@@ -1,67 +1,398 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, signal, SimpleChanges } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/screen.models';
 import { LayoutPolicyService } from '../services/layout-policy.service';
 
+type TTabularRow = Record<string, string>;
+type TSortDirection = 'asc' | 'desc';
+
 @Component({
   selector: 'app-section-renderer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <section class="section-card" [class.borderless]="!section.showBorder">
       @if (section.showBorder) {
-        <button type="button" class="section-header" (click)="toggle()" [disabled]="!section.isCollapsible">
-          <span>{{ section.name }}</span>
-          <span>{{ section.isCollapsible ? (collapsed() ? '+' : '-') : '•' }}</span>
-        </button>
+        <div class="section-header-bar">
+          <button type="button" class="section-header" (click)="toggle()" [disabled]="!section.isCollapsible">
+            <span>{{ section.name }}</span>
+            @if (section.isCollapsible) { <span class="section-collapse-icon">{{ collapsed() ? '+' : '-' }}</span> }
+          </button>
+          @if (isTabularLayout && !editingRow()) {
+            <div class="tabular-header-actions">
+              <button type="button" class="tabular-icon-btn" title="Add New Row" (click)="startAddNewRow()">＋</button>
+              <button type="button" class="tabular-icon-btn" title="Export Filtered Rows as CSV" (click)="exportCsv(true)">↓F</button>
+              <button type="button" class="tabular-icon-btn" title="Export All Rows as CSV" (click)="exportCsv(false)">↓A</button>
+            </div>
+          }
+        </div>
       }
 
-        <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
-        @for (objField of section.fields; track objField.id) {
-          <div class="field-row">
-            @if (objField.isActionField) {
-              <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
-                {{ objField.name }}
-              </button>
-            } @else {
-              <label class="field-label">
-                <span class="field-name">{{ objField.name }}</span>
-                @if (objField.controlType === 'textarea') {
-                  <textarea
-                    class="field-input"
-                    [style.width]="objField.width"
-                    [rows]="objField.lines"
-                    [placeholder]="objField.description"
-                    [title]="objField.description"
-                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                  ></textarea>
-                } @else if (objField.controlType === 'select') {
-                  <select class="field-input" [style.width]="objField.width" [title]="objField.description">
-                    @for (strLookupValue of objField.lookupValues; track strLookupValue) {
-                      <option [value]="strLookupValue">{{ strLookupValue }}</option>
+      <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
+        @if (isTabularLayout) {
+          <div class="tabular-shell">
+            @if (editingRow(); as objEditingRow) {
+              <div class="tabular-edit-screen">
+                <div class="tabular-edit-header">
+                  <h3>{{ isCreateRowMode() ? 'Add New Row' : 'Edit Record' }}</h3>
+                </div>
+
+                <div class="tabular-edit-fields">
+                  @for (objField of section.fields; track objField.id) {
+                    @if (!objField.isActionField) {
+                      <div class="field-row tabular-edit-field-row">
+                      <label class="field-label tabular-edit-field-label">
+                        <span class="field-name tabular-edit-field-name">{{ objField.name }}</span>
+                        @if (objField.controlType === 'textarea') {
+                          <textarea
+                            class="field-input"
+                            [rows]="objField.lines"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="objEditingRow[objField.id]"
+                            (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          ></textarea>
+                        } @else if (objField.controlType === 'select') {
+                          <div class="lookup-search-wrapper">
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
+                            <select
+                              class="field-input"
+                              [title]="objField.description"
+                              [ngModel]="objEditingRow[objField.id]"
+                              (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                            >
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <option [value]="opt.value" [title]="opt.description">
+                                  {{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        } @else if (objField.controlType === 'multiselect') {
+                          <div class="lookup-search-wrapper">
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
+                            <div class="lookup-multi-options">
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <label class="lookup-multi-option">
+                                  <input type="checkbox"
+                                    [checked]="isMultiSelected(objEditingRow, objField.id, opt.value)"
+                                    (change)="toggleMultiCellValue(objEditingRow, objField.id, opt.value)" />
+                                  @if (opt.image) { <img class="lookup-option-img" [src]="opt.image" [alt]="opt.value" /> }
+                                  <span>{{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}</span>
+                                </label>
+                              }
+                            </div>
+                            <div class="lookup-tags">
+                              @for (strTag of getMultiCellValues(objEditingRow, objField.id); track strTag) {
+                                <span class="lookup-tag">{{ strTag }}
+                                  <button type="button" class="lookup-tag-remove" (click)="toggleMultiCellValue(objEditingRow, objField.id, strTag)">×</button>
+                                </span>
+                              }
+                            </div>
+                          </div>
+                        } @else {
+                          <input
+                            class="field-input"
+                            [type]="objField.inputType"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="objEditingRow[objField.id]"
+                            (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          />
+                        }
+                      </label>
+                        @if (tabularShowOriginalValues() && !isCreateRowMode()) {
+                          <span class="record-detail-original-value" [title]="'Original: ' + tabularEditOriginal()[objField.id]">
+                            Original: <em>{{ tabularEditOriginal()[objField.id] || '(empty)' }}</em>
+                          </span>
+                        }
+                      </div>
                     }
-                  </select>
-                } @else {
-                  <input
-                    class="field-input"
-                    [style.width]="objField.width"
-                    [type]="objField.inputType"
-                    [placeholder]="objField.description"
-                    [title]="objField.description"
-                    [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
-                    [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
-                  />
-                }
-              </label>
+                  }
+                </div>
+
+                <div class="tabular-edit-actions">
+                  @if (isCreateRowMode()) {
+                    <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Cancel</button>
+                  } @else {
+                    <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Cancel</button>
+                    <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
+                      {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+                    </button>
+                  }
+                </div>
+              </div>
+            } @else {
+
+              <div class="tabular-scroll">
+                <table class="tabular-table" [attr.aria-label]="section.name + ' table view'">
+                <thead>
+                  <tr>
+                    @for (objField of section.fields; track objField.id) {
+                      <th [style.min-width]="objField.width">
+                        <button
+                          type="button"
+                          class="tabular-sort-button"
+                          [disabled]="objField.isActionField"
+                          [title]="objField.isActionField ? '' : getSortTitle(objField.id)"
+                          (click)="sortByColumn(objField.id)"
+                        >
+                          <span>{{ objField.name }}</span>
+                          @if (!objField.isActionField && getSortIndicator(objField.id)) {
+                            <span class="tabular-sort-indicator">{{ getSortIndicator(objField.id) }}</span>
+                          }
+                        </button>
+                      </th>
+                    }
+                    <th class="tabular-action-header">Actions</th>
+                  </tr>
+                  <tr class="tabular-filter-row">
+                    @for (objField of section.fields; track objField.id) {
+                      <th [style.min-width]="objField.width">
+                        @if (!objField.isActionField) {
+                          <input
+                            class="tabular-filter-input"
+                            type="text"
+                            [placeholder]="'Filter by ' + objField.name + '…'"
+                            [value]="getColumnFilter(objField.id)"
+                            (input)="setColumnFilter(objField.id, $any($event.target).value)"
+                          />
+                        }
+                      </th>
+                    }
+                    <th class="tabular-action-header"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (objRow of pagedTabularRows(); track $index) {
+                  <tr class="tabular-data-row" (click)="onRowClick(objRow)">
+                    @for (objField of section.fields; track objField.id) {
+                      <td class="tabular-cell" [style.min-width]="objField.width">
+                        @if (objField.isActionField) {
+                          <button type="button" class="field-action" [title]="objField.description" (click)="$event.stopPropagation(); emitAction(objField)">
+                            {{ objField.name }}
+                          </button>
+                        } @else {
+                          {{ objRow[objField.id] }}
+                        }
+                      </td>
+                    }
+                    <td class="tabular-row-actions">
+                      <button type="button" class="tabular-delete-btn" title="Delete row" (click)="$event.stopPropagation(); deleteRow(objRow)">🗑</button>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+                </table>
+              </div>
+
+              @if (shouldShowPagination()) {
+                <div class="tabular-pagination">
+                  <button type="button" class="tabular-page-btn" title="First page" [disabled]="!canGoToPreviousPage()" (click)="goToFirstPage()">«</button>
+                  <button type="button" class="tabular-page-btn" title="Previous page" [disabled]="!canGoToPreviousPage()" (click)="goToPreviousPage()">‹</button>
+                  <span class="tabular-page-status">Page {{ currentPageNumber() }} of {{ totalPageCount() }}</span>
+                  <button type="button" class="tabular-page-btn" title="Next page" [disabled]="!canGoToNextPage()" (click)="goToNextPage()">›</button>
+                  <button type="button" class="tabular-page-btn" title="Last page" [disabled]="!canGoToNextPage()" (click)="goToLastPage()">»</button>
+                </div>
+              }
             }
-            <small class="field-description">{{ objField.description }}</small>
           </div>
+        } @else if (isRecordDetailLayout) {
+          <div class="record-detail-shell">
+            <div class="record-detail-fields">
+              @for (objField of section.fields; track objField.id) {
+                <div class="field-row">
+                  @if (objField.isActionField) {
+                    <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
+                      {{ objField.name }}
+                    </button>
+                  } @else {
+                    <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
+                      <span class="field-name">{{ objField.name }}</span>
+                      <div class="record-detail-input-group">
+                        @if (objField.controlType === 'textarea') {
+                          <textarea
+                            class="field-input"
+                            [style.width]="objField.width"
+                            [rows]="objField.lines"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="recordDetailValues()[objField.id]"
+                            (ngModelChange)="updateRecordDetailField(objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          ></textarea>
+                        } @else if (objField.controlType === 'select') {
+                          <div class="lookup-search-wrapper">
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
+                            <select class="field-input" [style.width]="objField.width" [title]="objField.description"
+                              [ngModel]="recordDetailValues()[objField.id]"
+                              (ngModelChange)="updateRecordDetailField(objField.id, $event)">
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <option [value]="opt.value" [title]="opt.description">
+                                  {{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        } @else if (objField.controlType === 'multiselect') {
+                          <div class="lookup-search-wrapper">
+                            @if (objField.isSearchable) {
+                              <input class="lookup-search-input" type="text" placeholder="Search options…"
+                                [value]="getLookupSearch(objField.id)"
+                                (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                            }
+                            <div class="lookup-multi-options">
+                              @for (opt of getFilteredLookupOptions(objField); track opt.value) {
+                                <label class="lookup-multi-option">
+                                  <input type="checkbox"
+                                    [checked]="isMultiSelectedInRecord(objField.id, opt.value)"
+                                    (change)="toggleMultiRecordField(objField.id, opt.value)" />
+                                  @if (opt.image) { <img class="lookup-option-img" [src]="opt.image" [alt]="opt.value" /> }
+                                  <span>{{ opt.value }}{{ opt.description ? ' — ' + opt.description : '' }}</span>
+                                </label>
+                              }
+                            </div>
+                            <div class="lookup-tags">
+                              @for (strTag of getMultiRecordValues(objField.id); track strTag) {
+                                <span class="lookup-tag">{{ strTag }}
+                                  <button type="button" class="lookup-tag-remove" (click)="toggleMultiRecordField(objField.id, strTag)">×</button>
+                                </span>
+                              }
+                            </div>
+                          </div>
+                        } @else {
+                          <input
+                            class="field-input"
+                            [style.width]="objField.width"
+                            [type]="objField.inputType"
+                            [placeholder]="objField.description"
+                            [title]="objField.description"
+                            [ngModel]="recordDetailValues()[objField.id]"
+                            (ngModelChange)="updateRecordDetailField(objField.id, $event)"
+                            [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                            [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                          />
+                        }
+                        @if (showOriginalValues() && recordDetailOriginal()[objField.id] !== undefined) {
+                          <span class="record-detail-original-value" [title]="'Original: ' + recordDetailOriginal()[objField.id]">
+                            Original: <em>{{ recordDetailOriginal()[objField.id] || '(empty)' }}</em>
+                          </span>
+                        }
+                      </div>
+                    </label>
+                  }
+                </div>
+              }
+            </div>
+            <div class="record-detail-actions">
+              <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
+              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
+              <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
+                {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+              </button>
+            </div>
+
+            @if (showCancelConfirmDialog()) {
+              <div class="confirm-modal-backdrop" role="dialog" aria-modal="true" aria-label="Discard changes confirmation">
+                <div class="confirm-modal-card">
+                  <p>Changes will be lost. Do you want to continue?</p>
+                  <div class="confirm-modal-actions">
+                    <button type="button" class="record-detail-save-btn" (click)="confirmDiscardAndCloseRecordDetail()">Yes</button>
+                    <button type="button" class="record-detail-cancel-btn" (click)="stayOnRecordDetail()">No</button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          @for (objField of section.fields; track objField.id) {
+            <div class="field-row">
+              @if (objField.isActionField) {
+                <button type="button" class="field-action" [title]="objField.description" (click)="emitAction(objField)">
+                  {{ objField.name }}
+                </button>
+              } @else {
+                <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
+                  <span class="field-name">{{ objField.name }}</span>
+                  @if (objField.controlType === 'textarea') {
+                    <textarea
+                      class="field-input"
+                      [style.width]="objField.width"
+                      [rows]="objField.lines"
+                      [placeholder]="objField.description"
+                      [title]="objField.description"
+                      [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                      [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                    ></textarea>
+                  } @else if (objField.controlType === 'select') {
+                    <div class="lookup-search-wrapper">
+                      @if (objField.isSearchable) {
+                        <input class="lookup-search-input" type="text" placeholder="Search options…"
+                          [value]="getLookupSearch(objField.id)"
+                          (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      }
+                      <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                        @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
+                          <option [value]="strLookupValue">{{ strLookupValue }}</option>
+                        }
+                      </select>
+                    </div>
+                  } @else if (objField.controlType === 'multiselect') {
+                    <div class="lookup-search-wrapper">
+                      @if (objField.isSearchable) {
+                        <input class="lookup-search-input" type="text" placeholder="Search options…"
+                          [value]="getLookupSearch(objField.id)"
+                          (input)="setLookupSearch(objField.id, $any($event.target).value)" />
+                      }
+                      <div class="lookup-multi-options">
+                        @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
+                          <label class="lookup-multi-option">
+                            <input type="checkbox" />
+                            {{ strLookupValue }}
+                          </label>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <input
+                      class="field-input"
+                      [style.width]="objField.width"
+                      [type]="objField.inputType"
+                      [placeholder]="objField.description"
+                      [title]="objField.description"
+                      [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
+                      [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                    />
+                  }
+                </label>
+              }
+            </div>
+          }
         }
 
         @for (objSection of section.sections; track objSection.name) {
-          <app-section-renderer [section]="objSection" (actionInvoked)="forwardAction($event)"></app-section-renderer>
+          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
         }
       </div>
     </section>
@@ -73,6 +404,8 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         border-radius: 20px;
         background: rgba(255, 255, 255, 0.7);
         overflow: hidden;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       .section-card.borderless {
@@ -80,15 +413,52 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
         background: transparent;
       }
 
+      .section-header-bar {
+        display: flex;
+        align-items: stretch;
+        background: rgba(216, 192, 163, 0.4);
+      }
+
       .section-header {
-        width: 100%;
+        flex: 1;
         display: flex;
         justify-content: space-between;
         gap: 16px;
         padding: 14px 18px;
         border: none;
-        background: rgba(216, 192, 163, 0.4);
+        background: transparent;
         color: inherit;
+      }
+
+      .section-collapse-icon {
+        flex-shrink: 0;
+      }
+
+      .tabular-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+      }
+
+      .tabular-icon-btn {
+        border: 1px solid #3f2412;
+        background: #5a3217;
+        color: #fff8ef;
+        border-radius: 6px;
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .tabular-icon-btn:hover {
+        background: #704021;
       }
 
       .section-body {
@@ -100,6 +470,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
       .section-body.layout-per-line {
         display: grid;
+        gap: 4px;
       }
 
       .section-body.layout-flow {
@@ -121,6 +492,417 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
       .section-body.layout-flow > .field-row > .field-label {
         min-width: max-content;
+      }
+
+      .section-body.layout-tabular {
+        display: block;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .tabular-shell {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+
+      .tabular-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .tabular-toolbar-btn {
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        background: #f8efe2;
+        color: #4f4135;
+        border-radius: 8px;
+        padding: 7px 10px;
+        font: inherit;
+        font-weight: 600;
+      }
+
+      .tabular-edit-screen {
+        border: 1px solid rgba(94, 63, 34, 0.18);
+        border-radius: 12px;
+        background: #fffaf2;
+        padding: 14px;
+        margin: 8px;
+      }
+
+      .tabular-edit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .tabular-edit-header h3 {
+        margin: 0;
+      }
+
+      .tabular-edit-fields {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .tabular-edit-field-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .tabular-edit-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tabular-edit-field-label {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: nowrap;
+        gap: 12px;
+        font-weight: 700;
+        min-width: 0;
+      }
+
+      .tabular-edit-field-name {
+        flex: 0 0 160px;
+        font-weight: 700;
+      }
+
+      .tabular-scroll {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .tabular-table {
+        border-collapse: collapse;
+        width: max-content;
+        min-width: 100%;
+      }
+
+      .tabular-table th,
+      .tabular-table td {
+        padding: 2px 6px;
+        border-bottom: 1px solid rgba(94, 63, 34, 0.12);
+        vertical-align: middle;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .tabular-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+      }
+
+      .tabular-data-row {
+        cursor: pointer;
+      }
+
+      .tabular-data-row:hover {
+        background: rgba(216, 192, 163, 0.2);
+      }
+
+      .tabular-table th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f8efe2;
+        padding: 0;
+      }
+
+      .tabular-sort-button {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: #4f4135;
+        text-align: left;
+        font-weight: 700;
+        font-size: 12px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 4px 6px;
+        cursor: pointer;
+      }
+
+      .tabular-sort-button:disabled {
+        opacity: 0.65;
+        cursor: default;
+      }
+
+      .tabular-sort-indicator {
+        color: #8f4e2f;
+        min-width: 14px;
+        text-align: center;
+      }
+
+      .tabular-action-header {
+        min-width: 90px;
+      }
+
+      .tabular-filter-row th {
+        background: #fff7ee;
+        padding: 2px 4px;
+      }
+
+      .tabular-filter-input {
+        width: 100%;
+        min-width: 80px;
+        border-radius: 6px;
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        padding: 2px 5px;
+        font-size: 11px;
+        height: 22px;
+        box-sizing: border-box;
+      }
+
+      .tabular-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+        padding: 4px 8px;
+      }
+
+      .tabular-page-btn {
+        border: 1px solid #3f2412;
+        background: #f4e5d2;
+        color: #3f2412;
+        border-radius: 6px;
+        padding: 4px 10px;
+        min-width: 36px;
+        font-size: 16px;
+        font-weight: 700;
+        font: inherit;
+        line-height: 1.4;
+        cursor: pointer;
+      }
+
+      .tabular-page-btn:disabled {
+        opacity: 0.55;
+      }
+
+      .tabular-page-status {
+        color: #5a4b3e;
+        font-weight: 600;
+      }
+
+      .tabular-row-actions {
+        text-align: right;
+      }
+
+      .tabular-delete-btn {
+        border: 1px solid #7a1d1d;
+        background: #fff0f0;
+        color: #7a1d1d;
+        border-radius: 6px;
+        padding: 4px 6px;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .tabular-delete-btn:hover {
+        background: #ffdede;
+      }
+
+      .tabular-table td .field-input,
+      .tabular-table td .field-action {
+        width: 100%;
+        min-width: 80px;
+      }
+
+      /* ── record-detail layout ── */
+      .record-detail-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .record-detail-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .record-detail-shell .field-row .field-label {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: nowrap;
+        gap: 12px;
+        font-weight: 700;
+        min-width: 0;
+      }
+
+      .record-detail-shell .field-name {
+        flex: 0 0 160px;
+      }
+
+      .record-detail-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .confirm-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(24, 18, 13, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+      }
+
+      .confirm-modal-card {
+        background: #fff8ef;
+        border: 1px solid rgba(94, 63, 34, 0.24);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(35, 24, 15, 0.25);
+        padding: 18px;
+        width: min(460px, calc(100vw - 28px));
+      }
+
+      .confirm-modal-card p {
+        margin: 0;
+        color: #3f2412;
+        font-weight: 600;
+      }
+
+      .confirm-modal-actions {
+        margin-top: 14px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .record-detail-save-btn {
+        border: 1px solid rgba(63, 94, 34, 0.35);
+        background: #f2fff4;
+        color: #2a5a2e;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font: inherit;
+        font-weight: 600;
+      }
+
+      .record-detail-cancel-btn {
+        border: 1px solid rgba(94, 63, 34, 0.22);
+        background: #fffaf2;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font: inherit;
+      }
+
+      .record-detail-toggle-orig-btn {
+        border: 1px solid rgba(63, 94, 120, 0.35);
+        background: #f2f7ff;
+        color: #2a4a6a;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font: inherit;
+      }
+
+      .record-detail-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 auto;
+      }
+
+      .record-detail-original-value {
+        font-size: 0.82em;
+        color: #6b5b4e;
+        padding: 2px 6px;
+        background: rgba(255, 240, 200, 0.6);
+        border-radius: 6px;
+        border-left: 3px solid rgba(180, 130, 50, 0.5);
+      }
+
+      /* ── lookup search & multi-select (Req 3.3) ── */
+      .lookup-search-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 auto;
+      }
+
+      .lookup-search-input {
+        font: inherit;
+        border-radius: 8px;
+        border: 1px solid rgba(94, 63, 34, 0.22);
+        padding: 6px 10px;
+        font-size: 0.88em;
+      }
+
+      .lookup-multi-options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 160px;
+        overflow-y: auto;
+        border: 1px solid rgba(94, 63, 34, 0.18);
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: #fffdf8;
+      }
+
+      .lookup-multi-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .lookup-option-img {
+        width: 24px;
+        height: 24px;
+        object-fit: cover;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+
+      .lookup-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .lookup-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(143, 78, 47, 0.12);
+        border: 1px solid rgba(143, 78, 47, 0.25);
+        color: #5a2e0e;
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.85em;
+      }
+
+      .lookup-tag-remove {
+        background: none;
+        border: none;
+        color: #8a3a1a;
+        cursor: pointer;
+        font-size: 1em;
+        line-height: 1;
+        padding: 0 2px;
       }
 
       .section-body.hidden {
@@ -157,7 +939,7 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
       }
 
       .field-input {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         min-width: 0;
       }
 
@@ -220,16 +1002,518 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
     `
   ]
 })
-export class SectionRendererComponent {
+export class SectionRendererComponent implements OnChanges {
   private readonly m_itfLayoutPolicyService = inject(LayoutPolicyService);
+  private m_strTabularShapeSignature = '';
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
+  @Input() screenFileName: string = '';
+  @Input() initialFieldValuesByName: Record<string, string> | null = null;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
   readonly collapsed = signal(false);
+  readonly allTabularRows = signal<TTabularRow[]>([]);
+  readonly columnFilters = signal<Record<string, string>>({});
+  readonly sortColumnId = signal<string | null>(null);
+  readonly sortDirection = signal<TSortDirection>('asc');
+  readonly currentPageNumber = signal(1);
+  readonly editingRow = signal<TTabularRow | null>(null);
+  readonly isCreateRowMode = signal(false);
+
+  get pageSize(): number {
+    return this.displayedTabularRows().length || 1;
+  }
+
+  // ── record-detail state ──
+  readonly recordDetailValues = signal<Record<string, string>>({});
+  readonly showOriginalValues = signal(false);
+  readonly showCancelConfirmDialog = signal(false);
+  private m_dictRecordDetailOriginal: Record<string, string> = {};
+
+  // ── tabular edit state (Req 4.1) ──
+  readonly tabularShowOriginalValues = signal(false);
+  private m_dictTabularEditOriginal: Record<string, string> = {};
+
+  // ── lookup search state (Req 3.3.1) ──
+  readonly lookupSearchTerms = signal<Record<string, string>>({});
+
+  recordDetailOriginal(): Record<string, string> {
+    return this.m_dictRecordDetailOriginal;
+  }
+
+  tabularEditOriginal(): Record<string, string> {
+    return this.m_dictTabularEditOriginal;
+  }
+
+  ngOnChanges(objChanges: SimpleChanges): void {
+    if (!objChanges['section'] && !objChanges['initialFieldValuesByName']) {
+      return;
+    }
+
+    if (this.isTabularLayout) {
+      let strCurrentShapeSignature = this.section.fields.map(objField => objField.id).join('|');
+      if (this.m_strTabularShapeSignature !== strCurrentShapeSignature || objChanges['section'].firstChange) {
+        this.m_strTabularShapeSignature = strCurrentShapeSignature;
+        this.columnFilters.set({});
+        this.sortColumnId.set(null);
+        this.sortDirection.set('asc');
+        this.currentPageNumber.set(1);
+        this.allTabularRows.set(this.createInitialRows());
+      }
+    } else if (this.isRecordDetailLayout) {
+      let dictInitial: Record<string, string> = {};
+      for (let objField of this.section.fields) {
+        if (!objField.isActionField) {
+          let strPrefillByName = this.initialFieldValuesByName?.[objField.name] ?? '';
+          let strPrefillById = this.initialFieldValuesByName?.[objField.id] ?? '';
+          dictInitial[objField.id] = strPrefillByName || strPrefillById || '';
+        }
+      }
+
+      this.m_dictRecordDetailOriginal = { ...dictInitial };
+      this.recordDetailValues.set({ ...dictInitial });
+    }
+  }
 
   get layoutCssClass(): string {
     return 'section-body ' + this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
+  }
+
+  get isTabularLayout(): boolean {
+    return this.section.layoutPolicy === 'tabular';
+  }
+
+  get isRecordDetailLayout(): boolean {
+    return this.section.layoutPolicy === 'record-detail';
+  }
+
+  get isPerLineLayout(): boolean {
+    return this.section.layoutPolicy === 'per-line';
+  }
+
+  updateRecordDetailField(strFieldId: string, strValue: string): void {
+    this.recordDetailValues.update((dictValues) => ({ ...dictValues, [strFieldId]: strValue }));
+  }
+
+  saveRecordDetail(): void {
+    // Persist current values as the new baseline; downstream consumers can subscribe to actionInvoked.
+    this.m_dictRecordDetailOriginal = { ...this.recordDetailValues() };
+    this.actionInvoked.emit('save');
+  }
+
+  cancelRecordDetail(): void {
+    if (!this.hasRecordDetailChanges()) {
+      this.actionInvoked.emit('navigate-back');
+      return;
+    }
+
+    this.showCancelConfirmDialog.set(true);
+  }
+
+  confirmDiscardAndCloseRecordDetail(): void {
+    this.recordDetailValues.set({ ...this.m_dictRecordDetailOriginal });
+    this.showCancelConfirmDialog.set(false);
+    this.actionInvoked.emit('navigate-back');
+  }
+
+  stayOnRecordDetail(): void {
+    this.showCancelConfirmDialog.set(false);
+  }
+
+  toggleShowOriginalValues(): void {
+    this.showOriginalValues.update(fShow => !fShow);
+  }
+
+  private hasRecordDetailChanges(): boolean {
+    let dictCurrentValues = this.recordDetailValues();
+    let setAllKeys = new Set([...Object.keys(dictCurrentValues), ...Object.keys(this.m_dictRecordDetailOriginal)]);
+
+    for (let strKey of setAllKeys) {
+      if ((dictCurrentValues[strKey] ?? '') !== (this.m_dictRecordDetailOriginal[strKey] ?? '')) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // ── lookup search helpers (Req 3.3.1) ──
+  setLookupSearch(strFieldId: string, strTerm: string): void {
+    this.lookupSearchTerms.update(dict => ({ ...dict, [strFieldId]: strTerm }));
+  }
+
+  getLookupSearch(strFieldId: string): string {
+    return this.lookupSearchTerms()[strFieldId] ?? '';
+  }
+
+  getFilteredLookupValues(objField: ScreenRenderFieldModel): string[] {
+    let strTerm = this.getLookupSearch(objField.id).trim().toLowerCase();
+    if (!strTerm) {
+      return objField.lookupValues;
+    }
+
+    return objField.lookupValues.filter(strValue => strValue.toLowerCase().includes(strTerm));
+  }
+
+  getFilteredLookupOptions(objField: ScreenRenderFieldModel): { value: string; description: string; image: string }[] {
+    let strTerm = this.getLookupSearch(objField.id).trim().toLowerCase();
+    return objField.lookupValues
+      .map((strValue, iIndex) => ({
+        value: strValue,
+        description: objField.lookupOptionDescriptions?.[iIndex] ?? '',
+        image: objField.lookupOptionImages?.[iIndex] ?? ''
+      }))
+      .filter(opt => !strTerm || opt.value.toLowerCase().includes(strTerm) || opt.description.toLowerCase().includes(strTerm));
+  }
+
+  // ── multi-select helpers for tabular rows ──
+  isMultiSelected(objRow: TTabularRow, strFieldId: string, strValue: string): boolean {
+    return this.getMultiCellValues(objRow, strFieldId).includes(strValue);
+  }
+
+  getMultiCellValues(objRow: TTabularRow, strFieldId: string): string[] {
+    let strRaw = objRow[strFieldId] ?? '';
+    return strRaw ? strRaw.split('|').filter(s => s.length > 0) : [];
+  }
+
+  toggleMultiCellValue(objRow: TTabularRow, strFieldId: string, strValue: string): void {
+    let lstCurrent = this.getMultiCellValues(objRow, strFieldId);
+    let lstUpdated = lstCurrent.includes(strValue)
+      ? lstCurrent.filter(s => s !== strValue)
+      : [...lstCurrent, strValue];
+    objRow[strFieldId] = lstUpdated.join('|');
+  }
+
+  // ── multi-select helpers for record-detail ──
+  isMultiSelectedInRecord(strFieldId: string, strValue: string): boolean {
+    return this.getMultiRecordValues(strFieldId).includes(strValue);
+  }
+
+  getMultiRecordValues(strFieldId: string): string[] {
+    let strRaw = this.recordDetailValues()[strFieldId] ?? '';
+    return strRaw ? strRaw.split('|').filter(s => s.length > 0) : [];
+  }
+
+  toggleMultiRecordField(strFieldId: string, strValue: string): void {
+    let lstCurrent = this.getMultiRecordValues(strFieldId);
+    let lstUpdated = lstCurrent.includes(strValue)
+      ? lstCurrent.filter(s => s !== strValue)
+      : [...lstCurrent, strValue];
+    this.updateRecordDetailField(strFieldId, lstUpdated.join('|'));
+  }
+
+  getSortIndicator(strColumnId: string): string {
+    if (this.sortColumnId() !== strColumnId) {
+      return '';
+    }
+
+    return this.sortDirection() === 'asc' ? '↑' : '↓';
+  }
+
+  getSortTitle(strColumnId: string): string {
+    if (this.sortColumnId() === strColumnId) {
+      return this.sortDirection() === 'asc' ? 'Sorted ascending — click to sort descending' : 'Sorted descending — click to remove sort';
+    }
+
+    return 'Click to sort ascending';
+  }
+
+  sortByColumn(strColumnId: string): void {
+    if (!this.isTabularLayout) {
+      return;
+    }
+
+    let strCurrentSortColumnId = this.sortColumnId();
+    let strNextSortDirection: TSortDirection = 'asc';
+    if (strCurrentSortColumnId === strColumnId) {
+      strNextSortDirection = this.sortDirection() === 'asc' ? 'desc' : 'asc';
+    }
+
+    this.sortColumnId.set(strColumnId);
+    this.sortDirection.set(strNextSortDirection);
+    this.currentPageNumber.set(1);
+  }
+
+  displayedTabularRows(): TTabularRow[] {
+    let lstRows = [...this.allTabularRows()];
+    let dictFilters = this.columnFilters();
+    let lstFilterColumns = Object.keys(dictFilters).filter(strFilterColumnId => (dictFilters[strFilterColumnId] ?? '').trim().length > 0);
+    if (lstFilterColumns.length > 0) {
+      lstRows = lstRows.filter((objRow) => {
+        return lstFilterColumns.every((strFilterColumnId) => {
+          let strFilterValue = (dictFilters[strFilterColumnId] ?? '').trim().toLowerCase();
+          let strCellValue = String(objRow[strFilterColumnId] ?? '');
+          return strCellValue.toLowerCase().includes(strFilterValue);
+        });
+      });
+    }
+
+    let strSortColumnId = this.sortColumnId();
+    if (!strSortColumnId) {
+      return lstRows;
+    }
+
+    let strSortDirection = this.sortDirection();
+    return [...lstRows].sort((objLeftRow, objRightRow) =>
+      this.compareValues(objLeftRow[strSortColumnId] ?? '', objRightRow[strSortColumnId] ?? '', strSortDirection)
+    );
+  }
+
+  pagedTabularRows(): TTabularRow[] {
+    let lstFilteredRows = this.displayedTabularRows();
+    let iPageStartIndex = (this.currentPageNumber() - 1) * this.pageSize;
+    return lstFilteredRows.slice(iPageStartIndex, iPageStartIndex + this.pageSize);
+  }
+
+  totalPageCount(): number {
+    let iRowCount = this.displayedTabularRows().length;
+    return Math.max(1, Math.ceil(iRowCount / this.pageSize));
+  }
+
+  shouldShowPagination(): boolean {
+    return this.displayedTabularRows().length > this.pageSize;
+  }
+
+  canGoToPreviousPage(): boolean {
+    return this.currentPageNumber() > 1;
+  }
+
+  canGoToNextPage(): boolean {
+    return this.currentPageNumber() < this.totalPageCount();
+  }
+
+  goToFirstPage(): void {
+    this.currentPageNumber.set(1);
+  }
+
+  goToPreviousPage(): void {
+    if (!this.canGoToPreviousPage()) {
+      return;
+    }
+
+    this.currentPageNumber.update(iCurrentPage => iCurrentPage - 1);
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoToNextPage()) {
+      return;
+    }
+
+    this.currentPageNumber.update(iCurrentPage => iCurrentPage + 1);
+  }
+
+  goToLastPage(): void {
+    this.currentPageNumber.set(this.totalPageCount());
+  }
+
+  onRowClick(objRow: TTabularRow): void {
+    if (this.section.detailScreen) {
+      let dictPrefillByFieldName: Record<string, string> = {};
+      for (let objField of this.section.fields) {
+        if (!objField.isActionField) {
+          dictPrefillByFieldName[objField.name] = objRow[objField.id] ?? '';
+        }
+      }
+
+      let strPayload = encodeURIComponent(JSON.stringify(dictPrefillByFieldName));
+      this.actionInvoked.emit(`navigate:${this.section.detailScreen}|${strPayload}`);
+    } else {
+      this.openEditRow(objRow);
+    }
+  }
+
+  openEditRow(objRow: TTabularRow): void {
+    this.isCreateRowMode.set(false);
+    this.m_dictTabularEditOriginal = { ...objRow };
+    this.tabularShowOriginalValues.set(false);
+    this.editingRow.set(objRow);
+  }
+
+  closeEditRow(): void {
+    this.isCreateRowMode.set(false);
+    this.editingRow.set(null);
+  }
+
+  saveEditRow(): void {
+    this.m_dictTabularEditOriginal = { ...this.editingRow()! };
+    this.editingRow.set(null);
+    this.actionInvoked.emit('save');
+  }
+
+  discardEditRow(): void {
+    let objEditingRow = this.editingRow();
+    if (!objEditingRow) {
+      return;
+    }
+
+    this.allTabularRows.update((lstRows) => {
+      let iIndex = lstRows.findIndex(objRow => objRow === objEditingRow);
+      if (iIndex < 0) {
+        return lstRows;
+      }
+
+      let lstUpdated = [...lstRows];
+      lstUpdated[iIndex] = { ...this.m_dictTabularEditOriginal };
+      return lstUpdated;
+    });
+
+    this.editingRow.set(null);
+  }
+
+  toggleTabularShowOriginalValues(): void {
+    this.tabularShowOriginalValues.update(fShow => !fShow);
+  }
+
+  startAddNewRow(): void {
+    this.isCreateRowMode.set(true);
+    this.editingRow.set(this.createBlankRow());
+  }
+
+  saveNewRow(): void {
+    let objEditingRow = this.editingRow();
+    if (!objEditingRow || !this.isCreateRowMode()) {
+      return;
+    }
+
+    this.allTabularRows.update((lstRows) => [...lstRows, { ...objEditingRow }]);
+    this.closeEditRow();
+    this.goToLastPage();
+    this.actionInvoked.emit('save');
+  }
+
+  cancelNewRow(): void {
+    this.closeEditRow();
+  }
+
+  setColumnFilter(strColumnId: string, strFilterValue: string): void {
+    this.columnFilters.update((dictCurrentFilters) => ({
+      ...dictCurrentFilters,
+      [strColumnId]: strFilterValue
+    }));
+    this.currentPageNumber.set(1);
+  }
+
+  getColumnFilter(strColumnId: string): string {
+    return this.columnFilters()[strColumnId] ?? '';
+  }
+
+  exportCsv(fFilteredOnly: boolean): void {
+    let lstExportFields = this.section.fields.filter(objField => !objField.isActionField);
+    if (lstExportFields.length === 0) {
+      return;
+    }
+
+    let lstRowsToExport = fFilteredOnly ? this.displayedTabularRows() : this.allTabularRows();
+    let lstCsvLines: string[] = [];
+
+    lstCsvLines.push(lstExportFields.map(objField => this.escapeCsvCell(objField.name)).join(','));
+    for (let objRow of lstRowsToExport) {
+      let lstCsvCells = lstExportFields.map(objField => this.escapeCsvCell(String(objRow[objField.id] ?? '')));
+      lstCsvLines.push(lstCsvCells.join(','));
+    }
+
+    let strCsvContents = lstCsvLines.join('\r\n');
+    let objCsvBlob = new Blob([strCsvContents], { type: 'text/csv;charset=utf-8;' });
+    let strObjectUrl = URL.createObjectURL(objCsvBlob);
+
+    let objAnchorElement = document.createElement('a');
+    objAnchorElement.href = strObjectUrl;
+    objAnchorElement.download = this.section.name + (fFilteredOnly ? '-filtered' : '-all') + '.csv';
+    objAnchorElement.click();
+    URL.revokeObjectURL(strObjectUrl);
+  }
+
+  deleteRow(objCurrentRow: TTabularRow): void {
+    if (!window.confirm('Delete this row?')) {
+      return;
+    }
+
+    this.allTabularRows.update((lstRows) => lstRows.filter(objRow => objRow !== objCurrentRow));
+    if (this.currentPageNumber() > this.totalPageCount()) {
+      this.currentPageNumber.set(this.totalPageCount());
+    }
+  }
+
+  updateCellValue(objCurrentRow: TTabularRow, strFieldId: string, strValue: string): void {
+    this.allTabularRows.update((lstRows) => {
+      let iRowIndex = lstRows.findIndex(objRow => objRow === objCurrentRow);
+      if (iRowIndex < 0 || iRowIndex >= lstRows.length) {
+        return lstRows;
+      }
+
+      let lstUpdatedRows = [...lstRows];
+      lstUpdatedRows[iRowIndex] = {
+        ...lstUpdatedRows[iRowIndex],
+        [strFieldId]: strValue
+      };
+
+      return lstUpdatedRows;
+    });
+  }
+
+  private compareValues(strLeftValue: string, strRightValue: string, strSortDirection: TSortDirection): number {
+    let iLeftNumber = Number(strLeftValue);
+    let iRightNumber = Number(strRightValue);
+
+    let iCompareResult: number;
+    if (!Number.isNaN(iLeftNumber) && !Number.isNaN(iRightNumber)) {
+      iCompareResult = iLeftNumber - iRightNumber;
+    } else {
+      iCompareResult = strLeftValue.localeCompare(strRightValue, undefined, { sensitivity: 'base' });
+    }
+
+    return strSortDirection === 'asc' ? iCompareResult : -iCompareResult;
+  }
+
+  private createInitialRows(): TTabularRow[] {
+    let lstRows: TTabularRow[] = [];
+    for (let iRowIndex = 0; iRowIndex < 120; iRowIndex++) {
+      let dictRow: TTabularRow = {};
+
+      for (let objField of this.section.fields) {
+        dictRow[objField.id] = this.getInitialCellValue(objField, iRowIndex);
+      }
+
+      lstRows.push(dictRow);
+    }
+
+    return lstRows;
+  }
+
+  private getInitialCellValue(objField: ScreenRenderFieldModel, iRowIndex: number): string {
+    if (objField.isActionField) {
+      return '';
+    }
+
+    if (objField.controlType === 'select' && objField.lookupValues.length > 0) {
+      return objField.lookupValues[iRowIndex % objField.lookupValues.length];
+    }
+
+    if (objField.inputType === 'number') {
+      return String(iRowIndex + 1);
+    }
+
+    if (objField.inputType === 'date') {
+      let iDayValue = (iRowIndex % 28) + 1;
+      let strDayValue = iDayValue < 10 ? '0' + iDayValue : String(iDayValue);
+      return '2026-04-' + strDayValue;
+    }
+
+    return objField.name + ' ' + String(iRowIndex + 1);
+  }
+
+  private createBlankRow(): TTabularRow {
+    let dictRow: TTabularRow = {};
+    for (let objField of this.section.fields) {
+      dictRow[objField.id] = '';
+    }
+
+    return dictRow;
+  }
+
+  private escapeCsvCell(strValue: string): string {
+    let strEscapedValue = strValue.replaceAll('"', '""');
+    return '"' + strEscapedValue + '"';
   }
 
   toggle(): void {

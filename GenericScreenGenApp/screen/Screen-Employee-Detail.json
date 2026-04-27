@@ -1,0 +1,51 @@
+{
+  "sections": [
+    {
+      "name": "default-section",
+      "layout-policy": "record-detail",
+      "is-collapsible": false,
+      "fields": [
+        {
+          "id": "emp-det-001",
+          "name": "First Name",
+          "description": "Enter employee first name",
+          "type": "Text",
+          "type-info": "{min-chars=0;max-chars=30;lines=1;}",
+          "width": "280px"
+        },
+        {
+          "id": "emp-det-002",
+          "name": "Last Name",
+          "description": "Enter employee last name",
+          "type": "Text",
+          "type-info": "{min-chars=0;max-chars=30;lines=1;}",
+          "width": "280px"
+        },
+        {
+          "id": "emp-det-003",
+          "name": "SSN",
+          "description": "Enter employee social security number",
+          "type": "Text",
+          "type-info": "{min-chars=0;max-chars=13;lines=1;}",
+          "width": "160px"
+        },
+        {
+          "id": "emp-det-004",
+          "name": "Birth Date",
+          "description": "Select employee birth date",
+          "type": "Date",
+          "width": "180px"
+        },
+        {
+          "id": "emp-det-005",
+          "name": "Marital Status",
+          "description": "Select marital status",
+          "type": "Lookup",
+          "type-info": "{Single;Married;Widowed}",
+          "is-mandatory": true,
+          "width": "200px"
+        }
+      ]
+    }
+  ]
+}

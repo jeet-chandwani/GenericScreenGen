@@ -20,7 +20,12 @@ namespace GenericScreenGenImplementationsLib
             int iMaxChars,
             int iLines,
             IReadOnlyList<string> lstLookupValues,
-            bool fIsActionField)
+            IReadOnlyList<string> lstLookupOptionDescriptions,
+            IReadOnlyList<string> lstLookupOptionImages,
+            bool fIsMandatory,
+            bool fIsMultiple,
+            bool fIsActionField,
+            bool fIsSearchable = false)
         {
             Id = strId;
             Name = strName;
@@ -34,7 +39,12 @@ namespace GenericScreenGenImplementationsLib
             MaxChars = iMaxChars;
             Lines = iLines;
             LookupValues = lstLookupValues;
+            LookupOptionDescriptions = lstLookupOptionDescriptions;
+            LookupOptionImages = lstLookupOptionImages;
+            IsMandatory = fIsMandatory;
+            IsMultiple = fIsMultiple;
             IsActionField = fIsActionField;
+            IsSearchable = fIsSearchable;
         }
 
         public string Id { get; }
@@ -49,6 +59,11 @@ namespace GenericScreenGenImplementationsLib
         public int MaxChars { get; }
         public int Lines { get; }
         public IReadOnlyList<string> LookupValues { get; }
+        public IReadOnlyList<string> LookupOptionDescriptions { get; }
+        public IReadOnlyList<string> LookupOptionImages { get; }
+        public bool IsMandatory { get; }
+        public bool IsMultiple { get; }
         public bool IsActionField { get; }
+        public bool IsSearchable { get; }
     }
 }

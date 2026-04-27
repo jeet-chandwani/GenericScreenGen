@@ -26,13 +26,46 @@
 }
 
 .page-title-panel {
-  max-width: 1100px;
-  margin: 0 auto 16px;
+  margin: 0 0 8px;
   position: sticky;
   top: 0;
   z-index: 3;
   padding-top: 4px;
   background: linear-gradient(180deg, rgba(246, 239, 227, 0.98) 85%, rgba(246, 239, 227, 0));
+}
+
+.title-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title-bar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.title-nav-btn {
+  border: 1px solid #3f2412;
+  background: #5a3217;
+  color: #fff8ef;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 21px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.title-nav-btn:hover {
+  background: #704021;
 }
 
 .home-panel {
@@ -43,7 +76,6 @@
 
 .home-title {
   margin: 0;
-  text-align: center;
   font-family: Cambria, Georgia, serif;
   font-size: clamp(1.4rem, 2vw + 0.8rem, 2rem);
   line-height: 1.1;
@@ -51,7 +83,7 @@
 
 .home-divider {
   height: 2px;
-  margin: 14px 0 14px;
+  margin: 10px 0 8px;
   background: linear-gradient(90deg, #b57d52, #d3b18d, #b57d52);
   border-radius: 2px;
 }
@@ -145,38 +177,15 @@
 }
 
 .screen-view-panel {
-  max-width: 1100px;
-  margin: 0 auto;
+  margin: 0;
   padding: 16px;
 }
 
-.screen-view-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-bottom: 14px;
-}
-
 .panel-kicker,
-.screen-meta,
-.issue-path {
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.72rem;
-}
-
-.panel-header h2 {
-  margin: 8px 0 8px;
-  font-family: Cambria, Georgia, serif;
-}
-
 button {
   font: inherit;
   border-radius: 14px;
   border: 1px solid rgba(94, 63, 34, 0.24);
-}
-
-button {
   cursor: pointer;
   padding: 12px 18px;
   background: #8f4e2f;
@@ -195,8 +204,8 @@ button.secondary {
 .panel-header {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  align-items: start;
+  gap: 12px;
+  align-items: center;
   margin-bottom: 18px;
 }
 
@@ -242,15 +251,6 @@ button.secondary {
   .home-list-scroll {
     max-height: 280px;
   }
-
-  .screen-view-actions {
-    justify-content: stretch;
-  }
-
-  .screen-view-actions button {
-    flex: 1 1 auto;
-  }
-}
 
 @media (max-width: 640px) {
   .page-shell {

@@ -16,7 +16,12 @@ export interface ScreenRenderFieldModel {
   maxChars: number;
   lines: number;
   lookupValues: string[];
+  lookupOptionDescriptions: string[];
+  lookupOptionImages: string[];
+  isMandatory: boolean;
+  isMultiple: boolean;
   isActionField: boolean;
+  isSearchable: boolean;
 }
 
 export interface ScreenRenderSectionModel {
@@ -26,6 +31,7 @@ export interface ScreenRenderSectionModel {
   showBorder: boolean;
   fields: ScreenRenderFieldModel[];
   sections: ScreenRenderSectionModel[];
+  detailScreen: string;
 }
 
 export interface ScreenRenderModel {

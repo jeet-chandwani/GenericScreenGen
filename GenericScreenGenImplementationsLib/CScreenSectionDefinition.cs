@@ -20,13 +20,15 @@ namespace GenericScreenGenImplementationsLib
             string strLayoutPolicy,
             bool fIsCollapsible,
             IReadOnlyList<IScreenFieldDefinition> lstFields,
-            IReadOnlyList<IScreenSectionDefinition> lstSections)
+            IReadOnlyList<IScreenSectionDefinition> lstSections,
+            string strDetailScreen = "")
         {
             Name = strName;
             LayoutPolicy = strLayoutPolicy;
             IsCollapsible = fIsCollapsible;
             Fields = lstFields;
             Sections = lstSections;
+            DetailScreen = strDetailScreen;
         }
 
         /// <inheritdoc />
@@ -43,5 +45,8 @@ namespace GenericScreenGenImplementationsLib
 
         /// <inheritdoc />
         public IReadOnlyList<IScreenSectionDefinition> Sections { get; }
+
+        /// <inheritdoc />
+        public string DetailScreen { get; }
     }
 }

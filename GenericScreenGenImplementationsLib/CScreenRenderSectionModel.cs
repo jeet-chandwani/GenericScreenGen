@@ -7,7 +7,7 @@ namespace GenericScreenGenImplementationsLib
     /// </summary>
     public sealed class CScreenRenderSectionModel : IScreenRenderSectionModel
     {
-        public CScreenRenderSectionModel(string strName, string strLayoutPolicy, bool fIsCollapsible, bool fShowBorder, IReadOnlyList<IScreenRenderFieldModel> lstFields, IReadOnlyList<IScreenRenderSectionModel> lstSections)
+        public CScreenRenderSectionModel(string strName, string strLayoutPolicy, bool fIsCollapsible, bool fShowBorder, IReadOnlyList<IScreenRenderFieldModel> lstFields, IReadOnlyList<IScreenRenderSectionModel> lstSections, string strDetailScreen = "")
         {
             Name = strName;
             LayoutPolicy = strLayoutPolicy;
@@ -15,6 +15,7 @@ namespace GenericScreenGenImplementationsLib
             ShowBorder = fShowBorder;
             Fields = lstFields;
             Sections = lstSections;
+            DetailScreen = strDetailScreen;
         }
 
         public string Name { get; }
@@ -23,5 +24,6 @@ namespace GenericScreenGenImplementationsLib
         public bool ShowBorder { get; }
         public IReadOnlyList<IScreenRenderFieldModel> Fields { get; }
         public IReadOnlyList<IScreenRenderSectionModel> Sections { get; }
+        public string DetailScreen { get; }
     }
 }

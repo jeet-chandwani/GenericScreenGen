@@ -1,0 +1,52 @@
+{
+  "sections": [
+    {
+      "name": "default-section",
+      "layout-policy": "tabular",
+      "is-collapsible": false,
+      "detail-screen": "Screen-Employee-Detail.json",
+      "fields": [
+        {
+          "id": "emp-list-001",
+          "name": "First Name",
+          "description": "Enter employee first name",
+          "type": "Text",
+          "type-info": "{min-chars=0;max-chars=30;lines=1;}",
+          "width": "100px"
+        },
+        {
+          "id": "emp-list-002",
+          "name": "Last Name",
+          "description": "Enter employee last name",
+          "type": "Text",
+          "type-info": "{min-chars=0;max-chars=30;lines=1;}",
+          "width": "100px"
+        },
+        {
+          "id": "emp-list-003",
+          "name": "SSN",
+          "description": "Enter employee social security number",
+          "type": "Text",
+          "type-info": "{min-chars=0;max-chars=13;lines=1;}",
+          "width": "60px"
+        },
+        {
+          "id": "emp-list-004",
+          "name": "Birth Date",
+          "description": "Select employee birth date",
+          "type": "Date",
+          "width": "100px"
+        },
+        {
+          "id": "emp-list-005",
+          "name": "Marital Status",
+          "description": "Select marital status",
+          "type": "Lookup",
+          "type-info": "{Single;Married;Widowed}",
+          "is-mandatory": true,
+          "width": "100px"
+        }
+      ]
+    }
+  ]
+}

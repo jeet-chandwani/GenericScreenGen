@@ -16,7 +16,7 @@ namespace GenericScreenGenImplementationsLib
         /// <param name="enuType">Field type.</param>
         /// <param name="strTypeInfo">Type-specific configuration string.</param>
         /// <param name="strWidth">Field width.</param>
-        public CScreenFieldDefinition(string strId, string strName, string strDescription, EFieldType enuType, string strTypeInfo, string strWidth)
+        public CScreenFieldDefinition(string strId, string strName, string strDescription, EFieldType enuType, string strTypeInfo, string strWidth, bool fIsMandatory = false, bool fIsSearchable = false)
         {
             Id = strId;
             Name = strName;
@@ -24,6 +24,8 @@ namespace GenericScreenGenImplementationsLib
             Type = enuType;
             TypeInfo = strTypeInfo;
             Width = strWidth;
+            IsMandatory = fIsMandatory;
+            IsSearchable = fIsSearchable;
         }
 
         /// <inheritdoc />
@@ -43,5 +45,11 @@ namespace GenericScreenGenImplementationsLib
 
         /// <inheritdoc />
         public string Width { get; }
+
+        /// <inheritdoc />
+        public bool IsMandatory { get; }
+
+        /// <inheritdoc />
+        public bool IsSearchable { get; }
     }
 }

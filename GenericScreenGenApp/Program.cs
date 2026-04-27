@@ -3,6 +3,7 @@ using GenericScreenGenImplementationsLib;
 using GenericScreenGenInterfacesLib;
 using GenericScreenGenUtilsLib;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using MyDataStoreProviders;
 
 namespace GenericScreenGenApp
 {
@@ -38,6 +39,8 @@ namespace GenericScreenGenApp
 
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CPerLineLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CFlowLayoutPolicy>();
+			objBuilder.Services.AddSingleton<ILayoutPolicy, CTabularLayoutPolicy>();
+			objBuilder.Services.AddSingleton<ILayoutPolicy, CRecordDetailLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
 			objBuilder.Services.AddSingleton<IScreenConfigProvider>(sp =>
 			{
@@ -46,6 +49,11 @@ namespace GenericScreenGenApp
 			});
 			objBuilder.Services.AddSingleton<IScreenSchemaValidator>(delegate { return CreateScreenSchemaValidator(objFactory); });
 			objBuilder.Services.AddSingleton<IScreenRenderModelFactory>(delegate { return CreateScreenRenderModelFactory(objFactory); });
+			objBuilder.Services.AddSingleton<IDataStore>(delegate
+			{
+				string strDataStoreFolderPath = Path.Combine(objBuilder.Environment.ContentRootPath, "DataStore");
+				return new CJsonDataStore(strDataStoreFolderPath);
+			});
 
 			WebApplication objApp = objBuilder.Build();
 			objApp.UseCors("ClientAppCorsPolicy");
