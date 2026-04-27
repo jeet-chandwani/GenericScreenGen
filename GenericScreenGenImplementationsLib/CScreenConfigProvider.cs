@@ -163,8 +163,13 @@ namespace GenericScreenGenImplementationsLib
                 }
 
                 string strScreenFileName = Path.GetFileName(strJsonFilePath);
-                string strDisplayName = CScreenNameUtility.GetDisplayNameFromFileName(strScreenFileName);
-                string strScreenId = CScreenNameUtility.GetScreenIdFromFileName(strScreenFileName);
+                string strDefaultScreenName = CScreenNameUtility.GetScreenNameFromFileName(strScreenFileName);
+                string strDisplayName = string.IsNullOrWhiteSpace(objScreenDocument.Name)
+                    ? strDefaultScreenName
+                    : objScreenDocument.Name.Trim();
+                string strScreenId = string.IsNullOrWhiteSpace(objScreenDocument.Id)
+                    ? CScreenNameUtility.GetScreenIdFromFileName(strScreenFileName)
+                    : objScreenDocument.Id.Trim();
                 itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections);
                 strError = string.Empty;
                 return true;
@@ -306,6 +311,12 @@ namespace GenericScreenGenImplementationsLib
 
         private sealed class CScreenDocumentDto
         {
+            [JsonPropertyName("id")]
+            public string? Id { get; set; }
+
+            [JsonPropertyName("name")]
+            public string? Name { get; set; }
+
             [JsonPropertyName("sections")]
             public List<CScreenSectionDto>? Sections { get; set; }
         }

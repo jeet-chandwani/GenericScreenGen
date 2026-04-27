@@ -84,14 +84,21 @@ namespace GenericScreenGenApp
 					return Results.Problem(strError);
 				}
 
-				List<object> lstResponse = lstScreenFileNames
-					.Select(strScreenFileName => new
+				List<object> lstResponse = new List<object>();
+
+				foreach (string strScreenFileName in lstScreenFileNames)
+				{
+					if (!itfScreenConfigProvider.TryGetScreenDefinition(strScreenFileName, out IScreenDefinition? itfScreenDefinition, out string strLookupError) || itfScreenDefinition is null)
+					{
+						return Results.Problem(strLookupError);
+					}
+
+					lstResponse.Add(new
 					{
 						fileName = strScreenFileName,
-						displayName = CScreenNameUtility.GetDisplayNameFromFileName(strScreenFileName)
-					})
-					.Cast<object>()
-					.ToList();
+						displayName = itfScreenDefinition.DisplayName
+					});
+				}
 
 				return Results.Ok(lstResponse);
 			});
