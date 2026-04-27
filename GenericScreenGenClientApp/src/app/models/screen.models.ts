@@ -39,6 +39,7 @@ export interface ScreenRenderModel {
   screenId: string;
   screenFileName: string;
   displayName: string;
+  features: string[];
   sections: ScreenRenderSectionModel[];
 }
 

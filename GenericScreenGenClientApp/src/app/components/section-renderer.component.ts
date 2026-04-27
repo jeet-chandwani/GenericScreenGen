@@ -133,14 +133,24 @@ type TSortDirection = 'asc' | 'desc';
 
                 <div class="tabular-edit-actions">
                   @if (isCreateRowMode()) {
-                    <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
-                    <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Cancel</button>
+                    @if (canSaveFeature()) {
+                      <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
+                    }
+                    @if (canCancelFeature()) {
+                      <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Cancel</button>
+                    }
                   } @else {
-                    <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
-                    <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Cancel</button>
-                    <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
-                      {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
-                    </button>
+                    @if (canSaveFeature()) {
+                      <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
+                    }
+                    @if (canCancelFeature()) {
+                      <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Cancel</button>
+                    }
+                    @if (canShowOriginalValuesFeature()) {
+                      <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
+                        {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+                      </button>
+                    }
                   }
                 </div>
               </div>
@@ -314,11 +324,17 @@ type TSortDirection = 'asc' | 'desc';
               }
             </div>
             <div class="record-detail-actions">
-              <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
-              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
-              <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
-                {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
-              </button>
+              @if (canSaveFeature()) {
+                <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
+              }
+              @if (canCancelFeature()) {
+                <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
+              }
+              @if (canShowOriginalValuesFeature()) {
+                <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
+                  {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+                </button>
+              }
             </div>
 
             @if (showCancelConfirmDialog()) {
@@ -402,7 +418,7 @@ type TSortDirection = 'asc' | 'desc';
         }
 
         @for (objSection of section.sections; track objSection.name) {
-          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
+          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [screenFeatures]="screenFeatures" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
         }
       </div>
     </section>
@@ -1018,6 +1034,7 @@ export class SectionRendererComponent implements OnChanges {
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Input() screenFileName: string = '';
+  @Input() screenFeatures: string[] = [];
   @Input() initialFieldValuesByName: Record<string, string> | null = null;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
@@ -1099,6 +1116,18 @@ export class SectionRendererComponent implements OnChanges {
 
   get isPerLineLayout(): boolean {
     return this.section.layoutPolicy === 'per-line';
+  }
+
+  canSaveFeature(): boolean {
+    return this.hasFeature('save');
+  }
+
+  canCancelFeature(): boolean {
+    return this.hasFeature('cancel');
+  }
+
+  canShowOriginalValuesFeature(): boolean {
+    return this.hasFeature('show-original-values');
   }
 
   updateRecordDetailField(strFieldId: string, strValue: string): void {
@@ -1538,5 +1567,13 @@ export class SectionRendererComponent implements OnChanges {
 
   forwardAction(strActionName: string): void {
     this.actionInvoked.emit(strActionName);
+  }
+
+  private hasFeature(strFeatureId: string): boolean {
+    if (!this.screenFeatures || this.screenFeatures.length === 0) {
+      return true;
+    }
+
+    return this.screenFeatures.some(strFeature => strFeature?.trim().toLowerCase() === strFeatureId);
   }
 }

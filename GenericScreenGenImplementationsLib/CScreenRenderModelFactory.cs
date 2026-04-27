@@ -28,7 +28,7 @@ namespace GenericScreenGenImplementationsLib
                 .Cast<IScreenRenderSectionModel>()
                 .ToList();
 
-            itfScreenRenderModel = new CScreenRenderModel(itfScreenDefinition.ScreenId, itfScreenDefinition.ScreenFileName, itfScreenDefinition.DisplayName, lstSections);
+            itfScreenRenderModel = new CScreenRenderModel(itfScreenDefinition.ScreenId, itfScreenDefinition.ScreenFileName, itfScreenDefinition.DisplayName, itfScreenDefinition.Features, lstSections);
             strError = string.Empty;
             return true;
         }

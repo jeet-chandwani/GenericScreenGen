@@ -10,6 +10,8 @@ namespace GenericScreenGenImplementationsLib
     /// </summary>
     public sealed class CScreenConfigProvider : ACanInitBase, IScreenConfigProvider
     {
+        private static readonly string[] s_arrDefaultScreenFeatures = ["save", "cancel", "show-original-values"];
+
         private readonly JsonSerializerOptions m_objSerializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -170,7 +172,9 @@ namespace GenericScreenGenImplementationsLib
                 string strScreenId = string.IsNullOrWhiteSpace(objScreenDocument.Id)
                     ? CScreenNameUtility.GetScreenIdFromFileName(strScreenFileName)
                     : objScreenDocument.Id.Trim();
-                itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections);
+                IReadOnlyList<string> lstFeatures = NormalizeFeatures(objScreenDocument.Features);
+
+                itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections, lstFeatures);
                 strError = string.Empty;
                 return true;
             }
@@ -277,6 +281,37 @@ namespace GenericScreenGenImplementationsLib
             return true;
         }
 
+        private static IReadOnlyList<string> NormalizeFeatures(List<string>? lstRawFeatures)
+        {
+            if (lstRawFeatures is null || lstRawFeatures.Count == 0)
+            {
+                return s_arrDefaultScreenFeatures;
+            }
+
+            HashSet<string> setKnownFeatures = new HashSet<string>(s_arrDefaultScreenFeatures, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> setNormalized = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<string> lstNormalized = new List<string>();
+
+            foreach (string strRawFeature in lstRawFeatures)
+            {
+                if (string.IsNullOrWhiteSpace(strRawFeature))
+                {
+                    continue;
+                }
+
+                string strNormalizedFeature = strRawFeature.Trim().ToLowerInvariant();
+
+                if (!setKnownFeatures.Contains(strNormalizedFeature) || !setNormalized.Add(strNormalizedFeature))
+                {
+                    continue;
+                }
+
+                lstNormalized.Add(strNormalizedFeature);
+            }
+
+            return lstNormalized;
+        }
+
         private static bool TryParseFieldType(string strFieldType, out EFieldType enuFieldType)
         {
             enuFieldType = EFieldType.Text;
@@ -316,6 +351,9 @@ namespace GenericScreenGenImplementationsLib
 
             [JsonPropertyName("name")]
             public string? Name { get; set; }
+
+            [JsonPropertyName("features")]
+            public List<string>? Features { get; set; }
 
             [JsonPropertyName("sections")]
             public List<CScreenSectionDto>? Sections { get; set; }
