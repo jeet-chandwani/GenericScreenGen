@@ -251,6 +251,7 @@ button.secondary {
   .home-list-scroll {
     max-height: 280px;
   }
+}
 
 @media (max-width: 640px) {
   .page-shell {

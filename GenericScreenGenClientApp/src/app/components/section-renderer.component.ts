@@ -30,7 +30,7 @@ type TSortDirection = 'asc' | 'desc';
         </div>
       }
 
-      <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
+      <div class="section-body" [ngClass]="layoutPolicyCssClass" [class.hidden]="collapsed()">
         @if (isTabularLayout) {
           <div class="tabular-shell">
             @if (editingRow(); as objEditingRow) {
@@ -57,6 +57,7 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
                           <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
@@ -118,6 +119,7 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           />
                         }
                       </label>
@@ -254,6 +256,7 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateRecordDetailField(objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
                           <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
@@ -310,6 +313,7 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateRecordDetailField(objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           />
                         }
                         @if (showOriginalValues() && recordDetailOriginal()[objField.id] !== undefined) {
@@ -369,6 +373,7 @@ type TSortDirection = 'asc' | 'desc';
                       [title]="objField.description"
                       [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                       [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                      (input)="enforceMaxChars($event, objField.maxChars)"
                     ></textarea>
                   } @else if (objField.controlType === 'select') {
                     <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
@@ -409,6 +414,7 @@ type TSortDirection = 'asc' | 'desc';
                       [title]="objField.description"
                       [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                       [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                      (input)="enforceMaxChars($event, objField.maxChars)"
                     />
                   }
                 </label>
@@ -495,7 +501,6 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .section-body.layout-per-line {
-        display: grid;
         gap: 4px;
       }
 
@@ -971,8 +976,13 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .field-input {
-        flex: 1 1 auto;
+        flex: 0 1 auto;
         min-width: 0;
+      }
+
+      .record-detail-input-group .field-input,
+      .tabular-edit-field-label .field-input {
+        flex: 1 1 auto;
       }
 
       input,
@@ -1108,8 +1118,8 @@ export class SectionRendererComponent implements OnChanges {
     }
   }
 
-  get layoutCssClass(): string {
-    return 'section-body ' + this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
+  get layoutPolicyCssClass(): string {
+    return this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
   }
 
   get isTabularLayout(): boolean {
@@ -1507,6 +1517,21 @@ export class SectionRendererComponent implements OnChanges {
 
       return lstUpdatedRows;
     });
+  }
+
+  enforceMaxChars(objEvent: Event, iMaxChars: number): void {
+    if (iMaxChars <= 0) {
+      return;
+    }
+
+    let objTarget = objEvent.target as HTMLInputElement | HTMLTextAreaElement | null;
+    if (!objTarget || typeof objTarget.value !== 'string') {
+      return;
+    }
+
+    if (objTarget.value.length > iMaxChars) {
+      objTarget.value = objTarget.value.slice(0, iMaxChars);
+    }
   }
 
   private compareValues(strLeftValue: string, strRightValue: string, strSortDirection: TSortDirection): number {
