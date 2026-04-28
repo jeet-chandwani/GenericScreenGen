@@ -1,4 +1,6 @@
-{
+﻿{
+  "id": "screen-calculator",
+  "name": "Calculator",
   "sections": [
     {
       "name": "default-section",

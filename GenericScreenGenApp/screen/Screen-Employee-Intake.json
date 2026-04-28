@@ -1,4 +1,6 @@
-{
+﻿{
+  "id": "screen-employee-intake",
+  "name": "Employee Intake",
   "sections": [
     {
       "name": "default-section",

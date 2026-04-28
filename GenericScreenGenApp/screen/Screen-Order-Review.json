@@ -1,4 +1,6 @@
-{
+﻿{
+  "id": "screen-order-review",
+  "name": "Order Review",
   "sections": [
     {
       "name": "default-section",

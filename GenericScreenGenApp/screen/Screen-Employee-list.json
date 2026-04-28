@@ -1,4 +1,6 @@
-{
+﻿{
+  "id": "screen-employee-list",
+  "name": "Employee List",
   "sections": [
     {
       "name": "default-section",
