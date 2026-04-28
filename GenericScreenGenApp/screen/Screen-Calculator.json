@@ -1,6 +1,7 @@
 ﻿{
   "id": "screen-calculator",
   "name": "Calculator",
+  "features": [ ],
   "sections": [
     {
       "name": "default-section",

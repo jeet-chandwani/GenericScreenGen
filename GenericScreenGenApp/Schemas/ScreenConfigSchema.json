@@ -4,7 +4,7 @@
   "title": "Generic Screen Configuration",
   "description": "Schema for dynamic screen configuration files used by GenericScreenGenApp.",
   "type": "object",
-  "required": ["sections"],
+  "required": ["sections", "features"],
   "properties": {
     "id": {
       "type": "string",
@@ -19,7 +19,7 @@
     },
     "features": {
       "type": "array",
-      "description": "Optional screen-level feature toggles.",
+      "description": "Mandatory screen-level feature toggles. Use an empty array to disable all features. Supported values: 'save', 'cancel', 'show-original-values'.",
       "items": {
         "type": "string",
         "enum": ["save", "cancel", "show-original-values"]

@@ -281,11 +281,11 @@ namespace GenericScreenGenImplementationsLib
             return true;
         }
 
-        private static IReadOnlyList<string> NormalizeFeatures(List<string>? lstRawFeatures)
+        private static IReadOnlyList<string> NormalizeFeatures(List<string> lstRawFeatures)
         {
-            if (lstRawFeatures is null || lstRawFeatures.Count == 0)
+            if (lstRawFeatures.Count == 0)
             {
-                return s_arrDefaultScreenFeatures;
+                return Array.Empty<string>();
             }
 
             HashSet<string> setKnownFeatures = new HashSet<string>(s_arrDefaultScreenFeatures, StringComparer.OrdinalIgnoreCase);
@@ -353,7 +353,8 @@ namespace GenericScreenGenImplementationsLib
             public string? Name { get; set; }
 
             [JsonPropertyName("features")]
-            public List<string>? Features { get; set; }
+            [JsonRequired]
+            public List<string> Features { get; set; } = new List<string>();
 
             [JsonPropertyName("sections")]
             public List<CScreenSectionDto>? Sections { get; set; }

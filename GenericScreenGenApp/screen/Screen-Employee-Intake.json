@@ -1,6 +1,7 @@
 ﻿{
   "id": "screen-employee-intake",
   "name": "Employee Intake",
+  "features": [ ],
   "sections": [
     {
       "name": "default-section",
