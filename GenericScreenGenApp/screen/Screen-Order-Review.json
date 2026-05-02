@@ -1,4 +1,7 @@
-{
+﻿{
+  "id": "screen-order-review",
+  "name": "Order Review",
+  "features": [ ],
   "sections": [
     {
       "name": "default-section",
@@ -15,6 +18,7 @@
               "name": "Customer Name",
               "description": "Display the customer name for review",
               "type": "Text",
+              "type-info": "{min-chars=0;max-chars=40;lines=1;}",
               "width": "320px"
             },
             {
@@ -22,6 +26,7 @@
               "name": "Order Number",
               "description": "Display the sales order number",
               "type": "Text",
+              "type-info": "{min-chars=0;max-chars=20;lines=1;}",
               "width": "220px"
             }
           ]

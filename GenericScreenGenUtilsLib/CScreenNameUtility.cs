@@ -9,11 +9,11 @@ namespace GenericScreenGenUtilsLib
     public static class CScreenNameUtility
     {
         /// <summary>
-        /// Converts a screen configuration file name into a human-readable display name.
+        /// Gets the default screen name from a screen configuration file name.
         /// </summary>
         /// <param name="strScreenFileName">Screen configuration file name.</param>
-        /// <returns>Display name derived from the file name.</returns>
-        public static string GetDisplayNameFromFileName(string strScreenFileName)
+        /// <returns>Screen name derived from file name without prefix and extension.</returns>
+        public static string GetScreenNameFromFileName(string strScreenFileName)
         {
             string strBaseName = Path.GetFileNameWithoutExtension(strScreenFileName);
 
@@ -22,7 +22,17 @@ namespace GenericScreenGenUtilsLib
                 strBaseName = strBaseName.Substring(CScreenGeneratorConstants.SCREEN_FILE_PREFIX.Length);
             }
 
-            return strBaseName.Replace('-', ' ').Trim();
+            return strBaseName.Trim();
+        }
+
+        /// <summary>
+        /// Converts a screen configuration file name into a human-readable display name.
+        /// </summary>
+        /// <param name="strScreenFileName">Screen configuration file name.</param>
+        /// <returns>Display name derived from the file name.</returns>
+        public static string GetDisplayNameFromFileName(string strScreenFileName)
+        {
+            return GetScreenNameFromFileName(strScreenFileName).Replace('-', ' ').Trim();
         }
 
         /// <summary>

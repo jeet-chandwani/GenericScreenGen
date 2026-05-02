@@ -1,4 +1,7 @@
-{
+﻿{
+  "id": "screen-employee-detail",
+  "name": "Employee Detail",
+  "features": [ "save", "cancel", "show-original-values" ],
   "sections": [
     {
       "name": "default-section",

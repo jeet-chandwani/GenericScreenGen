@@ -56,7 +56,7 @@
 
           <div class="screen-sections">
             @for (objSection of objRenderModel.sections; track objSection.name) {
-              <app-section-renderer [section]="objSection" [screenFileName]="objRenderModel.screenFileName" [initialFieldValuesByName]="navigationPrefillByFieldName()" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
+              <app-section-renderer [section]="objSection" [screenFileName]="objRenderModel.screenFileName" [screenFeatures]="objRenderModel.features" [initialFieldValuesByName]="navigationPrefillByFieldName()" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
             }
           </div>
 

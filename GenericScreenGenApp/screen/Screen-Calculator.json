@@ -1,4 +1,7 @@
-{
+﻿{
+  "id": "screen-calculator",
+  "name": "Calculator",
+  "features": [ ],
   "sections": [
     {
       "name": "default-section",
@@ -10,14 +13,16 @@
           "name": "First Number",
           "description": "Type first number to add",
           "type": "Integer",
-          "width": "300px"
+          "width": "200px",
+          "max-width": "200px"
         },
         {
           "id": "calc-002",
           "name": "Second Number",
           "description": "Type second number to add",
           "type": "Integer",
-          "width": "300px"
+          "width": "200px",
+          "max-width": "200px"
         },
         {
           "id": "calc-003",

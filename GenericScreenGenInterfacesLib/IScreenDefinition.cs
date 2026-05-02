@@ -26,5 +26,10 @@ namespace GenericScreenGenInterfacesLib
         /// Gets the top-level sections for this screen.
         /// </summary>
         IReadOnlyList<IScreenSectionDefinition> Sections { get; }
+
+        /// <summary>
+        /// Gets the enabled screen-level features.
+        /// </summary>
+        IReadOnlyList<string> Features { get; }
     }
 }

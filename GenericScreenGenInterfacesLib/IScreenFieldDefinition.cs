@@ -36,6 +36,11 @@ namespace GenericScreenGenInterfacesLib
         string Width { get; }
 
         /// <summary>
+        /// Gets the optional CSS max-width value for the field.
+        /// </summary>
+        string MaxWidth { get; }
+
+        /// <summary>
         /// Gets a value indicating whether the field is mandatory, regardless of field type.
         /// </summary>
         bool IsMandatory { get; }

@@ -10,6 +10,7 @@ export interface ScreenRenderFieldModel {
   type: string;
   typeInfo: string;
   width: string;
+  maxWidth: string;
   controlType: string;
   inputType: string;
   minChars: number;
@@ -38,6 +39,7 @@ export interface ScreenRenderModel {
   screenId: string;
   screenFileName: string;
   displayName: string;
+  features: string[];
   sections: ScreenRenderSectionModel[];
 }
 

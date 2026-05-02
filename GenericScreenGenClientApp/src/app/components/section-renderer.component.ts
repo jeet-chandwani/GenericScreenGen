@@ -30,7 +30,7 @@ type TSortDirection = 'asc' | 'desc';
         </div>
       }
 
-      <div class="section-body" [class]="layoutCssClass" [class.hidden]="collapsed()">
+      <div class="section-body" [ngClass]="layoutPolicyCssClass" [class.hidden]="collapsed()">
         @if (isTabularLayout) {
           <div class="tabular-shell">
             @if (editingRow(); as objEditingRow) {
@@ -44,10 +44,12 @@ type TSortDirection = 'asc' | 'desc';
                     @if (!objField.isActionField) {
                       <div class="field-row tabular-edit-field-row">
                       <label class="field-label tabular-edit-field-label">
-                        <span class="field-name tabular-edit-field-name">{{ objField.name }}</span>
+                        <span class="field-name tabular-edit-field-name">{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                         @if (objField.controlType === 'textarea') {
                           <textarea
                             class="field-input"
+                            [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [rows]="objField.lines"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -55,9 +57,10 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
@@ -65,6 +68,8 @@ type TSortDirection = 'asc' | 'desc';
                             }
                             <select
                               class="field-input"
+                              [style.width]="objField.width"
+                              [style.max-width]="objField.maxWidth"
                               [title]="objField.description"
                               [ngModel]="objEditingRow[objField.id]"
                               (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
@@ -77,7 +82,7 @@ type TSortDirection = 'asc' | 'desc';
                             </select>
                           </div>
                         } @else if (objField.controlType === 'multiselect') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
@@ -105,6 +110,8 @@ type TSortDirection = 'asc' | 'desc';
                         } @else {
                           <input
                             class="field-input"
+                            [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [type]="objField.inputType"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -112,6 +119,7 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateCellValue(objEditingRow, objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           />
                         }
                       </label>
@@ -127,14 +135,24 @@ type TSortDirection = 'asc' | 'desc';
 
                 <div class="tabular-edit-actions">
                   @if (isCreateRowMode()) {
-                    <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
-                    <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Cancel</button>
+                    @if (canSaveFeature()) {
+                      <button type="button" class="record-detail-save-btn" (click)="saveNewRow()">Save</button>
+                    }
+                    @if (canCancelFeature()) {
+                      <button type="button" class="record-detail-cancel-btn" (click)="cancelNewRow()">Cancel</button>
+                    }
                   } @else {
-                    <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
-                    <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Cancel</button>
-                    <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
-                      {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
-                    </button>
+                    @if (canSaveFeature()) {
+                      <button type="button" class="record-detail-save-btn" (click)="saveEditRow()">Save</button>
+                    }
+                    @if (canCancelFeature()) {
+                      <button type="button" class="record-detail-cancel-btn" (click)="discardEditRow()">Cancel</button>
+                    }
+                    @if (canShowOriginalValuesFeature()) {
+                      <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleTabularShowOriginalValues()">
+                        {{ tabularShowOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+                      </button>
+                    }
                   }
                 </div>
               </div>
@@ -145,7 +163,7 @@ type TSortDirection = 'asc' | 'desc';
                 <thead>
                   <tr>
                     @for (objField of section.fields; track objField.id) {
-                      <th [style.min-width]="objField.width">
+                      <th [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         <button
                           type="button"
                           class="tabular-sort-button"
@@ -153,7 +171,7 @@ type TSortDirection = 'asc' | 'desc';
                           [title]="objField.isActionField ? '' : getSortTitle(objField.id)"
                           (click)="sortByColumn(objField.id)"
                         >
-                          <span>{{ objField.name }}</span>
+                          <span>{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                           @if (!objField.isActionField && getSortIndicator(objField.id)) {
                             <span class="tabular-sort-indicator">{{ getSortIndicator(objField.id) }}</span>
                           }
@@ -164,7 +182,7 @@ type TSortDirection = 'asc' | 'desc';
                   </tr>
                   <tr class="tabular-filter-row">
                     @for (objField of section.fields; track objField.id) {
-                      <th [style.min-width]="objField.width">
+                      <th [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         @if (!objField.isActionField) {
                           <input
                             class="tabular-filter-input"
@@ -183,7 +201,7 @@ type TSortDirection = 'asc' | 'desc';
                   @for (objRow of pagedTabularRows(); track $index) {
                   <tr class="tabular-data-row" (click)="onRowClick(objRow)">
                     @for (objField of section.fields; track objField.id) {
-                      <td class="tabular-cell" [style.min-width]="objField.width">
+                      <td class="tabular-cell" [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         @if (objField.isActionField) {
                           <button type="button" class="field-action" [title]="objField.description" (click)="$event.stopPropagation(); emitAction(objField)">
                             {{ objField.name }}
@@ -224,12 +242,13 @@ type TSortDirection = 'asc' | 'desc';
                     </button>
                   } @else {
                     <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
-                      <span class="field-name">{{ objField.name }}</span>
+                      <span class="field-name">{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                       <div class="record-detail-input-group">
                         @if (objField.controlType === 'textarea') {
                           <textarea
                             class="field-input"
                             [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [rows]="objField.lines"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -237,15 +256,16 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateRecordDetailField(objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           ></textarea>
                         } @else if (objField.controlType === 'select') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
                                 (input)="setLookupSearch(objField.id, $any($event.target).value)" />
                             }
-                            <select class="field-input" [style.width]="objField.width" [title]="objField.description"
+                            <select class="field-input" [style.width]="objField.width" [style.max-width]="objField.maxWidth" [title]="objField.description"
                               [ngModel]="recordDetailValues()[objField.id]"
                               (ngModelChange)="updateRecordDetailField(objField.id, $event)">
                               @for (opt of getFilteredLookupOptions(objField); track opt.value) {
@@ -256,7 +276,7 @@ type TSortDirection = 'asc' | 'desc';
                             </select>
                           </div>
                         } @else if (objField.controlType === 'multiselect') {
-                          <div class="lookup-search-wrapper">
+                          <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                             @if (objField.isSearchable) {
                               <input class="lookup-search-input" type="text" placeholder="Search options…"
                                 [value]="getLookupSearch(objField.id)"
@@ -285,6 +305,7 @@ type TSortDirection = 'asc' | 'desc';
                           <input
                             class="field-input"
                             [style.width]="objField.width"
+                            [style.max-width]="objField.maxWidth"
                             [type]="objField.inputType"
                             [placeholder]="objField.description"
                             [title]="objField.description"
@@ -292,6 +313,7 @@ type TSortDirection = 'asc' | 'desc';
                             (ngModelChange)="updateRecordDetailField(objField.id, $event)"
                             [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                             [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                            (input)="enforceMaxChars($event, objField.maxChars)"
                           />
                         }
                         @if (showOriginalValues() && recordDetailOriginal()[objField.id] !== undefined) {
@@ -306,11 +328,17 @@ type TSortDirection = 'asc' | 'desc';
               }
             </div>
             <div class="record-detail-actions">
-              <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
-              <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
-              <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
-                {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
-              </button>
+              @if (canSaveFeature()) {
+                <button type="button" class="record-detail-save-btn" (click)="saveRecordDetail()">Save</button>
+              }
+              @if (canCancelFeature()) {
+                <button type="button" class="record-detail-cancel-btn" (click)="cancelRecordDetail()">Cancel</button>
+              }
+              @if (canShowOriginalValuesFeature()) {
+                <button type="button" class="record-detail-toggle-orig-btn" (click)="toggleShowOriginalValues()">
+                  {{ showOriginalValues() ? 'Hide Original Values' : 'Show Original Values' }}
+                </button>
+              }
             </div>
 
             @if (showCancelConfirmDialog()) {
@@ -334,32 +362,34 @@ type TSortDirection = 'asc' | 'desc';
                 </button>
               } @else {
                 <label class="field-label" [title]="objField.name + (objField.description ? '\n' + objField.description : '')">
-                  <span class="field-name">{{ objField.name }}</span>
+                  <span class="field-name">{{ objField.name }}@if (objField.isMandatory && canSaveFeature()) { <span class="mandatory-indicator" aria-label="Mandatory field">*</span> }</span>
                   @if (objField.controlType === 'textarea') {
                     <textarea
                       class="field-input"
                       [style.width]="objField.width"
+                      [style.max-width]="objField.maxWidth"
                       [rows]="objField.lines"
                       [placeholder]="objField.description"
                       [title]="objField.description"
                       [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                       [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                      (input)="enforceMaxChars($event, objField.maxChars)"
                     ></textarea>
                   } @else if (objField.controlType === 'select') {
-                    <div class="lookup-search-wrapper">
+                    <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                       @if (objField.isSearchable) {
                         <input class="lookup-search-input" type="text" placeholder="Search options…"
                           [value]="getLookupSearch(objField.id)"
                           (input)="setLookupSearch(objField.id, $any($event.target).value)" />
                       }
-                      <select class="field-input" [style.width]="objField.width" [title]="objField.description">
+                      <select class="field-input" [style.width]="objField.width" [style.max-width]="objField.maxWidth" [title]="objField.description">
                         @for (strLookupValue of getFilteredLookupValues(objField); track strLookupValue) {
                           <option [value]="strLookupValue">{{ strLookupValue }}</option>
                         }
                       </select>
                     </div>
                   } @else if (objField.controlType === 'multiselect') {
-                    <div class="lookup-search-wrapper">
+                    <div class="lookup-search-wrapper" [style.width]="objField.width" [style.max-width]="objField.maxWidth">
                       @if (objField.isSearchable) {
                         <input class="lookup-search-input" type="text" placeholder="Search options…"
                           [value]="getLookupSearch(objField.id)"
@@ -378,11 +408,13 @@ type TSortDirection = 'asc' | 'desc';
                     <input
                       class="field-input"
                       [style.width]="objField.width"
+                      [style.max-width]="objField.maxWidth"
                       [type]="objField.inputType"
                       [placeholder]="objField.description"
                       [title]="objField.description"
                       [attr.minlength]="objField.minChars > 0 ? objField.minChars : null"
                       [attr.maxlength]="objField.maxChars > 0 ? objField.maxChars : null"
+                      (input)="enforceMaxChars($event, objField.maxChars)"
                     />
                   }
                 </label>
@@ -392,7 +424,7 @@ type TSortDirection = 'asc' | 'desc';
         }
 
         @for (objSection of section.sections; track objSection.name) {
-          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
+          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [screenFeatures]="screenFeatures" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
         }
       </div>
     </section>
@@ -469,7 +501,6 @@ type TSortDirection = 'asc' | 'desc';
       }
 
       .section-body.layout-per-line {
-        display: grid;
         gap: 4px;
       }
 
@@ -934,13 +965,24 @@ type TSortDirection = 'asc' | 'desc';
         text-overflow: clip;
       }
 
+      .mandatory-indicator {
+        color: #a72f2f;
+        font-weight: 800;
+        margin-left: 4px;
+      }
+
       .section-body.layout-per-line .field-name {
         flex: 0 0 160px;
       }
 
       .field-input {
-        flex: 1 1 auto;
+        flex: 0 1 auto;
         min-width: 0;
+      }
+
+      .record-detail-input-group .field-input,
+      .tabular-edit-field-label .field-input {
+        flex: 1 1 auto;
       }
 
       input,
@@ -1008,6 +1050,7 @@ export class SectionRendererComponent implements OnChanges {
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Input() screenFileName: string = '';
+  @Input() screenFeatures: string[] = [];
   @Input() initialFieldValuesByName: Record<string, string> | null = null;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
@@ -1075,8 +1118,8 @@ export class SectionRendererComponent implements OnChanges {
     }
   }
 
-  get layoutCssClass(): string {
-    return 'section-body ' + this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
+  get layoutPolicyCssClass(): string {
+    return this.m_itfLayoutPolicyService.getCssClass(this.section.layoutPolicy);
   }
 
   get isTabularLayout(): boolean {
@@ -1091,11 +1134,27 @@ export class SectionRendererComponent implements OnChanges {
     return this.section.layoutPolicy === 'per-line';
   }
 
+  canSaveFeature(): boolean {
+    return this.hasFeature('save');
+  }
+
+  canCancelFeature(): boolean {
+    return this.hasFeature('cancel');
+  }
+
+  canShowOriginalValuesFeature(): boolean {
+    return this.hasFeature('show-original-values');
+  }
+
   updateRecordDetailField(strFieldId: string, strValue: string): void {
     this.recordDetailValues.update((dictValues) => ({ ...dictValues, [strFieldId]: strValue }));
   }
 
   saveRecordDetail(): void {
+    if (!this.validateMandatoryFields(this.recordDetailValues())) {
+      return;
+    }
+
     // Persist current values as the new baseline; downstream consumers can subscribe to actionInvoked.
     this.m_dictRecordDetailOriginal = { ...this.recordDetailValues() };
     this.actionInvoked.emit('save');
@@ -1335,6 +1394,11 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   saveEditRow(): void {
+    let objEditingRow = this.editingRow();
+    if (!objEditingRow || !this.validateMandatoryFields(objEditingRow)) {
+      return;
+    }
+
     this.m_dictTabularEditOriginal = { ...this.editingRow()! };
     this.editingRow.set(null);
     this.actionInvoked.emit('save');
@@ -1372,6 +1436,10 @@ export class SectionRendererComponent implements OnChanges {
   saveNewRow(): void {
     let objEditingRow = this.editingRow();
     if (!objEditingRow || !this.isCreateRowMode()) {
+      return;
+    }
+
+    if (!this.validateMandatoryFields(objEditingRow)) {
       return;
     }
 
@@ -1451,6 +1519,21 @@ export class SectionRendererComponent implements OnChanges {
     });
   }
 
+  enforceMaxChars(objEvent: Event, iMaxChars: number): void {
+    if (iMaxChars <= 0) {
+      return;
+    }
+
+    let objTarget = objEvent.target as HTMLInputElement | HTMLTextAreaElement | null;
+    if (!objTarget || typeof objTarget.value !== 'string') {
+      return;
+    }
+
+    if (objTarget.value.length > iMaxChars) {
+      objTarget.value = objTarget.value.slice(0, iMaxChars);
+    }
+  }
+
   private compareValues(strLeftValue: string, strRightValue: string, strSortDirection: TSortDirection): number {
     let iLeftNumber = Number(strLeftValue);
     let iRightNumber = Number(strRightValue);
@@ -1528,5 +1611,35 @@ export class SectionRendererComponent implements OnChanges {
 
   forwardAction(strActionName: string): void {
     this.actionInvoked.emit(strActionName);
+  }
+
+  private hasFeature(strFeatureId: string): boolean {
+    if (!this.screenFeatures || this.screenFeatures.length === 0) {
+      return true;
+    }
+
+    return this.screenFeatures.some(strFeature => strFeature?.trim().toLowerCase() === strFeatureId);
+  }
+
+  private validateMandatoryFields(dictValues: Record<string, string>): boolean {
+    if (!this.canSaveFeature()) {
+      return true;
+    }
+
+    let lstMissingFields = this.section.fields
+      .filter(objField => objField.isMandatory && !objField.isActionField)
+      .filter(objField => !this.hasFieldValue(dictValues[objField.id]))
+      .map(objField => objField.name);
+
+    if (lstMissingFields.length === 0) {
+      return true;
+    }
+
+    window.alert('Please provide values for mandatory fields: ' + lstMissingFields.join(', '));
+    return false;
+  }
+
+  private hasFieldValue(strValue: string | undefined): boolean {
+    return (strValue ?? '').trim().length > 0;
   }
 }

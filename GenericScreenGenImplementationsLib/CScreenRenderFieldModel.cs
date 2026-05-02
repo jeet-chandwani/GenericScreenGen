@@ -14,6 +14,7 @@ namespace GenericScreenGenImplementationsLib
             EFieldType enuType,
             string strTypeInfo,
             string strWidth,
+            string strMaxWidth,
             string strControlType,
             string strInputType,
             int iMinChars,
@@ -33,6 +34,7 @@ namespace GenericScreenGenImplementationsLib
             Type = enuType;
             TypeInfo = strTypeInfo;
             Width = strWidth;
+            MaxWidth = strMaxWidth;
             ControlType = strControlType;
             InputType = strInputType;
             MinChars = iMinChars;
@@ -53,6 +55,7 @@ namespace GenericScreenGenImplementationsLib
         public EFieldType Type { get; }
         public string TypeInfo { get; }
         public string Width { get; }
+        public string MaxWidth { get; }
         public string ControlType { get; }
         public string InputType { get; }
         public int MinChars { get; }

@@ -11,6 +11,7 @@ namespace GenericScreenGenInterfacesLib
         EFieldType Type { get; }
         string TypeInfo { get; }
         string Width { get; }
+        string MaxWidth { get; }
         string ControlType { get; }
         string InputType { get; }
         int MinChars { get; }
