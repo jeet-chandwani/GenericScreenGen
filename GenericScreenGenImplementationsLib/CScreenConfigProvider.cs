@@ -172,8 +172,9 @@ namespace GenericScreenGenImplementationsLib
                 string strScreenId = objScreenDocument.Id.Trim();
                 IReadOnlyList<string> lstKey = NormalizeKeyFieldIds(objScreenDocument.Key);
                 IReadOnlyList<string> lstFeatures = NormalizeFeatures(objScreenDocument.Features);
+                string strTheme = NormalizeTheme(objScreenDocument.Theme);
 
-                itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections, lstKey, lstFeatures);
+                itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections, lstKey, lstFeatures, strTheme);
                 strError = string.Empty;
                 return true;
             }
@@ -468,6 +469,16 @@ namespace GenericScreenGenImplementationsLib
             return lstNormalized;
         }
 
+        private static string NormalizeTheme(string? strRawTheme)
+        {
+            if (string.IsNullOrWhiteSpace(strRawTheme))
+            {
+                return string.Empty;
+            }
+
+            return strRawTheme.Trim().ToLowerInvariant();
+        }
+
         private static IReadOnlyList<string> NormalizeKeyFieldIds(List<string> lstRawKeyFieldIds)
         {
             if (lstRawKeyFieldIds.Count == 0)
@@ -550,6 +561,9 @@ namespace GenericScreenGenImplementationsLib
 
             [JsonPropertyName("sections")]
             public List<CScreenSectionDto>? Sections { get; set; }
+
+            [JsonPropertyName("theme")]
+            public string? Theme { get; set; }
         }
 
         private sealed class CScreenSectionDto

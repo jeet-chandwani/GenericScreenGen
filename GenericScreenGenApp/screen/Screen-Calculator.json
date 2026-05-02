@@ -2,6 +2,7 @@
   "id": "screen-calculator",
   "name": "Calculator",
   "key": [],
+  "theme": "vivid-gradient",
   "features": [ ],
   "sections": [
     {

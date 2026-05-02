@@ -11,3 +11,5 @@
 For now, validators should be an empty array.
 
 **Req 6.4.** When a field type is used in screen config, we can override any of the default parameters defined in registry for that field type. If a parameter is not mentioned in screen config for a field, then default value from registry will be used for that parameter.
+
+**Req 6.5.** I need a nice UI UX scheme. Take a look at picture in Samples folder; file ="Sample-UI-UX.png". We can discuss and finalize the design. But in general, I want to have a modern look and feel with good use of colors, fonts, and spacing. The UI should be intuitive and easy to navigate. We can use icons and visual cues to enhance the user experience. The layout should be responsive and work well on different screen sizes.

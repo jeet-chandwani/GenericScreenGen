@@ -35,6 +35,11 @@
       },
       "examples": [["save", "cancel", "show-original-values"], ["cancel"]]
     },
+    "theme": {
+      "type": "string",
+      "description": "Optional UI theme id for this screen. Use to enable screen-specific visual styling in the client.",
+      "examples": ["vivid-gradient"]
+    },
     "sections": {
       "type": "array",
       "minItems": 1,

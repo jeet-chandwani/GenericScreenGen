@@ -37,6 +37,19 @@
         - Updated `ScreenConfigSchema.json` description for default + override behavior
       - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.4.md`
 
+  ## 2026-05-01
+  - Prompt: "Start implementation" (BRD-06 REQ-6.5: modern UI UX with config-driven theme)
+  - Implemented REQ-6.5 end-to-end themed UX:
+    - Added optional root `theme` support in `ScreenConfigSchema.json`
+    - Extended screen definition/render model contracts and implementations to carry `theme`
+    - Updated `CScreenConfigProvider` to normalize and load `theme`
+    - Bound `theme` to Angular app shell via `[attr.data-theme]`
+    - Implemented vivid gradient theme styling and component-level propagation using CSS variables
+    - Added tabular lookup color pills and improved table UX (lighter header gradient, softer corners, taller header)
+    - Improved sort indicator visibility with high-contrast filled icons (`▲`, `▼`)
+    - Applied `"theme": "vivid-gradient"` across all screen config files
+  - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.5.md`
+
 ## 2026-05-01
 - Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
 - Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:

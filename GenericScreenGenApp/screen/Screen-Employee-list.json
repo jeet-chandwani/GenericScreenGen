@@ -2,6 +2,7 @@
   "id": "screen-employee-list",
   "name": "Employee List",
   "key": [],
+  "theme": "vivid-gradient",
   "features": [ ],
   "sections": [
     {

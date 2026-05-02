@@ -2,6 +2,7 @@
   "id": "screen-employee-detail",
   "name": "Employee Detail",
   "key": [],
+  "theme": "vivid-gradient",
   "features": [ "save", "cancel", "show-original-values" ],
   "sections": [
     {
