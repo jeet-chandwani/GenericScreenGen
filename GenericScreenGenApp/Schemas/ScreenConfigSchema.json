@@ -4,7 +4,7 @@
   "title": "Generic Screen Configuration",
   "description": "Schema for dynamic screen configuration files used by GenericScreenGenApp.",
   "type": "object",
-  "required": ["id", "name", "sections", "features"],
+  "required": ["id", "name", "key", "sections", "features"],
   "properties": {
     "id": {
       "type": "string",
@@ -16,6 +16,15 @@
       "type": "string",
       "description": "Mandatory display name for the screen.",
       "examples": ["Employee List", "Calculator"]
+    },
+    "key": {
+      "type": "array",
+      "description": "Mandatory record key definition as a list of field identifiers. Use an empty array when no key is available yet.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "examples": [[], ["emp-list-003"], ["ord-001", "ord-002"]]
     },
     "features": {
       "type": "array",
@@ -123,6 +132,7 @@
   },
   "examples": [
     {
+      "key": [],
       "sections": [
         {
           "name": "default-section",

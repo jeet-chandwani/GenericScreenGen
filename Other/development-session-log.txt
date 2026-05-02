@@ -1,3 +1,16 @@
+# Branch: brd-05-screen-changes
+**Branch Created**: 2026-05-01
+**Branch Status**: ACTIVE
+
+## 2026-05-01
+- Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
+- Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:
+  - Added mandatory root `key` attribute (array of field IDs; empty array allowed) in screen schema
+  - Added `Key` property to `IScreenDefinition` and `CScreenDefinition`
+  - Updated `CScreenConfigProvider` to deserialize mandatory `key` and normalize key field IDs
+  - Migrated all existing screen configs to include `"key": []`
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.1.md`
+
 # Branch: feat/brd-03-new-layout-policies-and-field-types
 **Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE

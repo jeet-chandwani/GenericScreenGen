@@ -1,6 +1,7 @@
 ﻿{
   "id": "screen-employee-list",
   "name": "Employee List",
+  "key": [],
   "features": [ ],
   "sections": [
     {

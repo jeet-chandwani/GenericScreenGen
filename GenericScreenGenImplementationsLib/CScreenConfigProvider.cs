@@ -167,9 +167,10 @@ namespace GenericScreenGenImplementationsLib
                 string strScreenFileName = Path.GetFileName(strJsonFilePath);
                 string strDisplayName = objScreenDocument.Name.Trim();
                 string strScreenId = objScreenDocument.Id.Trim();
+                IReadOnlyList<string> lstKey = NormalizeKeyFieldIds(objScreenDocument.Key);
                 IReadOnlyList<string> lstFeatures = NormalizeFeatures(objScreenDocument.Features);
 
-                itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections, lstFeatures);
+                itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections, lstKey, lstFeatures);
                 strError = string.Empty;
                 return true;
             }
@@ -311,6 +312,36 @@ namespace GenericScreenGenImplementationsLib
             return lstNormalized;
         }
 
+        private static IReadOnlyList<string> NormalizeKeyFieldIds(List<string> lstRawKeyFieldIds)
+        {
+            if (lstRawKeyFieldIds.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            HashSet<string> setNormalized = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<string> lstNormalized = new List<string>();
+
+            foreach (string strRawKeyFieldId in lstRawKeyFieldIds)
+            {
+                if (string.IsNullOrWhiteSpace(strRawKeyFieldId))
+                {
+                    continue;
+                }
+
+                string strNormalizedKeyFieldId = strRawKeyFieldId.Trim().ToLowerInvariant();
+
+                if (!setNormalized.Add(strNormalizedKeyFieldId))
+                {
+                    continue;
+                }
+
+                lstNormalized.Add(strNormalizedKeyFieldId);
+            }
+
+            return lstNormalized;
+        }
+
         private static bool TryParseFieldType(string strFieldType, out EFieldType enuFieldType)
         {
             enuFieldType = EFieldType.Text;
@@ -356,6 +387,10 @@ namespace GenericScreenGenImplementationsLib
             [JsonPropertyName("features")]
             [JsonRequired]
             public List<string> Features { get; set; } = new List<string>();
+
+            [JsonPropertyName("key")]
+            [JsonRequired]
+            public List<string> Key { get; set; } = new List<string>();
 
             [JsonPropertyName("sections")]
             public List<CScreenSectionDto>? Sections { get; set; }
