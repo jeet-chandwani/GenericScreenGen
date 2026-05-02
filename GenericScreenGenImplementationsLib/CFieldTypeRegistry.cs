@@ -86,11 +86,25 @@ namespace GenericScreenGenImplementationsLib
                 }
 
                 m_dictFieldTypes.Clear();
+                HashSet<string> setFieldTypeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (CFieldTypeDto objFieldTypeDto in objRegistryDto.FieldTypes)
                 {
                     string strFieldTypeId = objFieldTypeDto.Id.Trim().ToLowerInvariant();
                     string strFieldTypeName = objFieldTypeDto.Name.Trim();
+
+                    if (m_dictFieldTypes.ContainsKey(strFieldTypeId))
+                    {
+                        strError = $"Field type registry has duplicate id '{strFieldTypeId}'.";
+                        return false;
+                    }
+
+                    if (setFieldTypeNames.Contains(strFieldTypeName))
+                    {
+                        strError = $"Field type registry has duplicate name '{strFieldTypeName}'.";
+                        return false;
+                    }
+
                     Dictionary<string, string> dictParameters = objFieldTypeDto.Parameters is null
                         ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                         : new Dictionary<string, string>(objFieldTypeDto.Parameters, StringComparer.OrdinalIgnoreCase);
@@ -98,6 +112,7 @@ namespace GenericScreenGenImplementationsLib
                         ?? new List<string>();
 
                     m_dictFieldTypes[strFieldTypeId] = new CFieldTypeDefinition(strFieldTypeId, strFieldTypeName, dictParameters, lstValidators);
+                    setFieldTypeNames.Add(strFieldTypeName);
                 }
 
                 strError = string.Empty;

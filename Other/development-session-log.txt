@@ -12,6 +12,14 @@
   - Added startup DI registration and initialization for `IFieldTypeRegistry` in `Program.cs`
 - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.1.md`
 
+  ## 2026-05-01
+  - Prompt: "Start implementation" (BRD-06 REQ-6.2: unique field type id and name)
+  - Implemented REQ-6.2 validation in `CFieldTypeRegistry`:
+    - Added duplicate field type id detection (case-insensitive)
+    - Added duplicate field type name detection (case-insensitive)
+    - Registry initialization now fails fast with descriptive duplicate errors
+  - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.2.md`
+
 ## 2026-05-01
 - Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
 - Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:
