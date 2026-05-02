@@ -1,0 +1,7 @@
+{
+  "datastore-id": "json-store",
+  "screen-ids": [
+    "screen-employee-list",
+    "screen-employee-detail"
+  ]
+}

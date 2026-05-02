@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Screen Data Store Mapping",
+  "type": "object",
+  "required": ["datastore-id", "screen-ids"],
+  "additionalProperties": false,
+  "properties": {
+    "datastore-id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "screen-ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

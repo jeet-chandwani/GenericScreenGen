@@ -1,3 +1,40 @@
+# Branch: feat/BRD-08-data-store-management
+**Branch Created**: 2026-05-02
+**Branch Status**: ACTIVE
+
+## 2026-05-02
+- Prompt: "Start implementation" (BRD-08 REQ-8.1: datastore foundation contracts)
+- Implemented REQ-8.1 foundation contracts:
+  - Added interfaces: `IDataStoreConfig`, `IDataStoreRegistry`, `IScreenDataStoreMappingRegistry`
+  - Added release notes file: `Docs/BRD-08-release-notes-REQ-8.1.md`
+  - Included BRD file in first commit: `Docs/BRD-08.md`
+
+  ## 2026-05-02
+  - Prompt: "Start implementation" (BRD-08 REQ-8.2: datastore provider implementations)
+  - Implemented REQ-8.2 provider layer in `MyDataStoreProviders`:
+    - Added `CDbDataStore` (SQL Server-backed `IDataStore` implementation)
+    - Added `Microsoft.Data.SqlClient` package reference
+    - Retained and reused existing `CJsonDataStore` as JSON provider
+  - Added release notes file: `Docs/BRD-08-release-notes-REQ-8.2.md`
+
+    ## 2026-05-02
+    - Prompt: "Start implementation" (BRD-08 REQ-8.3: datastore config registry and folder segregation)
+    - Implemented dedicated datastore config structure:
+      - Added folders: `GenericScreenGenApp/DataStoreConfigs`, `GenericScreenGenApp/DataStoreMappings`
+      - Added config files: `datastore.json-store.config.json`, `datastore.sql-primary.config.json`
+      - Added schema: `GenericScreenGenApp/Schemas/DataStoreConfigSchema.json`
+      - Added implementations: `CDataStoreConfig`, `CDataStoreRegistry`
+      - Updated constants and app csproj to copy DataStoreConfigs/DataStoreMappings JSON files to output
+  - Added release notes file: `Docs/BRD-08-release-notes-REQ-8.3.md`
+
+      ## 2026-05-02
+      - Prompt: "Start implementation" (BRD-08 REQ-8.4: optional screen-datastore association)
+      - Implemented registry-based resolution in API data endpoints:
+        - Added `CScreenDataStoreMappingRegistry`
+        - Updated `Program.cs` DI to register `IDataStoreRegistry` and `IScreenDataStoreMappingRegistry`
+        - Updated `/api/data/*` handlers to resolve data store per screen mapping and return not found for unmapped screens
+      - Added release notes file: `Docs/BRD-08-release-notes-REQ-8.4.md`
+
 # Branch: brd-07-containerize
 **Branch Created**: 2026-05-02
 **Branch Status**: ACTIVE
