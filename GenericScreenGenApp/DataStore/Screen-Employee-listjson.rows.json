@@ -6,5 +6,10 @@
     "emp-det-004": "2026-04-12",
     "emp-det-005": "Widowed",
     "__record-id": "85843bd7-9e41-4bd1-9ea1-894face81afe"
+  },
+  {
+    "emp-det-002": "SmokeLast",
+    "emp-det-001": "SmokeFirst",
+    "__record-id": "smoke-rec-001"
   }
 ]
