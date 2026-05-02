@@ -1,0 +1,7 @@
+# This file has my requirements for adding a registry for field types
+
+**Req 7.1.** I need to Dockerize the application. Model the docker containerize file based on the sample "D:\MyData\Professional\MyGitPrjs\Backups-Imp-Files\sample-docker-compose.yml" file. The sample yml file shows a DB component, API component and UI component. Study and use this to create a docker-compose file to design a new one for this project. Save this main docker-compose file in solution level and individual docker files in each project folder. The main docker-compose file should be able to run the entire solution with one command. Each project should have its own docker file to build its own image. The main docker-compose file should use these images to run the containers. 
+
+**Req 7.2.** The variables should be read from .env file, which should not be part of source control as it has premium private information. Take a look at the sample .env file "D:\MyData\Professional\MyGitPrjs\Backups-Imp-Files\.env" and create a new .env file for this project. The .env file should have all the necessary variables for the application to run, such as database connection strings, API keys, etc. Make sure to add the .env file to .gitignore so that it is not committed to source control.
+
+**Req 7.3.** Verify that with this setup, there is one Docker container for each executable component/project in this solution.
