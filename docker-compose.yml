@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: GenericScreenGenApp/Dockerfile
+    container_name: ${APP_API_CONTAINER_NAME}
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_URLS=http://+:5074
+      - Cors__AllowedOrigins__0=http://localhost:${APP_CLIENT_PORT}
+    ports:
+      - "${APP_API_PORT}:5074"
+    volumes:
+      - datastore_data:/app/DataStore
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./GenericScreenGenClientApp
+      dockerfile: Dockerfile
+    container_name: ${APP_CLIENT_CONTAINER_NAME}
+    ports:
+      - "${APP_CLIENT_PORT}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  datastore_data:
+    driver: local
