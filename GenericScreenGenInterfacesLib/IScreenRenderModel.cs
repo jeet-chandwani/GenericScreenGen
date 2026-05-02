@@ -10,6 +10,7 @@ namespace GenericScreenGenInterfacesLib
         string ScreenId { get; }
         string ScreenFileName { get; }
         string DisplayName { get; }
+        string Theme { get; }
         IReadOnlyList<string> Features { get; }
         IReadOnlyList<IScreenRenderSectionModel> Sections { get; }
     }

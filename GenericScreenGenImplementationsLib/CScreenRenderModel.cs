@@ -7,11 +7,12 @@ namespace GenericScreenGenImplementationsLib
     /// </summary>
     public sealed class CScreenRenderModel : IScreenRenderModel
     {
-        public CScreenRenderModel(string strScreenId, string strScreenFileName, string strDisplayName, IReadOnlyList<string> lstFeatures, IReadOnlyList<IScreenRenderSectionModel> lstSections)
+        public CScreenRenderModel(string strScreenId, string strScreenFileName, string strDisplayName, string strTheme, IReadOnlyList<string> lstFeatures, IReadOnlyList<IScreenRenderSectionModel> lstSections)
         {
             ScreenId = strScreenId;
             ScreenFileName = strScreenFileName;
             DisplayName = strDisplayName;
+            Theme = strTheme;
             Features = lstFeatures;
             Sections = lstSections;
         }
@@ -19,6 +20,7 @@ namespace GenericScreenGenImplementationsLib
         public string ScreenId { get; }
         public string ScreenFileName { get; }
         public string DisplayName { get; }
+        public string Theme { get; }
         public IReadOnlyList<string> Features { get; }
         public IReadOnlyList<IScreenRenderSectionModel> Sections { get; }
     }

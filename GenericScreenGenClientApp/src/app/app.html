@@ -1,4 +1,4 @@
-<main class="page-shell">
+<main class="page-shell" [attr.data-theme]="viewMode() === 'screen' ? (renderModel()?.theme || null) : null">
   <section class="page-title-panel">
     <div class="title-bar-row">
       <h1 class="home-title">Generic Screen Generator</h1>

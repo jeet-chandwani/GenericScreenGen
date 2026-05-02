@@ -44,10 +44,15 @@ namespace GenericScreenGenApp
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CTabularLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CRecordDetailLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
+			objBuilder.Services.AddSingleton<IFieldTypeRegistry>(delegate
+			{
+				return CreateFieldTypeRegistry(objBuilder.Environment.ContentRootPath);
+			});
 			objBuilder.Services.AddSingleton<IScreenConfigProvider>(sp =>
 			{
-				ILayoutPolicyRegistry itfRegistry = sp.GetRequiredService<ILayoutPolicyRegistry>();
-				return CreateScreenConfigProvider(objFactory, itfRegistry);
+				ILayoutPolicyRegistry itfLayoutPolicyRegistry = sp.GetRequiredService<ILayoutPolicyRegistry>();
+				IFieldTypeRegistry itfFieldTypeRegistry = sp.GetRequiredService<IFieldTypeRegistry>();
+				return CreateScreenConfigProvider(objFactory, itfLayoutPolicyRegistry, itfFieldTypeRegistry);
 			});
 			objBuilder.Services.AddSingleton<IScreenSchemaValidator>(delegate { return CreateScreenSchemaValidator(objFactory); });
 			objBuilder.Services.AddSingleton<IScreenRenderModelFactory>(delegate { return CreateScreenRenderModelFactory(objFactory); });
@@ -257,9 +262,9 @@ namespace GenericScreenGenApp
 			return objFactory;
 		}
 
-		private static IScreenConfigProvider CreateScreenConfigProvider(CGenericScreenGenFactory objFactory, ILayoutPolicyRegistry itfLayoutPolicyRegistry)
+		private static IScreenConfigProvider CreateScreenConfigProvider(CGenericScreenGenFactory objFactory, ILayoutPolicyRegistry itfLayoutPolicyRegistry, IFieldTypeRegistry itfFieldTypeRegistry)
 		{
-			if (!objFactory.TryCreateScreenConfigProvider(itfLayoutPolicyRegistry, out IScreenConfigProvider? itfScreenConfigProvider, out string strProviderError) || itfScreenConfigProvider is null)
+			if (!objFactory.TryCreateScreenConfigProvider(itfLayoutPolicyRegistry, itfFieldTypeRegistry, out IScreenConfigProvider? itfScreenConfigProvider, out string strProviderError) || itfScreenConfigProvider is null)
 			{
 				throw new InvalidOperationException(strProviderError);
 			}
@@ -285,6 +290,18 @@ namespace GenericScreenGenApp
 			}
 
 			return itfScreenRenderModelFactory;
+		}
+
+		private static IFieldTypeRegistry CreateFieldTypeRegistry(string strContentRootPath)
+		{
+			CFieldTypeRegistry objFieldTypeRegistry = new CFieldTypeRegistry();
+
+			if (!objFieldTypeRegistry.Init(strContentRootPath, out string strError))
+			{
+				throw new InvalidOperationException(strError);
+			}
+
+			return objFieldTypeRegistry;
 		}
 
 		private static IReadOnlyDictionary<string, string>? FindRowByRecordId(IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, string strRecordId)

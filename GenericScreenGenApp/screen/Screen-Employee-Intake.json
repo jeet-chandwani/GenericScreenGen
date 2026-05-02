@@ -2,6 +2,7 @@
   "id": "screen-employee-intake",
   "name": "Employee Intake",
   "key": [],
+  "theme": "vivid-gradient",
   "features": [ ],
   "sections": [
     {

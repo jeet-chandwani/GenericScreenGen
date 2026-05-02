@@ -36,5 +36,10 @@ namespace GenericScreenGenInterfacesLib
         /// Gets the enabled screen-level features.
         /// </summary>
         IReadOnlyList<string> Features { get; }
+
+        /// <summary>
+        /// Gets the optional UI theme identifier for this screen.
+        /// </summary>
+        string Theme { get; }
     }
 }

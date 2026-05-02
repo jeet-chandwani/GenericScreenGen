@@ -208,6 +208,12 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
                           <button type="button" class="field-action" [title]="objField.description" (click)="$event.stopPropagation(); emitAction(objField)">
                             {{ objField.name }}
                           </button>
+                        } @else if (objField.controlType === 'select' || objField.controlType === 'multiselect') {
+                          <div class="lookup-pills-cell">
+                            @for (strToken of getLookupDisplayTokens(objField, objRow[objField.id]); track strToken + '-' + $index) {
+                              <span class="lookup-pill" [ngClass]="'lookup-pill-' + getLookupPillVariant(strToken)">{{ strToken }}</span>
+                            }
+                          </div>
                         } @else {
                           {{ objRow[objField.id] }}
                         }
@@ -434,9 +440,9 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
   styles: [
     `
       .section-card {
-        border: 1px solid rgba(94, 63, 34, 0.16);
+        border: 1px solid var(--section-card-border, rgba(94, 63, 34, 0.16));
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.7);
+        background: var(--section-card-bg, rgba(255, 255, 255, 0.7));
         overflow: hidden;
         min-width: 0;
         box-sizing: border-box;
@@ -450,7 +456,7 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       .section-header-bar {
         display: flex;
         align-items: stretch;
-        background: rgba(216, 192, 163, 0.4);
+        background: var(--section-header-bg, rgba(216, 192, 163, 0.4));
       }
 
       .section-header {
@@ -476,9 +482,9 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       }
 
       .tabular-icon-btn {
-        border: 1px solid #3f2412;
-        background: #5a3217;
-        color: #fff8ef;
+        border: 1px solid var(--section-icon-btn-border, #3f2412);
+        background: var(--section-icon-btn-bg, #5a3217);
+        color: var(--section-icon-btn-fg, #fff8ef);
         border-radius: 6px;
         width: 38px;
         height: 38px;
@@ -492,7 +498,7 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       }
 
       .tabular-icon-btn:hover {
-        background: #704021;
+        background: var(--section-icon-btn-bg-hover, #704021);
       }
 
       .section-body {
@@ -641,22 +647,31 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       }
 
       .tabular-data-row:hover {
-        background: rgba(216, 192, 163, 0.2);
+        background: var(--section-tabular-hover-bg, rgba(216, 192, 163, 0.2));
       }
 
       .tabular-table th {
         position: sticky;
         top: 0;
         z-index: 1;
-        background: #f8efe2;
+        background: var(--section-tabular-header-bg, #f8efe2);
         padding: 0;
+        overflow: hidden;
+      }
+
+      .tabular-table thead tr:first-child th:first-child {
+        border-top-left-radius: 12px;
+      }
+
+      .tabular-table thead tr:first-child th:last-child {
+        border-top-right-radius: 12px;
       }
 
       .tabular-sort-button {
         width: 100%;
         border: none;
         background: transparent;
-        color: #4f4135;
+        color: var(--section-tabular-header-fg, #4f4135);
         text-align: left;
         font-weight: 700;
         font-size: 12px;
@@ -665,7 +680,7 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
         align-items: center;
         justify-content: space-between;
         gap: 4px;
-        padding: 4px 6px;
+        padding: 5px 7px;
         cursor: pointer;
       }
 
@@ -675,7 +690,10 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       }
 
       .tabular-sort-indicator {
-        color: #8f4e2f;
+        color: var(--section-tabular-header-fg, #4f4135);
+        font-size: 13px;
+        font-weight: 900;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
         min-width: 14px;
         text-align: center;
       }
@@ -685,7 +703,7 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       }
 
       .tabular-filter-row th {
-        background: #fff7ee;
+        background: var(--section-tabular-filter-bg, #fff7ee);
         padding: 2px 4px;
       }
 
@@ -693,7 +711,8 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
         width: 100%;
         min-width: 80px;
         border-radius: 6px;
-        border: 1px solid rgba(94, 63, 34, 0.24);
+        border: 1px solid var(--section-input-border, rgba(94, 63, 34, 0.24));
+        background: var(--section-input-bg, #ffffff);
         padding: 2px 5px;
         font-size: 11px;
         height: 22px;
@@ -866,78 +885,6 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
         border-left: 3px solid rgba(180, 130, 50, 0.5);
       }
 
-      /* ── lookup search & multi-select (Req 3.3) ── */
-      .lookup-search-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        flex: 1 1 auto;
-      }
-
-      .lookup-search-input {
-        font: inherit;
-        border-radius: 8px;
-        border: 1px solid rgba(94, 63, 34, 0.22);
-        padding: 6px 10px;
-        font-size: 0.88em;
-      }
-
-      .lookup-multi-options {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        max-height: 160px;
-        overflow-y: auto;
-        border: 1px solid rgba(94, 63, 34, 0.18);
-        border-radius: 8px;
-        padding: 6px 8px;
-        background: #fffdf8;
-      }
-
-      .lookup-multi-option {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-weight: 400;
-        cursor: pointer;
-      }
-
-      .lookup-option-img {
-        width: 24px;
-        height: 24px;
-        object-fit: cover;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-
-      .lookup-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-      }
-
-      .lookup-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: rgba(143, 78, 47, 0.12);
-        border: 1px solid rgba(143, 78, 47, 0.25);
-        color: #5a2e0e;
-        border-radius: 20px;
-        padding: 2px 8px;
-        font-size: 0.85em;
-      }
-
-      .lookup-tag-remove {
-        background: none;
-        border: none;
-        color: #8a3a1a;
-        cursor: pointer;
-        font-size: 1em;
-        line-height: 1;
-        padding: 0 2px;
-      }
-
       .section-body.hidden {
         display: none;
       }
@@ -993,7 +940,8 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
       .field-action {
         font: inherit;
         border-radius: 12px;
-        border: 1px solid rgba(94, 63, 34, 0.22);
+        border: 1px solid var(--section-input-border, rgba(94, 63, 34, 0.22));
+        background: var(--section-input-bg, #ffffff);
         padding: 10px 12px;
       }
 
@@ -1003,8 +951,8 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
 
       .field-action {
         width: fit-content;
-        background: #8f4e2f;
-        color: #fffaf2;
+        background: var(--section-action-bg, #8f4e2f);
+        color: var(--section-action-fg, #fffaf2);
       }
 
       .field-description {
@@ -1230,6 +1178,28 @@ export class SectionRendererComponent implements OnChanges {
       .filter(opt => !strTerm || opt.value.toLowerCase().includes(strTerm) || opt.description.toLowerCase().includes(strTerm));
   }
 
+  getLookupDisplayTokens(objField: ScreenRenderFieldModel, strRawValue: string | undefined): string[] {
+    let strEffectiveValue = (strRawValue ?? '').trim();
+    if (!strEffectiveValue) {
+      return [];
+    }
+
+    if (objField.controlType === 'multiselect') {
+      return strEffectiveValue.split('|').map(strToken => strToken.trim()).filter(strToken => strToken.length > 0);
+    }
+
+    return [strEffectiveValue];
+  }
+
+  getLookupPillVariant(strLookupValue: string): number {
+    let iHash = 0;
+    for (let iIndex = 0; iIndex < strLookupValue.length; iIndex++) {
+      iHash += strLookupValue.charCodeAt(iIndex);
+    }
+
+    return Math.abs(iHash) % 5;
+  }
+
   // ── multi-select helpers for tabular rows ──
   isMultiSelected(objRow: TTabularRow, strFieldId: string, strValue: string): boolean {
     return this.getMultiCellValues(objRow, strFieldId).includes(strValue);
@@ -1271,7 +1241,7 @@ export class SectionRendererComponent implements OnChanges {
       return '';
     }
 
-    return this.sortDirection() === 'asc' ? '↑' : '↓';
+    return this.sortDirection() === 'asc' ? '▲' : '▼';
   }
 
   getSortTitle(strColumnId: string): string {

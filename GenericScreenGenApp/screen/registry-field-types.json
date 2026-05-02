@@ -1,0 +1,63 @@
+{
+  "field-types": [
+    {
+      "id": "integer",
+      "name": "Integer",
+      "parameters": {
+        "min-width": "120px",
+        "max-width": "320px"
+      },
+      "validators": []
+    },
+    {
+      "id": "button",
+      "name": "Button",
+      "parameters": {
+        "min-width": "120px",
+        "max-width": "220px"
+      },
+      "validators": []
+    },
+    {
+      "id": "text",
+      "name": "Text",
+      "parameters": {
+        "min-chars": "0",
+        "max-chars": "10",
+        "lines": "1",
+        "min-width": "160px",
+        "max-width": "360px"
+      },
+      "validators": []
+    },
+    {
+      "id": "date",
+      "name": "Date",
+      "parameters": {
+        "min-width": "140px",
+        "max-width": "240px"
+      },
+      "validators": []
+    },
+    {
+      "id": "date-time",
+      "name": "Date Time",
+      "parameters": {
+        "min-width": "180px",
+        "max-width": "280px"
+      },
+      "validators": []
+    },
+    {
+      "id": "lookup",
+      "name": "Lookup",
+      "parameters": {
+        "values": "",
+        "multiple": "false",
+        "min-width": "180px",
+        "max-width": "300px"
+      },
+      "validators": []
+    }
+  ]
+}
