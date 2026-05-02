@@ -44,6 +44,10 @@ namespace GenericScreenGenApp
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CTabularLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicy, CRecordDetailLayoutPolicy>();
 			objBuilder.Services.AddSingleton<ILayoutPolicyRegistry, CLayoutPolicyRegistry>();
+			objBuilder.Services.AddSingleton<IFieldTypeRegistry>(delegate
+			{
+				return CreateFieldTypeRegistry(objBuilder.Environment.ContentRootPath);
+			});
 			objBuilder.Services.AddSingleton<IScreenConfigProvider>(sp =>
 			{
 				ILayoutPolicyRegistry itfRegistry = sp.GetRequiredService<ILayoutPolicyRegistry>();
@@ -285,6 +289,18 @@ namespace GenericScreenGenApp
 			}
 
 			return itfScreenRenderModelFactory;
+		}
+
+		private static IFieldTypeRegistry CreateFieldTypeRegistry(string strContentRootPath)
+		{
+			CFieldTypeRegistry objFieldTypeRegistry = new CFieldTypeRegistry();
+
+			if (!objFieldTypeRegistry.Init(strContentRootPath, out string strError))
+			{
+				throw new InvalidOperationException(strError);
+			}
+
+			return objFieldTypeRegistry;
 		}
 
 		private static IReadOnlyDictionary<string, string>? FindRowByRecordId(IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, string strRecordId)

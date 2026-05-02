@@ -1,0 +1,28 @@
+{
+  "field-types": [
+    {
+      "id": "integer",
+      "name": "Integer"
+    },
+    {
+      "id": "button",
+      "name": "Button"
+    },
+    {
+      "id": "text",
+      "name": "Text"
+    },
+    {
+      "id": "date",
+      "name": "Date"
+    },
+    {
+      "id": "date-time",
+      "name": "Date Time"
+    },
+    {
+      "id": "lookup",
+      "name": "Lookup"
+    }
+  ]
+}

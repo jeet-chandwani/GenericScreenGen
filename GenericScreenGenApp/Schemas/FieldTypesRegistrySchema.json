@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genericscreengen.local/schemas/field-types-registry.schema.json",
+  "title": "Field Types Registry",
+  "description": "Defines all reusable field types for screen configuration.",
+  "type": "object",
+  "required": ["field-types"],
+  "properties": {
+    "field-types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/field-type"
+      }
+    }
+  },
+  "$defs": {
+    "field-type": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "examples": ["text", "lookup", "date-time"]
+        },
+        "name": {
+          "type": "string",
+          "examples": ["Text", "Lookup", "Date Time"]
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -3,6 +3,16 @@
 **Branch Status**: ACTIVE
 
 ## 2026-05-01
+- Prompt: "Start implementation" (BRD-06 REQ-6.1: field type registry foundation)
+- Implemented REQ-6.1 baseline:
+  - Added field type registry file: `GenericScreenGenApp/screen/registry-field-types.json`
+  - Added separate registry schema: `GenericScreenGenApp/Schemas/FieldTypesRegistrySchema.json`
+  - Added new interfaces: `IFieldTypeDefinition`, `IFieldTypeRegistry`
+  - Added implementations: `CFieldTypeDefinition`, `CFieldTypeRegistry`
+  - Added startup DI registration and initialization for `IFieldTypeRegistry` in `Program.cs`
+- Added release notes file: `Docs/BRD-06-release-notes-REQ-6.1.md`
+
+## 2026-05-01
 - Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
 - Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:
   - Added mandatory root `key` attribute (array of field IDs; empty array allowed) in screen schema
