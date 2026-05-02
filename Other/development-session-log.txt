@@ -1,3 +1,29 @@
+# Branch: brd-07-containerize
+**Branch Created**: 2026-05-02
+**Branch Status**: ACTIVE
+
+## 2026-05-02
+- Prompt: "Start implementation" (BRD-07 REQ-7.1: Dockerize the application)
+- Implemented REQ-7.1 Docker containerization:
+  - Added `GenericScreenGenApp/Dockerfile` — multi-stage ASP.NET Core 8 build (sdk:8.0 → aspnet:8.0); publishes API with all library deps; exposes port 5074
+  - Added `GenericScreenGenClientApp/Dockerfile` — multi-stage Angular → Nginx build (node:20-alpine → nginx:alpine); builds `dist/clientapp`, serves on port 80
+  - Added `GenericScreenGenClientApp/nginx.conf` — Nginx config for SPA fallback and `/api/` proxy to `http://api:5074`
+  - Added `docker-compose.yml` (solution root) — orchestrates `api` and `ui` services; `datastore_data` named volume for JSON DataStore persistence
+- Added release notes file: `Docs/BRD-07-release-notes-REQ-7.1.md`
+
+  ## 2026-05-02
+  - Prompt: "Start implementation" (BRD-07 REQ-7.2: Environment variables via .env file)
+  - Implemented REQ-7.2 .env setup:
+    - Added `.env` (solution root, gitignored) — runtime variables: container names, ports, ASPNETCORE_ENVIRONMENT
+    - Added `.env.example` (committed) — reference template with all required variables and descriptions
+    - Updated `.gitignore` — added `.env` entry at top with explanatory comment
+  - Added release notes file: `Docs/BRD-07-release-notes-REQ-7.2.md`
+
+    ## 2026-05-02
+    - Prompt: "Start implementation" (BRD-07 REQ-7.3: Container verification)
+    - Documented REQ-7.3 verification: 2 containers (api + ui), 5 library projects compiled into api, MyTestConsoleApp excluded
+    - Added release notes file: `Docs/BRD-07-release-notes-REQ-7.3.md`
+
 # Branch: brd-05-screen-changes
 **Branch Created**: 2026-05-01
 **Branch Status**: ACTIVE
