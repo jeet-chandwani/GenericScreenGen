@@ -159,7 +159,13 @@ export class App {
       const strSourceScreenFileName = this.selectedScreenFileName();
       const strNavigatePayload = strActionName.slice('navigate:'.length);
       const arrNavigateParts = strNavigatePayload.split('|', 2);
-      const strTargetScreenFileName = arrNavigateParts[0] ?? '';
+      const strTargetScreenToken = arrNavigateParts[0] ?? '';
+      const strTargetScreenFileName = this.resolveTargetScreenFileName(strTargetScreenToken);
+
+      if (!strTargetScreenFileName) {
+        this.errorMessage.set(`Unable to resolve target screen '${strTargetScreenToken}'.`);
+        return;
+      }
 
       let dictPrefillByFieldName: Record<string, string> | null = null;
       if (arrNavigateParts.length > 1) {
@@ -338,5 +344,19 @@ export class App {
     } else {
       this.goToHome();
     }
+  }
+
+  private resolveTargetScreenFileName(strTargetScreenToken: string): string {
+    if (!strTargetScreenToken) {
+      return '';
+    }
+
+    const objScreenById = this.screens().find(objScreen => objScreen.screenId === strTargetScreenToken);
+    if (objScreenById) {
+      return objScreenById.fileName;
+    }
+
+    // Compatibility fallback for older navigate payloads that still pass file names.
+    return strTargetScreenToken;
   }
 }

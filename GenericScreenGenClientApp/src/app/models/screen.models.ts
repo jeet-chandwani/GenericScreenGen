@@ -1,4 +1,5 @@
 export interface ScreenListItem {
+  screenId: string;
   fileName: string;
   displayName: string;
 }
@@ -27,7 +28,7 @@ export interface ScreenRenderFieldModel {
 
 export interface ScreenSelectionActionModel {
   event: string;
-  targetScreen: string;
+  targetScreenId: string;
   includeRecordId: boolean;
 }
 

@@ -244,10 +244,10 @@ namespace GenericScreenGenImplementationsLib
                         return false;
                     }
 
-                    if (string.IsNullOrWhiteSpace(objSelectionAction.TargetScreen))
+                    if (string.IsNullOrWhiteSpace(objSelectionAction.TargetScreenId))
                     {
                         itfScreenSectionDefinition = null;
-                        strError = $"Section '{strSectionName}' has a selection action with empty target-screen.";
+                        strError = $"Section '{strSectionName}' has a selection action with empty target-screen-id.";
                         return false;
                     }
 
@@ -260,7 +260,7 @@ namespace GenericScreenGenImplementationsLib
 
                     lstSelectionActions.Add(new CScreenSelectionActionDefinition(
                         strSelectionEvent,
-                        objSelectionAction.TargetScreen.Trim(),
+                        objSelectionAction.TargetScreenId.Trim(),
                         objSelectionAction.IncludeRecordId));
                 }
             }
@@ -467,9 +467,9 @@ namespace GenericScreenGenImplementationsLib
             [JsonRequired]
             public string Event { get; set; } = string.Empty;
 
-            [JsonPropertyName("target-screen")]
+            [JsonPropertyName("target-screen-id")]
             [JsonRequired]
-            public string TargetScreen { get; set; } = string.Empty;
+            public string TargetScreenId { get; set; } = string.Empty;
 
             [JsonPropertyName("include-record-id")]
             public bool IncludeRecordId { get; set; } = true;

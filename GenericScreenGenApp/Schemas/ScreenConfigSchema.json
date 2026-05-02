@@ -72,7 +72,7 @@
             [
               {
                 "event": "click",
-                "target-screen": "Screen-Employee-Detail.json",
+                "target-screen-id": "screen-employee-detail",
                 "include-record-id": true
               }
             ]
@@ -142,16 +142,17 @@
     },
     "selection-action": {
       "type": "object",
-      "required": ["event", "target-screen"],
+      "required": ["event", "target-screen-id"],
       "properties": {
         "event": {
           "type": "string",
           "enum": ["click", "double-click"],
           "examples": ["click", "double-click"]
         },
-        "target-screen": {
+        "target-screen-id": {
           "type": "string",
-          "examples": ["Screen-Employee-Detail.json"]
+          "pattern": "^[a-z0-9-]+$",
+          "examples": ["screen-employee-detail"]
         },
         "include-record-id": {
           "type": "boolean",

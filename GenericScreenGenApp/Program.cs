@@ -97,6 +97,7 @@ namespace GenericScreenGenApp
 
 					lstResponse.Add(new
 					{
+						screenId = itfScreenDefinition.ScreenId,
 						fileName = strScreenFileName,
 						displayName = itfScreenDefinition.DisplayName
 					});

@@ -7,16 +7,16 @@ namespace GenericScreenGenImplementationsLib
     /// </summary>
     public sealed class CScreenRenderSelectionActionModel : IScreenRenderSelectionActionModel
     {
-        public CScreenRenderSelectionActionModel(string strEvent, string strTargetScreen, bool fIncludeRecordId)
+        public CScreenRenderSelectionActionModel(string strEvent, string strTargetScreenId, bool fIncludeRecordId)
         {
             Event = strEvent;
-            TargetScreen = strTargetScreen;
+            TargetScreenId = strTargetScreenId;
             IncludeRecordId = fIncludeRecordId;
         }
 
         public string Event { get; }
 
-        public string TargetScreen { get; }
+        public string TargetScreenId { get; }
 
         public bool IncludeRecordId { get; }
     }

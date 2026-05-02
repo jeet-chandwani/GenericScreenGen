@@ -33,6 +33,17 @@
   - Removed all `detail-screen` usage and migrated `Screen-Employee-list.json` config
 - Added release notes file: `Docs/BRD-05-release-notes-REQ-5.3.md`
 
+## 2026-05-01
+- Prompt: "For selection-actions in screen config files, change attribute target-screen to target-screen-id and update the value with screen id"
+- Implemented BRD-05 REQ-5.4:
+  - Renamed selection-action attribute from `target-screen` to `target-screen-id` in schema and parser DTO
+  - Updated selection action contracts and render models to use `TargetScreenId`
+  - Added `screenId` in `/api/screens` list response and Angular list model
+  - Updated Angular navigation resolution to interpret selection action target as screen-id
+  - Migrated screen configs using selection-actions to `target-screen-id` with screen id values
+- Updated requirement doc: `Docs/BRD-05.md` (added Req 5.4)
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.4.md`
+
 # Branch: feat/brd-03-new-layout-policies-and-field-types
 **Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE

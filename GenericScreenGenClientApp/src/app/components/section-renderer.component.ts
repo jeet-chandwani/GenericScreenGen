@@ -1583,7 +1583,7 @@ export class SectionRendererComponent implements OnChanges {
 
   private executeSelectionAction(strEventName: 'click' | 'double-click', objRow: TTabularRow): boolean {
     let objSelectionAction = this.getSelectionActionByEvent(strEventName);
-    if (!objSelectionAction || !objSelectionAction.targetScreen) {
+    if (!objSelectionAction || !objSelectionAction.targetScreenId) {
       return false;
     }
 
@@ -1602,7 +1602,7 @@ export class SectionRendererComponent implements OnChanges {
     dictPrefillByFieldName[SOURCE_SCREEN_FIELD_NAME] = this.screenFileName;
 
     let strPayload = encodeURIComponent(JSON.stringify(dictPrefillByFieldName));
-    this.actionInvoked.emit(`navigate:${objSelectionAction.targetScreen}|${strPayload}`);
+    this.actionInvoked.emit(`navigate:${objSelectionAction.targetScreenId}|${strPayload}`);
     return true;
   }
 

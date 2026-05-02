@@ -6,7 +6,7 @@ namespace GenericScreenGenInterfacesLib
     public interface IScreenRenderSelectionActionModel
     {
         string Event { get; }
-        string TargetScreen { get; }
+        string TargetScreenId { get; }
         bool IncludeRecordId { get; }
     }
 }

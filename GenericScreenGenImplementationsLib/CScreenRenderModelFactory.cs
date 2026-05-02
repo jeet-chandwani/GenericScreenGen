@@ -46,7 +46,7 @@ namespace GenericScreenGenImplementationsLib
                 .ToList();
 
             List<IScreenRenderSelectionActionModel> lstSelectionActions = itfSectionDefinition.SelectionActions
-                .Select(itfAction => new CScreenRenderSelectionActionModel(itfAction.Event, itfAction.TargetScreen, itfAction.IncludeRecordId))
+                .Select(itfAction => new CScreenRenderSelectionActionModel(itfAction.Event, itfAction.TargetScreenId, itfAction.IncludeRecordId))
                 .Cast<IScreenRenderSelectionActionModel>()
                 .ToList();
 

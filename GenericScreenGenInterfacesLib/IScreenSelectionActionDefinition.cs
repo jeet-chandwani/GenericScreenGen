@@ -11,9 +11,9 @@ namespace GenericScreenGenInterfacesLib
         string Event { get; }
 
         /// <summary>
-        /// Gets the target child screen file name to navigate for this action.
+        /// Gets the target child screen identifier to navigate for this action.
         /// </summary>
-        string TargetScreen { get; }
+        string TargetScreenId { get; }
 
         /// <summary>
         /// Gets a value indicating whether record-id must be propagated for this action.

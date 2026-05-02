@@ -6,3 +6,5 @@
 
 **Req 5.3.** For defining actions about "selection" (click/double-click) on a record, the child screen id to handle record-details should be mentioned along with record-id.
 
+**Req 5.4.** In `selection-actions`, rename attribute `target-screen` to `target-screen-id` and use child screen `id` value instead of screen file name in all screen config files.
+

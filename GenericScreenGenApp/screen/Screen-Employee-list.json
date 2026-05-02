@@ -11,12 +11,12 @@
       "selection-actions": [
         {
           "event": "click",
-          "target-screen": "Screen-Employee-Detail.json",
+          "target-screen-id": "screen-employee-detail",
           "include-record-id": true
         },
         {
           "event": "double-click",
-          "target-screen": "Screen-Employee-Detail.json",
+          "target-screen-id": "screen-employee-detail",
           "include-record-id": true
         }
       ],
