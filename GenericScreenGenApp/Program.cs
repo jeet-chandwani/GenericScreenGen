@@ -3,7 +3,6 @@ using GenericScreenGenImplementationsLib;
 using GenericScreenGenInterfacesLib;
 using GenericScreenGenUtilsLib;
 using Microsoft.AspNetCore.Cors.Infrastructure;
-using MyDataStoreProviders;
 
 namespace GenericScreenGenApp
 {
@@ -56,10 +55,14 @@ namespace GenericScreenGenApp
 			});
 			objBuilder.Services.AddSingleton<IScreenSchemaValidator>(delegate { return CreateScreenSchemaValidator(objFactory); });
 			objBuilder.Services.AddSingleton<IScreenRenderModelFactory>(delegate { return CreateScreenRenderModelFactory(objFactory); });
-			objBuilder.Services.AddSingleton<IDataStore>(delegate
+			objBuilder.Services.AddSingleton<IDataStoreRegistry>(delegate
 			{
-				string strDataStoreFolderPath = Path.Combine(objBuilder.Environment.ContentRootPath, "DataStore");
-				return new CJsonDataStore(strDataStoreFolderPath);
+				return CreateDataStoreRegistry(objBuilder.Environment.ContentRootPath);
+			});
+			objBuilder.Services.AddSingleton<IScreenDataStoreMappingRegistry>(delegate (IServiceProvider sp)
+			{
+				IDataStoreRegistry itfDataStoreRegistry = sp.GetRequiredService<IDataStoreRegistry>();
+				return CreateScreenDataStoreMappingRegistry(objBuilder.Environment.ContentRootPath, itfDataStoreRegistry);
 			});
 
 			WebApplication objApp = objBuilder.Build();
@@ -142,8 +145,15 @@ namespace GenericScreenGenApp
 			objApp.MapGet("/api/data/{strScreenFileName}/{strRecordId}", delegate (
 				string strScreenFileName,
 				string strRecordId,
-				IDataStore itfDataStore)
+				IScreenConfigProvider itfScreenConfigProvider,
+				IScreenDataStoreMappingRegistry itfScreenDataStoreMappingRegistry,
+				IDataStoreRegistry itfDataStoreRegistry)
 			{
+				if (!TryResolveDataStoreForScreen(strScreenFileName, itfScreenConfigProvider, itfScreenDataStoreMappingRegistry, itfDataStoreRegistry, out IDataStore? itfDataStore, out string strResolveError) || itfDataStore is null)
+				{
+					return Results.NotFound(new { error = strResolveError });
+				}
+
 				if (!itfDataStore.TryLoadRows(strScreenFileName, out IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, out string strLoadError))
 				{
 					return Results.Problem(strLoadError);
@@ -170,11 +180,18 @@ namespace GenericScreenGenApp
 				string strScreenFileName,
 				string strRecordId,
 				CRecordDataUpsertRequest? objRequest,
-				IDataStore itfDataStore)
+				IScreenConfigProvider itfScreenConfigProvider,
+				IScreenDataStoreMappingRegistry itfScreenDataStoreMappingRegistry,
+				IDataStoreRegistry itfDataStoreRegistry)
 			{
 				if (objRequest?.Data is null)
 				{
 					return Results.BadRequest(new { error = "Request body must contain a data object." });
+				}
+
+				if (!TryResolveDataStoreForScreen(strScreenFileName, itfScreenConfigProvider, itfScreenDataStoreMappingRegistry, itfDataStoreRegistry, out IDataStore? itfDataStore, out string strResolveError) || itfDataStore is null)
+				{
+					return Results.NotFound(new { error = strResolveError });
 				}
 
 				if (!itfDataStore.TryLoadRows(strScreenFileName, out IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, out string strLoadError))
@@ -302,6 +319,60 @@ namespace GenericScreenGenApp
 			}
 
 			return objFieldTypeRegistry;
+		}
+
+		private static IDataStoreRegistry CreateDataStoreRegistry(string strContentRootPath)
+		{
+			CDataStoreRegistry objDataStoreRegistry = new CDataStoreRegistry();
+
+			if (!objDataStoreRegistry.Init(strContentRootPath, out string strError))
+			{
+				throw new InvalidOperationException(strError);
+			}
+
+			return objDataStoreRegistry;
+		}
+
+		private static IScreenDataStoreMappingRegistry CreateScreenDataStoreMappingRegistry(string strContentRootPath, IDataStoreRegistry itfDataStoreRegistry)
+		{
+			CScreenDataStoreMappingRegistry objMappingRegistry = new CScreenDataStoreMappingRegistry(itfDataStoreRegistry);
+
+			if (!objMappingRegistry.Init(strContentRootPath, out string strError))
+			{
+				throw new InvalidOperationException(strError);
+			}
+
+			return objMappingRegistry;
+		}
+
+		private static bool TryResolveDataStoreForScreen(
+			string strScreenFileName,
+			IScreenConfigProvider itfScreenConfigProvider,
+			IScreenDataStoreMappingRegistry itfScreenDataStoreMappingRegistry,
+			IDataStoreRegistry itfDataStoreRegistry,
+			out IDataStore? itfDataStore,
+			out string strError)
+		{
+			itfDataStore = null;
+
+			if (!itfScreenConfigProvider.TryGetScreenDefinition(strScreenFileName, out IScreenDefinition? itfScreenDefinition, out strError) || itfScreenDefinition is null)
+			{
+				return false;
+			}
+
+			if (!itfScreenDataStoreMappingRegistry.TryGetDataStoreIdForScreen(itfScreenDefinition.ScreenId, out string strDataStoreId, out strError))
+			{
+				strError = $"Screen '{itfScreenDefinition.ScreenId}' is not associated with a data store.";
+				return false;
+			}
+
+			if (!itfDataStoreRegistry.TryGetDataStore(strDataStoreId, out itfDataStore, out strError) || itfDataStore is null)
+			{
+				return false;
+			}
+
+			strError = string.Empty;
+			return true;
 		}
 
 		private static IReadOnlyDictionary<string, string>? FindRowByRecordId(IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, string strRecordId)
