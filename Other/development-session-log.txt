@@ -20,6 +20,14 @@
     - Registry initialization now fails fast with descriptive duplicate errors
   - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.2.md`
 
+    ## 2026-05-01
+    - Prompt: "Start implementation" (BRD-06 REQ-6.3: field type parameters with defaults)
+    - Implemented REQ-6.3 registry parameter/default model:
+      - Updated `FieldTypesRegistrySchema.json` to require `parameters` and `validators`
+      - Enforced `validators` as empty array (schema and runtime guard)
+      - Updated `registry-field-types.json` with default parameter maps for each built-in field type
+    - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.3.md`
+
 ## 2026-05-01
 - Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
 - Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:

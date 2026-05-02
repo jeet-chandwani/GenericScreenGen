@@ -17,7 +17,7 @@
   "$defs": {
     "field-type": {
       "type": "object",
-      "required": ["id", "name"],
+      "required": ["id", "name", "parameters", "validators"],
       "properties": {
         "id": {
           "type": "string",
@@ -36,6 +36,7 @@
         },
         "validators": {
           "type": "array",
+          "maxItems": 0,
           "items": {
             "type": "string"
           }

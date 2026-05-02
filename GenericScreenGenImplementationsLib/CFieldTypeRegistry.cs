@@ -111,6 +111,12 @@ namespace GenericScreenGenImplementationsLib
                     List<string> lstValidators = objFieldTypeDto.Validators?.Where(strItem => !string.IsNullOrWhiteSpace(strItem)).Select(strItem => strItem.Trim()).ToList()
                         ?? new List<string>();
 
+                    if (lstValidators.Count != 0)
+                    {
+                        strError = $"Field type '{strFieldTypeId}' must define validators as an empty array for current BRD-06 scope.";
+                        return false;
+                    }
+
                     m_dictFieldTypes[strFieldTypeId] = new CFieldTypeDefinition(strFieldTypeId, strFieldTypeName, dictParameters, lstValidators);
                     setFieldTypeNames.Add(strFieldTypeName);
                 }
