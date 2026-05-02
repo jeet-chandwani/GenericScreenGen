@@ -192,6 +192,7 @@ namespace GenericScreenGenImplementationsLib
         {
             List<IScreenFieldDefinition> lstFields = new List<IScreenFieldDefinition>();
             List<IScreenSectionDefinition> lstSections = new List<IScreenSectionDefinition>();
+            List<IScreenSelectionActionDefinition> lstSelectionActions = new List<IScreenSelectionActionDefinition>();
 
             if (objSection.Fields is not null)
             {
@@ -231,6 +232,46 @@ namespace GenericScreenGenImplementationsLib
             string strSectionName = objSection.Name;
             string strLayoutPolicy = objSection.LayoutPolicy;
 
+            if (objSection.SelectionActions is not null)
+            {
+                foreach (CScreenSelectionActionDto objSelectionAction in objSection.SelectionActions)
+                {
+                    string strSelectionEvent = objSelectionAction.Event.Trim().ToLowerInvariant();
+                    if (strSelectionEvent != "click" && strSelectionEvent != "double-click")
+                    {
+                        itfScreenSectionDefinition = null;
+                        strError = $"Section '{strSectionName}' contains unsupported selection action event '{objSelectionAction.Event}'. Supported values: click, double-click.";
+                        return false;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(objSelectionAction.TargetScreen))
+                    {
+                        itfScreenSectionDefinition = null;
+                        strError = $"Section '{strSectionName}' has a selection action with empty target-screen.";
+                        return false;
+                    }
+
+                    if (lstSelectionActions.Any(itfAction => string.Equals(itfAction.Event, strSelectionEvent, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        itfScreenSectionDefinition = null;
+                        strError = $"Section '{strSectionName}' contains duplicate selection action for event '{strSelectionEvent}'.";
+                        return false;
+                    }
+
+                    lstSelectionActions.Add(new CScreenSelectionActionDefinition(
+                        strSelectionEvent,
+                        objSelectionAction.TargetScreen.Trim(),
+                        objSelectionAction.IncludeRecordId));
+                }
+            }
+
+            if (string.Equals(strLayoutPolicy, "tabular", StringComparison.OrdinalIgnoreCase) && lstSelectionActions.Count == 0)
+            {
+                itfScreenSectionDefinition = null;
+                strError = $"Section '{strSectionName}' uses tabular layout and must define at least one selection-action (click or double-click).";
+                return false;
+            }
+
             if (!m_itfLayoutPolicyRegistry.IsValidPolicyId(strLayoutPolicy))
             {
                 itfScreenSectionDefinition = null;
@@ -245,7 +286,7 @@ namespace GenericScreenGenImplementationsLib
                 objSection.IsCollapsible,
                 lstFields,
                 lstSections,
-                objSection.DetailScreen ?? string.Empty);
+                lstSelectionActions);
             strError = string.Empty;
             return true;
         }
@@ -410,14 +451,28 @@ namespace GenericScreenGenImplementationsLib
             [JsonRequired]
             public bool IsCollapsible { get; set; }
 
-            [JsonPropertyName("detail-screen")]
-            public string? DetailScreen { get; set; }
+            [JsonPropertyName("selection-actions")]
+            public List<CScreenSelectionActionDto>? SelectionActions { get; set; }
 
             [JsonPropertyName("fields")]
             public List<CScreenFieldDto>? Fields { get; set; }
 
             [JsonPropertyName("sections")]
             public List<CScreenSectionDto>? Sections { get; set; }
+        }
+
+        private sealed class CScreenSelectionActionDto
+        {
+            [JsonPropertyName("event")]
+            [JsonRequired]
+            public string Event { get; set; } = string.Empty;
+
+            [JsonPropertyName("target-screen")]
+            [JsonRequired]
+            public string TargetScreen { get; set; } = string.Empty;
+
+            [JsonPropertyName("include-record-id")]
+            public bool IncludeRecordId { get; set; } = true;
         }
 
         private sealed class CScreenFieldDto

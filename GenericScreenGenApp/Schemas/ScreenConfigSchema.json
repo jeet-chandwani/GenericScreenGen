@@ -62,10 +62,21 @@
           "description": "Mandatory. Whether the section can be collapsed by the user.",
           "examples": [true, false]
         },
-        "detail-screen": {
-          "type": "string",
-          "description": "Optional target screen file name for row-click navigation in tabular sections.",
-          "examples": ["Screen-Employee-Detail.json"]
+        "selection-actions": {
+          "type": "array",
+          "description": "Selection action mappings for tabular sections. Use click and/or double-click to navigate to a target screen with record-id context.",
+          "items": {
+            "$ref": "#/$defs/selection-action"
+          },
+          "examples": [
+            [
+              {
+                "event": "click",
+                "target-screen": "Screen-Employee-Detail.json",
+                "include-record-id": true
+              }
+            ]
+          ]
         },
         "fields": {
           "type": "array",
@@ -125,6 +136,27 @@
           "type": "boolean",
           "default": false,
           "examples": [true, false]
+        }
+      },
+      "additionalProperties": false
+    },
+    "selection-action": {
+      "type": "object",
+      "required": ["event", "target-screen"],
+      "properties": {
+        "event": {
+          "type": "string",
+          "enum": ["click", "double-click"],
+          "examples": ["click", "double-click"]
+        },
+        "target-screen": {
+          "type": "string",
+          "examples": ["Screen-Employee-Detail.json"]
+        },
+        "include-record-id": {
+          "type": "boolean",
+          "default": true,
+          "examples": [true]
         }
       },
       "additionalProperties": false

@@ -22,6 +22,17 @@
   - Added top-right record-id display on target detail screen header
 - Added release notes file: `Docs/BRD-05-release-notes-REQ-5.2.md`
 
+## 2026-05-01
+- Prompt: "Start implementation" (BRD-05 REQ-5.3: explicit selection actions for click/double-click)
+- Implemented REQ-5.3 migration from `detail-screen` to `selection-actions`:
+  - Added backend contracts/models for selection actions in both definition and render layers
+  - Updated parser to read/validate `selection-actions` with supported events: `click`, `double-click`
+  - Enforced at least one selection action for tabular sections
+  - Updated render model mapping and Angular section model to use `selectionActions`
+  - Updated tabular row handling to execute configured click/double-click actions with event disambiguation
+  - Removed all `detail-screen` usage and migrated `Screen-Employee-list.json` config
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.3.md`
+
 # Branch: feat/brd-03-new-layout-policies-and-field-types
 **Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE

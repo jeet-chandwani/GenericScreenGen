@@ -2,7 +2,7 @@
 import { Component, EventEmitter, inject, Input, OnChanges, Output, signal, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { ScreenRenderFieldModel, ScreenRenderSectionModel } from '../models/screen.models';
+import { ScreenRenderFieldModel, ScreenRenderSectionModel, ScreenSelectionActionModel } from '../models/screen.models';
 import { LayoutPolicyService } from '../services/layout-policy.service';
 
 type TTabularRow = Record<string, string>;
@@ -201,7 +201,7 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
                 </thead>
                 <tbody>
                   @for (objRow of pagedTabularRows(); track $index) {
-                  <tr class="tabular-data-row" (click)="onRowClick(objRow)">
+                  <tr class="tabular-data-row" (click)="onRowClick(objRow)" (dblclick)="onRowDoubleClick(objRow)">
                     @for (objField of section.fields; track objField.id) {
                       <td class="tabular-cell" [style.min-width]="objField.width" [style.max-width]="objField.maxWidth">
                         @if (objField.isActionField) {
@@ -1049,6 +1049,7 @@ const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
 export class SectionRendererComponent implements OnChanges {
   private readonly m_itfLayoutPolicyService = inject(LayoutPolicyService);
   private m_strTabularShapeSignature = '';
+  private m_iPendingRowClickTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Input() screenFileName: string = '';
@@ -1370,21 +1371,31 @@ export class SectionRendererComponent implements OnChanges {
   }
 
   onRowClick(objRow: TTabularRow): void {
-    if (this.section.detailScreen) {
-      let strRecordId = this.ensureRecordIdForRow(objRow);
-      let dictPrefillByFieldName: Record<string, string> = {};
-      for (let objField of this.section.fields) {
-        if (!objField.isActionField) {
-          dictPrefillByFieldName[objField.name] = objRow[objField.id] ?? '';
-        }
+    let objDoubleClickAction = this.getSelectionActionByEvent('double-click');
+    if (objDoubleClickAction) {
+      if (this.m_iPendingRowClickTimeoutId) {
+        clearTimeout(this.m_iPendingRowClickTimeoutId);
       }
 
-      dictPrefillByFieldName[RECORD_ID_FIELD_NAME] = strRecordId;
-      dictPrefillByFieldName[SOURCE_SCREEN_FIELD_NAME] = this.screenFileName;
+      this.m_iPendingRowClickTimeoutId = setTimeout(() => {
+        this.m_iPendingRowClickTimeoutId = null;
+        this.executeSelectionAction('click', objRow);
+      }, 220);
+      return;
+    }
 
-      let strPayload = encodeURIComponent(JSON.stringify(dictPrefillByFieldName));
-      this.actionInvoked.emit(`navigate:${this.section.detailScreen}|${strPayload}`);
-    } else {
+    if (!this.executeSelectionAction('click', objRow)) {
+      this.openEditRow(objRow);
+    }
+  }
+
+  onRowDoubleClick(objRow: TTabularRow): void {
+    if (this.m_iPendingRowClickTimeoutId) {
+      clearTimeout(this.m_iPendingRowClickTimeoutId);
+      this.m_iPendingRowClickTimeoutId = null;
+    }
+
+    if (!this.executeSelectionAction('double-click', objRow)) {
       this.openEditRow(objRow);
     }
   }
@@ -1568,6 +1579,37 @@ export class SectionRendererComponent implements OnChanges {
 
     objRow[RECORD_ID_FIELD_NAME] = strGeneratedRecordId;
     return strGeneratedRecordId;
+  }
+
+  private executeSelectionAction(strEventName: 'click' | 'double-click', objRow: TTabularRow): boolean {
+    let objSelectionAction = this.getSelectionActionByEvent(strEventName);
+    if (!objSelectionAction || !objSelectionAction.targetScreen) {
+      return false;
+    }
+
+    let dictPrefillByFieldName: Record<string, string> = {};
+    for (let objField of this.section.fields) {
+      if (!objField.isActionField) {
+        dictPrefillByFieldName[objField.name] = objRow[objField.id] ?? '';
+      }
+    }
+
+    if (objSelectionAction.includeRecordId) {
+      let strRecordId = this.ensureRecordIdForRow(objRow);
+      dictPrefillByFieldName[RECORD_ID_FIELD_NAME] = strRecordId;
+    }
+
+    dictPrefillByFieldName[SOURCE_SCREEN_FIELD_NAME] = this.screenFileName;
+
+    let strPayload = encodeURIComponent(JSON.stringify(dictPrefillByFieldName));
+    this.actionInvoked.emit(`navigate:${objSelectionAction.targetScreen}|${strPayload}`);
+    return true;
+  }
+
+  private getSelectionActionByEvent(strEventName: 'click' | 'double-click'): ScreenSelectionActionModel | null {
+    return (this.section.selectionActions ?? []).find(
+      objSelectionAction => (objSelectionAction.event ?? '').toLowerCase() === strEventName
+    ) ?? null;
   }
 
   private createInitialRows(): TTabularRow[] {

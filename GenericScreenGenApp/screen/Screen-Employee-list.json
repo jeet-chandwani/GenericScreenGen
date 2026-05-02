@@ -8,7 +8,18 @@
       "name": "default-section",
       "layout-policy": "tabular",
       "is-collapsible": false,
-      "detail-screen": "Screen-Employee-Detail.json",
+      "selection-actions": [
+        {
+          "event": "click",
+          "target-screen": "Screen-Employee-Detail.json",
+          "include-record-id": true
+        },
+        {
+          "event": "double-click",
+          "target-screen": "Screen-Employee-Detail.json",
+          "include-record-id": true
+        }
+      ],
       "fields": [
         {
           "id": "emp-list-001",
