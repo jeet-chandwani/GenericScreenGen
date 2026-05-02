@@ -12,6 +12,8 @@ namespace GenericScreenGenApp
 	/// </summary>
 	public static class Program
 	{
+		private const string RECORD_ID_FIELD_NAME = "__record-id";
+
 		/// <summary>
 		/// Application entry point.
 		/// </summary>
@@ -131,6 +133,81 @@ namespace GenericScreenGenApp
 				return Results.Ok(itfScreenRenderModel);
 			});
 
+			objApp.MapGet("/api/data/{strScreenFileName}/{strRecordId}", delegate (
+				string strScreenFileName,
+				string strRecordId,
+				IDataStore itfDataStore)
+			{
+				if (!itfDataStore.TryLoadRows(strScreenFileName, out IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, out string strLoadError))
+				{
+					return Results.Problem(strLoadError);
+				}
+
+				IReadOnlyDictionary<string, string>? itfMatchingRow = FindRowByRecordId(lstRows, strRecordId);
+				if (itfMatchingRow is null)
+				{
+					return Results.NotFound(new { error = $"Record '{strRecordId}' was not found for screen '{strScreenFileName}'." });
+				}
+
+				Dictionary<string, string> dictResponseData = itfMatchingRow
+					.Where(objKvp => !string.Equals(objKvp.Key, RECORD_ID_FIELD_NAME, StringComparison.OrdinalIgnoreCase))
+					.ToDictionary(objKvp => objKvp.Key, objKvp => objKvp.Value ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+
+				return Results.Ok(new
+				{
+					recordId = strRecordId,
+					data = dictResponseData
+				});
+			});
+
+			objApp.MapPut("/api/data/{strScreenFileName}/{strRecordId}", delegate (
+				string strScreenFileName,
+				string strRecordId,
+				CRecordDataUpsertRequest? objRequest,
+				IDataStore itfDataStore)
+			{
+				if (objRequest?.Data is null)
+				{
+					return Results.BadRequest(new { error = "Request body must contain a data object." });
+				}
+
+				if (!itfDataStore.TryLoadRows(strScreenFileName, out IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, out string strLoadError))
+				{
+					return Results.Problem(strLoadError);
+				}
+
+				Dictionary<string, string> dictRecordData = objRequest.Data
+					.Where(objKvp => !string.IsNullOrWhiteSpace(objKvp.Key))
+					.ToDictionary(objKvp => objKvp.Key, objKvp => objKvp.Value ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+				dictRecordData[RECORD_ID_FIELD_NAME] = strRecordId;
+
+				List<IReadOnlyDictionary<string, string>> lstWritableRows = lstRows
+					.Select(itfRow => (IReadOnlyDictionary<string, string>)itfRow.ToDictionary(objKvp => objKvp.Key, objKvp => objKvp.Value ?? string.Empty, StringComparer.OrdinalIgnoreCase))
+					.ToList();
+
+				int iExistingIndex = FindRowIndexByRecordId(lstWritableRows, strRecordId);
+				if (iExistingIndex >= 0)
+				{
+					lstWritableRows[iExistingIndex] = dictRecordData;
+				}
+				else
+				{
+					lstWritableRows.Add(dictRecordData);
+				}
+
+				if (!itfDataStore.TrySaveRows(strScreenFileName, lstWritableRows, out string strSaveError))
+				{
+					return Results.Problem(strSaveError);
+				}
+
+				return Results.Ok(new
+				{
+					screenFileName = strScreenFileName,
+					recordId = strRecordId,
+					savedAtUtc = DateTime.UtcNow
+				});
+			});
+
 			objApp.MapGet("/api/screens/validation", delegate (IScreenConfigProvider itfScreenConfigProvider, IScreenSchemaValidator itfScreenSchemaValidator)
 			{
 				if (!itfScreenConfigProvider.TryGetAvailableScreens(out IReadOnlyList<string> lstScreenFileNames, out string strListError))
@@ -207,6 +284,40 @@ namespace GenericScreenGenApp
 			}
 
 			return itfScreenRenderModelFactory;
+		}
+
+		private static IReadOnlyDictionary<string, string>? FindRowByRecordId(IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, string strRecordId)
+		{
+			foreach (IReadOnlyDictionary<string, string> itfRow in lstRows)
+			{
+				if (itfRow.TryGetValue(RECORD_ID_FIELD_NAME, out string? strExistingRecordId) &&
+					string.Equals(strExistingRecordId, strRecordId, StringComparison.OrdinalIgnoreCase))
+				{
+					return itfRow;
+				}
+			}
+
+			return null;
+		}
+
+		private static int FindRowIndexByRecordId(IReadOnlyList<IReadOnlyDictionary<string, string>> lstRows, string strRecordId)
+		{
+			for (int iIndex = 0; iIndex < lstRows.Count; iIndex++)
+			{
+				IReadOnlyDictionary<string, string> itfRow = lstRows[iIndex];
+				if (itfRow.TryGetValue(RECORD_ID_FIELD_NAME, out string? strExistingRecordId) &&
+					string.Equals(strExistingRecordId, strRecordId, StringComparison.OrdinalIgnoreCase))
+				{
+					return iIndex;
+				}
+			}
+
+			return -1;
+		}
+
+		private sealed class CRecordDataUpsertRequest
+		{
+			public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		}
 	}
 }

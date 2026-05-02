@@ -7,6 +7,8 @@ import { LayoutPolicyService } from '../services/layout-policy.service';
 
 type TTabularRow = Record<string, string>;
 type TSortDirection = 'asc' | 'desc';
+const RECORD_ID_FIELD_NAME = '__record-id';
+const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
 
 @Component({
   selector: 'app-section-renderer',
@@ -424,7 +426,7 @@ type TSortDirection = 'asc' | 'desc';
         }
 
         @for (objSection of section.sections; track objSection.name) {
-          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [screenFeatures]="screenFeatures" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
+          <app-section-renderer [section]="objSection" [screenFileName]="screenFileName" [screenFeatures]="screenFeatures" [recordId]="recordId" [initialFieldValuesByName]="initialFieldValuesByName" (actionInvoked)="forwardAction($event)"></app-section-renderer>
         }
       </div>
     </section>
@@ -1051,6 +1053,7 @@ export class SectionRendererComponent implements OnChanges {
   @Input({ required: true }) section!: ScreenRenderSectionModel;
   @Input() screenFileName: string = '';
   @Input() screenFeatures: string[] = [];
+  @Input() recordId: string = '';
   @Input() initialFieldValuesByName: Record<string, string> | null = null;
   @Output() readonly actionInvoked = new EventEmitter<string>();
 
@@ -1157,7 +1160,8 @@ export class SectionRendererComponent implements OnChanges {
 
     // Persist current values as the new baseline; downstream consumers can subscribe to actionInvoked.
     this.m_dictRecordDetailOriginal = { ...this.recordDetailValues() };
-    this.actionInvoked.emit('save');
+    let strPayload = encodeURIComponent(JSON.stringify(this.recordDetailValues()));
+    this.actionInvoked.emit(`save-record:${strPayload}`);
   }
 
   cancelRecordDetail(): void {
@@ -1367,12 +1371,16 @@ export class SectionRendererComponent implements OnChanges {
 
   onRowClick(objRow: TTabularRow): void {
     if (this.section.detailScreen) {
+      let strRecordId = this.ensureRecordIdForRow(objRow);
       let dictPrefillByFieldName: Record<string, string> = {};
       for (let objField of this.section.fields) {
         if (!objField.isActionField) {
           dictPrefillByFieldName[objField.name] = objRow[objField.id] ?? '';
         }
       }
+
+      dictPrefillByFieldName[RECORD_ID_FIELD_NAME] = strRecordId;
+      dictPrefillByFieldName[SOURCE_SCREEN_FIELD_NAME] = this.screenFileName;
 
       let strPayload = encodeURIComponent(JSON.stringify(dictPrefillByFieldName));
       this.actionInvoked.emit(`navigate:${this.section.detailScreen}|${strPayload}`);
@@ -1546,6 +1554,20 @@ export class SectionRendererComponent implements OnChanges {
     }
 
     return strSortDirection === 'asc' ? iCompareResult : -iCompareResult;
+  }
+
+  private ensureRecordIdForRow(objRow: TTabularRow): string {
+    let strExistingRecordId = (objRow[RECORD_ID_FIELD_NAME] ?? '').trim();
+    if (strExistingRecordId.length > 0) {
+      return strExistingRecordId;
+    }
+
+    let strGeneratedRecordId = (globalThis.crypto && 'randomUUID' in globalThis.crypto)
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+
+    objRow[RECORD_ID_FIELD_NAME] = strGeneratedRecordId;
+    return strGeneratedRecordId;
   }
 
   private createInitialRows(): TTabularRow[] {

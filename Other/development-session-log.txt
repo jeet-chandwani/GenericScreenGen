@@ -11,6 +11,17 @@
   - Migrated all existing screen configs to include `"key": []`
 - Added release notes file: `Docs/BRD-05-release-notes-REQ-5.1.md`
 
+## 2026-05-01
+- Prompt: "Start implementation" (BRD-05 REQ-5.2: record-id propagation, display, and persistence)
+- Implemented REQ-5.2 across API and Angular client:
+  - Added record-by-id endpoints: `GET /api/data/{screenFileName}/{recordId}` and `PUT /api/data/{screenFileName}/{recordId}`
+  - Added record-id based row lookup/upsert logic using reserved row key `__record-id`
+  - Added Angular API methods for record load/save by record-id
+  - Updated navigation flow to pass `__record-id` and `__source-screen` on tabular row selection
+  - Updated detail save flow to persist edited record payload via `save-record` action
+  - Added top-right record-id display on target detail screen header
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.2.md`
+
 # Branch: feat/brd-03-new-layout-policies-and-field-types
 **Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE

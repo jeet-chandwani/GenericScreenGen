@@ -52,11 +52,14 @@
         <article class="screen-panel">
           <div class="panel-header">
             <h2 [title]="objRenderModel.displayName + '\nConfig: ' + objRenderModel.screenFileName">{{ objRenderModel.displayName }}</h2>
+            @if (selectedRecordId()) {
+              <span class="record-id-pill" [title]="'Record ID: ' + selectedRecordId()">Record ID: {{ selectedRecordId() }}</span>
+            }
           </div>
 
           <div class="screen-sections">
             @for (objSection of objRenderModel.sections; track objSection.name) {
-              <app-section-renderer [section]="objSection" [screenFileName]="objRenderModel.screenFileName" [screenFeatures]="objRenderModel.features" [initialFieldValuesByName]="navigationPrefillByFieldName()" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
+              <app-section-renderer [section]="objSection" [screenFileName]="objRenderModel.screenFileName" [screenFeatures]="objRenderModel.features" [recordId]="selectedRecordId()" [initialFieldValuesByName]="navigationPrefillByFieldName()" (actionInvoked)="onActionInvoked($event)"></app-section-renderer>
             }
           </div>
 
