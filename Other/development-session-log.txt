@@ -258,3 +258,23 @@
   - Updated SectionRendererComponent: injects LayoutPolicyService; applies layout CSS class to section-body div; added .layout-per-line CSS rule
   - Updated ScreenConfigSchema.json: added description to layout-policy property explaining extension pattern
   - Build: 0 errors, 0 warnings
+
+# Branch: brd-04-layout-and-field-type-changes
+**Branch Created**: 2026-04-28
+**Branch Status**: ACTIVE
+
+## 2026-04-28
+- Req 4.1.0: Added max-width policy to all field types (schema + C# + Angular)
+- Req 4.1.1: Added explicit screen id and name with filename-derived defaults
+- Req 4.1.2: Centralized screen features (save, cancel, show-original-values) with per-screen features array
+- Req 4.1.3: Mandatory field validation now gated on save feature being enabled
+- Req 4.2.1: Screen id and name added to all screen config files
+- Req 4.2.2: features array made mandatory in schema; defaults to empty array
+
+## 2026-04-28 (continued)
+- Prompt: "start implementation"
+- Req 4.2.3: Made id and name mandatory in root schema required array; CScreenDocumentDto.Id and .Name changed to non-nullable string with [JsonRequired]; fallback filename derivation removed
+- Req 4.2.4: Made layout-policy and is-collapsible mandatory in section schema required array; minItems:1 added to fields array; CScreenSectionDto properties changed to non-nullable with [JsonRequired]; empty-fields-array guard added in TryCreateSectionDefinition
+- Req 4.2.5: description and width in CScreenFieldDto changed to non-nullable string with [JsonRequired]; field validation guard updated to check all five required attributes
+- Build: 0 errors, 1 pre-existing warning (unused variable in CScreenRenderModelFactory)
+- Release notes: BRD-04-release-notes-REQ-4.2.3-4.2.5.md

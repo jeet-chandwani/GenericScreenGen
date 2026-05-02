@@ -165,13 +165,8 @@ namespace GenericScreenGenImplementationsLib
                 }
 
                 string strScreenFileName = Path.GetFileName(strJsonFilePath);
-                string strDefaultScreenName = CScreenNameUtility.GetScreenNameFromFileName(strScreenFileName);
-                string strDisplayName = string.IsNullOrWhiteSpace(objScreenDocument.Name)
-                    ? strDefaultScreenName
-                    : objScreenDocument.Name.Trim();
-                string strScreenId = string.IsNullOrWhiteSpace(objScreenDocument.Id)
-                    ? CScreenNameUtility.GetScreenIdFromFileName(strScreenFileName)
-                    : objScreenDocument.Id.Trim();
+                string strDisplayName = objScreenDocument.Name.Trim();
+                string strScreenId = objScreenDocument.Id.Trim();
                 IReadOnlyList<string> lstFeatures = NormalizeFeatures(objScreenDocument.Features);
 
                 itfScreenDefinition = new CScreenDefinition(strScreenId, strScreenFileName, strDisplayName, lstSections, lstFeatures);
@@ -199,6 +194,13 @@ namespace GenericScreenGenImplementationsLib
 
             if (objSection.Fields is not null)
             {
+                if (objSection.Fields.Count == 0)
+                {
+                    itfScreenSectionDefinition = null;
+                    strError = $"Section '{objSection.Name}' has a fields array but it is empty. At least one field is required when the fields array is present.";
+                    return false;
+                }
+
                 foreach (CScreenFieldDto objField in objSection.Fields)
                 {
                     if (!TryCreateFieldDefinition(objField, out IScreenFieldDefinition? itfFieldDefinition, out strError) || itfFieldDefinition is null)
@@ -225,12 +227,8 @@ namespace GenericScreenGenImplementationsLib
                 }
             }
 
-            string strSectionName = string.IsNullOrWhiteSpace(objSection.Name)
-                ? CScreenGeneratorConstants.DEFAULT_SECTION_NAME
-                : objSection.Name;
-            string strLayoutPolicy = string.IsNullOrWhiteSpace(objSection.LayoutPolicy)
-                ? CScreenGeneratorConstants.DEFAULT_LAYOUT_POLICY
-                : objSection.LayoutPolicy;
+            string strSectionName = objSection.Name;
+            string strLayoutPolicy = objSection.LayoutPolicy;
 
             if (!m_itfLayoutPolicyRegistry.IsValidPolicyId(strLayoutPolicy))
             {
@@ -243,7 +241,7 @@ namespace GenericScreenGenImplementationsLib
             itfScreenSectionDefinition = new CScreenSectionDefinition(
                 strSectionName,
                 strLayoutPolicy,
-                objSection.IsCollapsible ?? true,
+                objSection.IsCollapsible,
                 lstFields,
                 lstSections,
                 objSection.DetailScreen ?? string.Empty);
@@ -253,10 +251,11 @@ namespace GenericScreenGenImplementationsLib
 
         private static bool TryCreateFieldDefinition(CScreenFieldDto objField, out IScreenFieldDefinition? itfFieldDefinition, out string strError)
         {
-            if (string.IsNullOrWhiteSpace(objField.Id) || string.IsNullOrWhiteSpace(objField.Name))
+            if (string.IsNullOrWhiteSpace(objField.Id) || string.IsNullOrWhiteSpace(objField.Name) ||
+                string.IsNullOrWhiteSpace(objField.Description) || string.IsNullOrWhiteSpace(objField.Width))
             {
                 itfFieldDefinition = null;
-                strError = "Each field must define both id and name values.";
+                strError = "Each field must define id, name, description, and width values.";
                 return false;
             }
 
@@ -270,10 +269,10 @@ namespace GenericScreenGenImplementationsLib
             itfFieldDefinition = new CScreenFieldDefinition(
                 objField.Id,
                 objField.Name,
-                objField.Description ?? string.Empty,
+                objField.Description,
                 enuFieldType,
                 objField.TypeInfo ?? string.Empty,
-                string.IsNullOrWhiteSpace(objField.Width) ? "300px" : objField.Width,
+                objField.Width,
                 objField.MaxWidth ?? string.Empty,
                 objField.IsMandatory,
                 objField.IsSearchable);
@@ -347,10 +346,12 @@ namespace GenericScreenGenImplementationsLib
         private sealed class CScreenDocumentDto
         {
             [JsonPropertyName("id")]
-            public string? Id { get; set; }
+            [JsonRequired]
+            public string Id { get; set; } = string.Empty;
 
             [JsonPropertyName("name")]
-            public string? Name { get; set; }
+            [JsonRequired]
+            public string Name { get; set; } = string.Empty;
 
             [JsonPropertyName("features")]
             [JsonRequired]
@@ -363,13 +364,16 @@ namespace GenericScreenGenImplementationsLib
         private sealed class CScreenSectionDto
         {
             [JsonPropertyName("name")]
-            public string? Name { get; set; }
+            [JsonRequired]
+            public string Name { get; set; } = string.Empty;
 
             [JsonPropertyName("layout-policy")]
-            public string? LayoutPolicy { get; set; }
+            [JsonRequired]
+            public string LayoutPolicy { get; set; } = string.Empty;
 
             [JsonPropertyName("is-collapsible")]
-            public bool? IsCollapsible { get; set; }
+            [JsonRequired]
+            public bool IsCollapsible { get; set; }
 
             [JsonPropertyName("detail-screen")]
             public string? DetailScreen { get; set; }
@@ -390,16 +394,19 @@ namespace GenericScreenGenImplementationsLib
             public string Name { get; set; } = string.Empty;
 
             [JsonPropertyName("description")]
-            public string? Description { get; set; }
+            [JsonRequired]
+            public string Description { get; set; } = string.Empty;
 
             [JsonPropertyName("type")]
+            [JsonRequired]
             public string Type { get; set; } = string.Empty;
 
             [JsonPropertyName("type-info")]
             public string? TypeInfo { get; set; }
 
             [JsonPropertyName("width")]
-            public string? Width { get; set; }
+            [JsonRequired]
+            public string Width { get; set; } = string.Empty;
 
             [JsonPropertyName("max-width")]
             public string? MaxWidth { get; set; }

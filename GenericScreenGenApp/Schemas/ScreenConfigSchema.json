@@ -4,17 +4,17 @@
   "title": "Generic Screen Configuration",
   "description": "Schema for dynamic screen configuration files used by GenericScreenGenApp.",
   "type": "object",
-  "required": ["sections", "features"],
+  "required": ["id", "name", "sections", "features"],
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9-]+$",
-      "description": "Optional screen identifier. When omitted, defaults to file name without 'Screen-' prefix and '.json' suffix.",
+      "description": "Mandatory screen identifier in kebab-case format.",
       "examples": ["employee-list", "calculator"]
     },
     "name": {
       "type": "string",
-      "description": "Optional display name for the screen. When omitted, defaults to file name without 'Screen-' prefix and '.json' suffix.",
+      "description": "Mandatory display name for the screen.",
       "examples": ["Employee List", "Calculator"]
     },
     "features": {
@@ -37,7 +37,7 @@
   "$defs": {
     "section": {
       "type": "object",
-      "required": ["name"],
+      "required": ["name", "layout-policy", "is-collapsible"],
       "properties": {
         "name": {
           "type": "string",
@@ -45,13 +45,12 @@
         },
         "layout-policy": {
           "type": "string",
-          "default": "per-line",
-          "description": "Controls how fields inside this section are arranged. Built-in values: 'per-line' (each field on its own line, vertical stack), 'flow' (fields flow left-to-right with wrap), and 'tabular' (fields are rendered as table columns with records as rows). New policies can be added by implementing ILayoutPolicy and registering the implementation in the dependency-injection container — no schema change required.",
+          "description": "Mandatory. Controls how fields inside this section are arranged. Built-in values: 'per-line' (each field on its own line, vertical stack), 'flow' (fields flow left-to-right with wrap), and 'tabular' (fields are rendered as table columns with records as rows). New policies can be added by implementing ILayoutPolicy and registering the implementation in the dependency-injection container — no schema change required.",
           "examples": ["per-line", "flow", "tabular"]
         },
         "is-collapsible": {
           "type": "boolean",
-          "default": true,
+          "description": "Mandatory. Whether the section can be collapsed by the user.",
           "examples": [true, false]
         },
         "detail-screen": {
@@ -61,6 +60,8 @@
         },
         "fields": {
           "type": "array",
+          "minItems": 1,
+          "description": "When present, must contain at least one field definition.",
           "items": {
             "$ref": "#/$defs/field"
           }
