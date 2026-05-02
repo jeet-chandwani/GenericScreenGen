@@ -1,0 +1,8 @@
+{
+  "id": "sql-primary",
+  "name": "Primary SQL Server Store",
+  "provider-type": "sql-server",
+  "parameters": {
+    "connection-string": "Server=localhost,1433;Database=GenericScreenGenDB;User Id=sa;Password=ReplaceMe123!;TrustServerCertificate=True;"
+  }
+}

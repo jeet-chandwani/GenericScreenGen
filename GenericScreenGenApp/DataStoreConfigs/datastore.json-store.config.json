@@ -1,0 +1,8 @@
+{
+  "id": "json-store",
+  "name": "JSON File Store",
+  "provider-type": "json",
+  "parameters": {
+    "root-folder": "DataStore"
+  }
+}
