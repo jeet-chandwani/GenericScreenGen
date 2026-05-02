@@ -8,3 +8,5 @@
 
 **Req 5.4.** In `selection-actions`, rename attribute `target-screen` to `target-screen-id` and use child screen `id` value instead of screen file name in all screen config files.
 
+**Req 5.5.** Reduce vertical spacing in screen display for all screens irrespective of sections and layout policies. Specifically, reduce space between top border and screen title, and reduce space between screen title and first section so UI feels compact and uses more display area.
+

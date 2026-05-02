@@ -44,6 +44,21 @@
 - Updated requirement doc: `Docs/BRD-05.md` (added Req 5.4)
 - Added release notes file: `Docs/BRD-05-release-notes-REQ-5.4.md`
 
+## 2026-05-01
+- Prompt: "Add this new req to BRD-05 doc before commit/push adn start implementation of this plan"
+- Implemented BRD-05 REQ-5.5 (compact vertical spacing across all screens):
+  - Added Req 5.5 to `Docs/BRD-05.md`
+  - Reduced shared screen-shell vertical spacing in `GenericScreenGenClientApp/src/app/app.css`:
+    - `.page-shell` top padding: 32px -> 20px
+    - `.page-title-panel` bottom margin: 8px -> 4px
+    - `.page-title-panel` top padding: 4px -> 2px
+    - `.screen-panel` padding: 24px -> 18px
+    - `.panel-header` margin-bottom: 18px -> 10px
+    - `.screen-sections` gap: 18px -> 12px
+    - Added `.panel-header h2 { margin: 0; }` to eliminate extra default heading spacing
+  - Changes applied at shared screen-level selectors so behavior is layout-policy and section-count independent
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.5.md`
+
 # Branch: feat/brd-03-new-layout-policies-and-field-types
 **Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE
