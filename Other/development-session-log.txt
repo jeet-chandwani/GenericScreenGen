@@ -1,3 +1,64 @@
+# Branch: brd-05-screen-changes
+**Branch Created**: 2026-05-01
+**Branch Status**: ACTIVE
+
+## 2026-05-01
+- Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
+- Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:
+  - Added mandatory root `key` attribute (array of field IDs; empty array allowed) in screen schema
+  - Added `Key` property to `IScreenDefinition` and `CScreenDefinition`
+  - Updated `CScreenConfigProvider` to deserialize mandatory `key` and normalize key field IDs
+  - Migrated all existing screen configs to include `"key": []`
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.1.md`
+
+## 2026-05-01
+- Prompt: "Start implementation" (BRD-05 REQ-5.2: record-id propagation, display, and persistence)
+- Implemented REQ-5.2 across API and Angular client:
+  - Added record-by-id endpoints: `GET /api/data/{screenFileName}/{recordId}` and `PUT /api/data/{screenFileName}/{recordId}`
+  - Added record-id based row lookup/upsert logic using reserved row key `__record-id`
+  - Added Angular API methods for record load/save by record-id
+  - Updated navigation flow to pass `__record-id` and `__source-screen` on tabular row selection
+  - Updated detail save flow to persist edited record payload via `save-record` action
+  - Added top-right record-id display on target detail screen header
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.2.md`
+
+## 2026-05-01
+- Prompt: "Start implementation" (BRD-05 REQ-5.3: explicit selection actions for click/double-click)
+- Implemented REQ-5.3 migration from `detail-screen` to `selection-actions`:
+  - Added backend contracts/models for selection actions in both definition and render layers
+  - Updated parser to read/validate `selection-actions` with supported events: `click`, `double-click`
+  - Enforced at least one selection action for tabular sections
+  - Updated render model mapping and Angular section model to use `selectionActions`
+  - Updated tabular row handling to execute configured click/double-click actions with event disambiguation
+  - Removed all `detail-screen` usage and migrated `Screen-Employee-list.json` config
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.3.md`
+
+## 2026-05-01
+- Prompt: "For selection-actions in screen config files, change attribute target-screen to target-screen-id and update the value with screen id"
+- Implemented BRD-05 REQ-5.4:
+  - Renamed selection-action attribute from `target-screen` to `target-screen-id` in schema and parser DTO
+  - Updated selection action contracts and render models to use `TargetScreenId`
+  - Added `screenId` in `/api/screens` list response and Angular list model
+  - Updated Angular navigation resolution to interpret selection action target as screen-id
+  - Migrated screen configs using selection-actions to `target-screen-id` with screen id values
+- Updated requirement doc: `Docs/BRD-05.md` (added Req 5.4)
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.4.md`
+
+## 2026-05-01
+- Prompt: "Add this new req to BRD-05 doc before commit/push adn start implementation of this plan"
+- Implemented BRD-05 REQ-5.5 (compact vertical spacing across all screens):
+  - Added Req 5.5 to `Docs/BRD-05.md`
+  - Reduced shared screen-shell vertical spacing in `GenericScreenGenClientApp/src/app/app.css`:
+    - `.page-shell` top padding: 32px -> 20px
+    - `.page-title-panel` bottom margin: 8px -> 4px
+    - `.page-title-panel` top padding: 4px -> 2px
+    - `.screen-panel` padding: 24px -> 18px
+    - `.panel-header` margin-bottom: 18px -> 10px
+    - `.screen-sections` gap: 18px -> 12px
+    - Added `.panel-header h2 { margin: 0; }` to eliminate extra default heading spacing
+  - Changes applied at shared screen-level selectors so behavior is layout-policy and section-count independent
+- Added release notes file: `Docs/BRD-05-release-notes-REQ-5.5.md`
+
 # Branch: feat/brd-03-new-layout-policies-and-field-types
 **Branch Created**: 2026-04-25
 **Branch Status**: ACTIVE

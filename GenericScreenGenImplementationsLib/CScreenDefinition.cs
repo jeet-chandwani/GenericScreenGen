@@ -14,18 +14,21 @@ namespace GenericScreenGenImplementationsLib
         /// <param name="strScreenFileName">Backing screen file name.</param>
         /// <param name="strDisplayName">Display name.</param>
         /// <param name="lstSections">Screen sections.</param>
+        /// <param name="lstKey">Field identifiers that define the record key.</param>
         /// <param name="lstFeatures">Enabled screen-level features.</param>
         public CScreenDefinition(
             string strScreenId,
             string strScreenFileName,
             string strDisplayName,
             IReadOnlyList<IScreenSectionDefinition> lstSections,
+            IReadOnlyList<string> lstKey,
             IReadOnlyList<string> lstFeatures)
         {
             ScreenId = strScreenId;
             ScreenFileName = strScreenFileName;
             DisplayName = strDisplayName;
             Sections = lstSections;
+            Key = lstKey;
             Features = lstFeatures;
         }
 
@@ -40,6 +43,9 @@ namespace GenericScreenGenImplementationsLib
 
         /// <inheritdoc />
         public IReadOnlyList<IScreenSectionDefinition> Sections { get; }
+
+        /// <inheritdoc />
+        public IReadOnlyList<string> Key { get; }
 
         /// <inheritdoc />
         public IReadOnlyList<string> Features { get; }

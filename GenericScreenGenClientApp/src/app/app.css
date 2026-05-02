@@ -6,7 +6,7 @@
   box-sizing: border-box;
   height: 100dvh;
   min-width: 360px;
-  padding: 32px 20px 48px;
+  padding: 20px 20px 48px;
   background:
     radial-gradient(circle at 10% 0%, rgba(255, 215, 165, 0.4), transparent 30%),
     linear-gradient(180deg, #f6efe3 0%, #efe6d8 100%);
@@ -26,11 +26,11 @@
 }
 
 .page-title-panel {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   position: sticky;
   top: 0;
   z-index: 3;
-  padding-top: 4px;
+  padding-top: 2px;
   background: linear-gradient(180deg, rgba(246, 239, 227, 0.98) 85%, rgba(246, 239, 227, 0));
 }
 
@@ -198,7 +198,7 @@ button.secondary {
 }
 
 .screen-panel {
-  padding: 24px;
+  padding: 18px;
 }
 
 .panel-header {
@@ -206,12 +206,27 @@ button.secondary {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+.record-id-pill {
+  border: 1px solid rgba(63, 94, 120, 0.35);
+  background: #f2f7ff;
+  color: #2a4a6a;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .screen-sections {
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 
 .message-panel {

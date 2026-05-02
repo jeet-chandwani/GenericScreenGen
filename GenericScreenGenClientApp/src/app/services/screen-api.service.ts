@@ -30,6 +30,19 @@ export class ScreenApiService {
     return this.httpClient.post<{ refreshedScreenCount: number; refreshedAtUtc: string }>(this.getApiUrl('/screens/refresh'), {});
   }
 
+  getRecordById(strScreenFileName: string, strRecordId: string): Observable<{ recordId: string; data: Record<string, string> }> {
+    return this.httpClient.get<{ recordId: string; data: Record<string, string> }>(
+      this.getApiUrl(`/data/${encodeURIComponent(strScreenFileName)}/${encodeURIComponent(strRecordId)}`)
+    );
+  }
+
+  saveRecordById(strScreenFileName: string, strRecordId: string, dictData: Record<string, string>): Observable<{ screenFileName: string; recordId: string; savedAtUtc: string }> {
+    return this.httpClient.put<{ screenFileName: string; recordId: string; savedAtUtc: string }>(
+      this.getApiUrl(`/data/${encodeURIComponent(strScreenFileName)}/${encodeURIComponent(strRecordId)}`),
+      { data: dictData }
+    );
+  }
+
   private getApiUrl(strPath: string): string {
     return `${this.strApiBaseUrl}${strPath}`;
   }

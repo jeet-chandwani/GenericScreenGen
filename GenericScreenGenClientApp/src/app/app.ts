@@ -16,6 +16,8 @@ type EAppViewMode = 'home' | 'screen';
 
 const RETRY_COUNT = 3;
 const RETRY_DELAY_MS = 1000;
+const RECORD_ID_FIELD_NAME = '__record-id';
+const SOURCE_SCREEN_FIELD_NAME = '__source-screen';
 
 @Component({
   selector: 'app-root',
@@ -32,6 +34,8 @@ export class App {
   readonly renderModel = signal<ScreenRenderModel | null>(null);
   readonly navigationPrefillByFieldName = signal<Record<string, string> | null>(null);
   readonly returnScreenFileName = signal('');
+  readonly selectedRecordId = signal('');
+  readonly selectedRecordSourceScreenFileName = signal('');
   readonly selectedInvalidScreenValidation = signal<ScreenValidationResult | null>(null);
   readonly validationResults = signal<ScreenValidationResult[]>([]);
   readonly errorMessage = signal('');
@@ -103,6 +107,8 @@ export class App {
   goToHome(): void {
     this.viewMode.set('home');
     this.navigationPrefillByFieldName.set(null);
+    this.selectedRecordId.set('');
+    this.selectedRecordSourceScreenFileName.set('');
     this.selectedInvalidScreenValidation.set(null);
     this.errorMessage.set('');
     this.actionMessage.set('');
@@ -153,7 +159,13 @@ export class App {
       const strSourceScreenFileName = this.selectedScreenFileName();
       const strNavigatePayload = strActionName.slice('navigate:'.length);
       const arrNavigateParts = strNavigatePayload.split('|', 2);
-      const strTargetScreenFileName = arrNavigateParts[0] ?? '';
+      const strTargetScreenToken = arrNavigateParts[0] ?? '';
+      const strTargetScreenFileName = this.resolveTargetScreenFileName(strTargetScreenToken);
+
+      if (!strTargetScreenFileName) {
+        this.errorMessage.set(`Unable to resolve target screen '${strTargetScreenToken}'.`);
+        return;
+      }
 
       let dictPrefillByFieldName: Record<string, string> | null = null;
       if (arrNavigateParts.length > 1) {
@@ -164,16 +176,74 @@ export class App {
         }
       }
 
+      const strRecordId = dictPrefillByFieldName?.[RECORD_ID_FIELD_NAME] ?? '';
+      const strSourceScreenFromPayload = dictPrefillByFieldName?.[SOURCE_SCREEN_FIELD_NAME] ?? '';
+      const strSourceForRecord = strSourceScreenFromPayload || strSourceScreenFileName;
+
+      if (dictPrefillByFieldName) {
+        const { [RECORD_ID_FIELD_NAME]: _, [SOURCE_SCREEN_FIELD_NAME]: __, ...dictCleanPrefill } = dictPrefillByFieldName;
+        dictPrefillByFieldName = dictCleanPrefill;
+      }
+
+      this.selectedRecordId.set(strRecordId);
+      this.selectedRecordSourceScreenFileName.set(strSourceForRecord);
+
       if (strSourceScreenFileName && strSourceScreenFileName !== strTargetScreenFileName) {
         this.returnScreenFileName.set(strSourceScreenFileName);
+      }
+
+      if (strRecordId && strSourceForRecord) {
+        this.screenApiService
+          .getRecordById(strSourceForRecord, strRecordId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (objRecordResponse) => {
+              this.openScreen(strTargetScreenFileName, { ...(dictPrefillByFieldName ?? {}), ...objRecordResponse.data });
+            },
+            error: () => {
+              this.openScreen(strTargetScreenFileName, dictPrefillByFieldName);
+            }
+          });
+        return;
       }
 
       this.openScreen(strTargetScreenFileName, dictPrefillByFieldName);
     } else if (strActionName === 'navigate-back') {
       this.navigateBackToSourceOrHome();
+    } else if (strActionName.startsWith('save-record:')) {
+      const strRecordId = this.selectedRecordId();
+      const strSourceScreenFileName = this.selectedRecordSourceScreenFileName() || this.returnScreenFileName();
+
+      if (!strRecordId || !strSourceScreenFileName) {
+        this.errorMessage.set('Missing record context required to save the selected record.');
+        return;
+      }
+
+      const strEncodedPayload = strActionName.slice('save-record:'.length);
+      let dictRecordData: Record<string, string> = {};
+
+      try {
+        dictRecordData = JSON.parse(decodeURIComponent(strEncodedPayload)) as Record<string, string>;
+      } catch {
+        this.errorMessage.set('Failed to parse record data for save operation.');
+        return;
+      }
+
+      this.errorMessage.set('');
+      this.screenApiService
+        .saveRecordById(strSourceScreenFileName, strRecordId, dictRecordData)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.actionMessage.set(`Record ${strRecordId} saved.`);
+            this.navigateBackToSourceOrHome();
+          },
+          error: () => {
+            this.errorMessage.set(`Failed to save record ${strRecordId}.`);
+          }
+        });
     } else if (strActionName === 'save') {
-      window.alert('Save functionality is not implemented yet.');
-      this.navigateBackToSourceOrHome();
+      this.actionMessage.set('Save action invoked.');
     } else {
       this.actionMessage.set(`Action invoked: ${strActionName}`);
     }
@@ -266,11 +336,27 @@ export class App {
   private navigateBackToSourceOrHome(): void {
     const strReturnScreenFileName = this.returnScreenFileName();
     this.returnScreenFileName.set('');
+    this.selectedRecordId.set('');
+    this.selectedRecordSourceScreenFileName.set('');
 
     if (strReturnScreenFileName) {
       this.openScreen(strReturnScreenFileName, null);
     } else {
       this.goToHome();
     }
+  }
+
+  private resolveTargetScreenFileName(strTargetScreenToken: string): string {
+    if (!strTargetScreenToken) {
+      return '';
+    }
+
+    const objScreenById = this.screens().find(objScreen => objScreen.screenId === strTargetScreenToken);
+    if (objScreenById) {
+      return objScreenById.fileName;
+    }
+
+    // Compatibility fallback for older navigate payloads that still pass file names.
+    return strTargetScreenToken;
   }
 }

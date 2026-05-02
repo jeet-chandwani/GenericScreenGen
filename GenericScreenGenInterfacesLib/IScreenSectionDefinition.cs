@@ -33,8 +33,8 @@ namespace GenericScreenGenInterfacesLib
         IReadOnlyList<IScreenSectionDefinition> Sections { get; }
 
         /// <summary>
-        /// Gets the file name of a detail screen to navigate to when a row is clicked in tabular layout. Empty string means use inline edit.
+        /// Gets selection action mappings for tabular row interactions.
         /// </summary>
-        string DetailScreen { get; }
+        IReadOnlyList<IScreenSelectionActionDefinition> SelectionActions { get; }
     }
 }

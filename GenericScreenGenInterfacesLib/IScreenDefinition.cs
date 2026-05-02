@@ -28,6 +28,11 @@ namespace GenericScreenGenInterfacesLib
         IReadOnlyList<IScreenSectionDefinition> Sections { get; }
 
         /// <summary>
+        /// Gets the list of field identifiers that together define the screen record key.
+        /// </summary>
+        IReadOnlyList<string> Key { get; }
+
+        /// <summary>
         /// Gets the enabled screen-level features.
         /// </summary>
         IReadOnlyList<string> Features { get; }

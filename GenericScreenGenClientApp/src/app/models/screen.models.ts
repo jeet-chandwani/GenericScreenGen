@@ -1,4 +1,5 @@
 export interface ScreenListItem {
+  screenId: string;
   fileName: string;
   displayName: string;
 }
@@ -25,6 +26,12 @@ export interface ScreenRenderFieldModel {
   isSearchable: boolean;
 }
 
+export interface ScreenSelectionActionModel {
+  event: string;
+  targetScreenId: string;
+  includeRecordId: boolean;
+}
+
 export interface ScreenRenderSectionModel {
   name: string;
   layoutPolicy: string;
@@ -32,7 +39,7 @@ export interface ScreenRenderSectionModel {
   showBorder: boolean;
   fields: ScreenRenderFieldModel[];
   sections: ScreenRenderSectionModel[];
-  detailScreen: string;
+  selectionActions: ScreenSelectionActionModel[];
 }
 
 export interface ScreenRenderModel {

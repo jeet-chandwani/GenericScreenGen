@@ -45,6 +45,11 @@ namespace GenericScreenGenImplementationsLib
                 .Cast<IScreenRenderSectionModel>()
                 .ToList();
 
+            List<IScreenRenderSelectionActionModel> lstSelectionActions = itfSectionDefinition.SelectionActions
+                .Select(itfAction => new CScreenRenderSelectionActionModel(itfAction.Event, itfAction.TargetScreenId, itfAction.IncludeRecordId))
+                .Cast<IScreenRenderSelectionActionModel>()
+                .ToList();
+
             return new CScreenRenderSectionModel(
                 itfSectionDefinition.Name,
                 itfSectionDefinition.LayoutPolicy,
@@ -52,7 +57,7 @@ namespace GenericScreenGenImplementationsLib
                 !string.Equals(itfSectionDefinition.Name, CScreenGeneratorConstants.DEFAULT_SECTION_NAME, StringComparison.OrdinalIgnoreCase),
                 lstFields,
                 lstSections,
-                itfSectionDefinition.DetailScreen);
+                lstSelectionActions);
         }
 
         private static CScreenRenderFieldModel CreateFieldRenderModel(IScreenFieldDefinition itfFieldDefinition)

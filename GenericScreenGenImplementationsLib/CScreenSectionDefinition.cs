@@ -15,20 +15,21 @@ namespace GenericScreenGenImplementationsLib
         /// <param name="fIsCollapsible">Indicates whether the section can collapse.</param>
         /// <param name="lstFields">Section fields.</param>
         /// <param name="lstSections">Nested sections.</param>
+        /// <param name="lstSelectionActions">Selection action mappings for tabular row interactions.</param>
         public CScreenSectionDefinition(
             string strName,
             string strLayoutPolicy,
             bool fIsCollapsible,
             IReadOnlyList<IScreenFieldDefinition> lstFields,
             IReadOnlyList<IScreenSectionDefinition> lstSections,
-            string strDetailScreen = "")
+            IReadOnlyList<IScreenSelectionActionDefinition> lstSelectionActions)
         {
             Name = strName;
             LayoutPolicy = strLayoutPolicy;
             IsCollapsible = fIsCollapsible;
             Fields = lstFields;
             Sections = lstSections;
-            DetailScreen = strDetailScreen;
+            SelectionActions = lstSelectionActions;
         }
 
         /// <inheritdoc />
@@ -47,6 +48,6 @@ namespace GenericScreenGenImplementationsLib
         public IReadOnlyList<IScreenSectionDefinition> Sections { get; }
 
         /// <inheritdoc />
-        public string DetailScreen { get; }
+        public IReadOnlyList<IScreenSelectionActionDefinition> SelectionActions { get; }
     }
 }
