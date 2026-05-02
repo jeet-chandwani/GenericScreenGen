@@ -27,7 +27,7 @@ namespace GenericScreenGenFactoryLib
         }
 
         /// <inheritdoc />
-        public bool TryCreateScreenConfigProvider(ILayoutPolicyRegistry itfLayoutPolicyRegistry, out IScreenConfigProvider? itfScreenConfigProvider, out string strError)
+        public bool TryCreateScreenConfigProvider(ILayoutPolicyRegistry itfLayoutPolicyRegistry, IFieldTypeRegistry itfFieldTypeRegistry, out IScreenConfigProvider? itfScreenConfigProvider, out string strError)
         {
             if (string.IsNullOrWhiteSpace(m_strScreenFolderPath))
             {
@@ -36,7 +36,7 @@ namespace GenericScreenGenFactoryLib
                 return false;
             }
 
-            CScreenConfigProvider objScreenConfigProvider = new CScreenConfigProvider(itfLayoutPolicyRegistry);
+            CScreenConfigProvider objScreenConfigProvider = new CScreenConfigProvider(itfLayoutPolicyRegistry, itfFieldTypeRegistry);
 
             if (!objScreenConfigProvider.Init(m_strScreenFolderPath, out strError))
             {

@@ -28,6 +28,15 @@
       - Updated `registry-field-types.json` with default parameter maps for each built-in field type
     - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.3.md`
 
+      ## 2026-05-01
+      - Prompt: "Start implementation" (BRD-06 REQ-6.4: merge defaults with field-level type-info)
+      - Implemented REQ-6.4 effective type-info merge flow:
+        - Updated factory and app startup wiring to pass `IFieldTypeRegistry` into `CScreenConfigProvider`
+        - Added merge logic in `CScreenConfigProvider` to build effective `type-info` from registry defaults + field overrides
+        - Preserved backward compatibility for non key-value `type-info` formats
+        - Updated `ScreenConfigSchema.json` description for default + override behavior
+      - Added release notes file: `Docs/BRD-06-release-notes-REQ-6.4.md`
+
 ## 2026-05-01
 - Prompt: "Start implementation" (BRD-05 REQ-5.1: mandatory screen key attribute)
 - Implemented REQ-5.1 foundation across schema, backend contracts, parser, and sample configs:

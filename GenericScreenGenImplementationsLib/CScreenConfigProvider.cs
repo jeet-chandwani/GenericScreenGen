@@ -18,6 +18,7 @@ namespace GenericScreenGenImplementationsLib
         };
 
         private readonly ILayoutPolicyRegistry m_itfLayoutPolicyRegistry;
+        private readonly IFieldTypeRegistry m_itfFieldTypeRegistry;
         private string? m_strScreenFolderPath;
 
         /// <summary>
@@ -25,9 +26,11 @@ namespace GenericScreenGenImplementationsLib
         /// <c>layout-policy</c> values in screen configuration files.
         /// </summary>
         /// <param name="itfLayoutPolicyRegistry">Registry of all registered layout policies.</param>
-        public CScreenConfigProvider(ILayoutPolicyRegistry itfLayoutPolicyRegistry)
+        /// <param name="itfFieldTypeRegistry">Registry of all configured field types.</param>
+        public CScreenConfigProvider(ILayoutPolicyRegistry itfLayoutPolicyRegistry, IFieldTypeRegistry itfFieldTypeRegistry)
         {
             m_itfLayoutPolicyRegistry = itfLayoutPolicyRegistry;
+            m_itfFieldTypeRegistry = itfFieldTypeRegistry;
         }
 
         private readonly Dictionary<string, IScreenDefinition> m_dictScreenDefinitions = new Dictionary<string, IScreenDefinition>(StringComparer.OrdinalIgnoreCase);
@@ -291,7 +294,7 @@ namespace GenericScreenGenImplementationsLib
             return true;
         }
 
-        private static bool TryCreateFieldDefinition(CScreenFieldDto objField, out IScreenFieldDefinition? itfFieldDefinition, out string strError)
+        private bool TryCreateFieldDefinition(CScreenFieldDto objField, out IScreenFieldDefinition? itfFieldDefinition, out string strError)
         {
             if (string.IsNullOrWhiteSpace(objField.Id) || string.IsNullOrWhiteSpace(objField.Name) ||
                 string.IsNullOrWhiteSpace(objField.Description) || string.IsNullOrWhiteSpace(objField.Width))
@@ -308,18 +311,130 @@ namespace GenericScreenGenImplementationsLib
                 return false;
             }
 
+            string strFieldTypeRegistryId = NormalizeFieldTypeRegistryId(enuFieldType);
+            if (!m_itfFieldTypeRegistry.TryGetFieldTypeDefinition(strFieldTypeRegistryId, out IFieldTypeDefinition? itfFieldTypeDefinition) || itfFieldTypeDefinition is null)
+            {
+                itfFieldDefinition = null;
+                strError = $"Field type '{strFieldTypeRegistryId}' is not defined in registry-field-types.json.";
+                return false;
+            }
+
+            string strEffectiveTypeInfo = BuildEffectiveTypeInfo(enuFieldType, itfFieldTypeDefinition.Parameters, objField.TypeInfo ?? string.Empty);
+
             itfFieldDefinition = new CScreenFieldDefinition(
                 objField.Id,
                 objField.Name,
                 objField.Description,
                 enuFieldType,
-                objField.TypeInfo ?? string.Empty,
+                strEffectiveTypeInfo,
                 objField.Width,
                 objField.MaxWidth ?? string.Empty,
                 objField.IsMandatory,
                 objField.IsSearchable);
             strError = string.Empty;
             return true;
+        }
+
+        private static string BuildEffectiveTypeInfo(EFieldType enuFieldType, IReadOnlyDictionary<string, string> dictDefaultParameters, string strTypeInfoOverride)
+        {
+            if (string.IsNullOrWhiteSpace(strTypeInfoOverride))
+            {
+                return BuildDefaultTypeInfoFromParameters(enuFieldType, dictDefaultParameters);
+            }
+
+            if (!TryParseTypeInfoKeyValuePairs(strTypeInfoOverride, out Dictionary<string, string> dictOverrides))
+            {
+                return strTypeInfoOverride;
+            }
+
+            Dictionary<string, string> dictMerged = new Dictionary<string, string>(dictDefaultParameters, StringComparer.OrdinalIgnoreCase);
+
+            foreach (KeyValuePair<string, string> kvpOverride in dictOverrides)
+            {
+                dictMerged[kvpOverride.Key] = kvpOverride.Value;
+            }
+
+            return BuildDefaultTypeInfoFromParameters(enuFieldType, dictMerged);
+        }
+
+        private static bool TryParseTypeInfoKeyValuePairs(string strTypeInfo, out Dictionary<string, string> dictParameters)
+        {
+            dictParameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            string strNormalizedTypeInfo = strTypeInfo.Trim().Trim('{', '}');
+
+            if (string.IsNullOrWhiteSpace(strNormalizedTypeInfo))
+            {
+                return true;
+            }
+
+            string[] arrTokens = strNormalizedTypeInfo.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (string strToken in arrTokens)
+            {
+                string[] arrKeyValue = strToken.Split('=', 2, StringSplitOptions.TrimEntries);
+                if (arrKeyValue.Length != 2)
+                {
+                    return false;
+                }
+
+                dictParameters[arrKeyValue[0].Trim()] = arrKeyValue[1].Trim();
+            }
+
+            return true;
+        }
+
+        private static string BuildDefaultTypeInfoFromParameters(EFieldType enuFieldType, IReadOnlyDictionary<string, string> dictParameters)
+        {
+            if (dictParameters.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            if (enuFieldType == EFieldType.Lookup)
+            {
+                List<string> lstLookupTokens = new List<string>();
+
+                if (dictParameters.TryGetValue("values", out string? strValues) && !string.IsNullOrWhiteSpace(strValues))
+                {
+                    string[] arrValues = strValues.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    lstLookupTokens.AddRange(arrValues);
+                }
+
+                if (dictParameters.TryGetValue("multiple", out string? strMultiple) &&
+                    string.Equals(strMultiple, "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    lstLookupTokens.Add("multiple");
+                }
+
+                if (lstLookupTokens.Count == 0)
+                {
+                    return string.Empty;
+                }
+
+                return "{" + string.Join(";", lstLookupTokens) + "}";
+            }
+
+            List<string> lstPairs = dictParameters
+                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
+                .OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(kvp => kvp.Key + "=" + kvp.Value)
+                .ToList();
+
+            if (lstPairs.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return "{" + string.Join(";", lstPairs) + ";}";
+        }
+
+        private static string NormalizeFieldTypeRegistryId(EFieldType enuFieldType)
+        {
+            if (enuFieldType == EFieldType.DateTime)
+            {
+                return "date-time";
+            }
+
+            return enuFieldType.ToString().Trim().ToLowerInvariant();
         }
 
         private static IReadOnlyList<string> NormalizeFeatures(List<string> lstRawFeatures)
