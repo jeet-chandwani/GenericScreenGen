@@ -20,7 +20,7 @@ FROM nginx:alpine AS runtime
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copy Angular build output
-COPY --from=build /app/dist/clientapp /usr/share/nginx/html
+COPY --from=build /app/dist/clientapp/browser /usr/share/nginx/html
 
 # Copy custom Nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf

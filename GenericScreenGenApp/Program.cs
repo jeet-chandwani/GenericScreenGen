@@ -68,6 +68,32 @@ namespace GenericScreenGenApp
 			WebApplication objApp = objBuilder.Build();
 			objApp.UseCors("ClientAppCorsPolicy");
 
+			objApp.MapGet("/", delegate ()
+			{
+				return Results.Ok(new
+				{
+					name = "GenericScreenGen API",
+					status = "running",
+					routes = new[]
+					{
+						"/api/screens",
+						"/api/screens/{strScreenFileName}",
+						"/api/screens/{strScreenFileName}/render",
+						"/api/screens/validation",
+						"/api/schema"
+					}
+				});
+			});
+
+			objApp.MapGet("/health", delegate ()
+			{
+				return Results.Ok(new
+				{
+					status = "healthy",
+					timestampUtc = DateTime.UtcNow
+				});
+			});
+
 			objApp.MapPost("/api/screens/refresh", delegate (IScreenConfigProvider itfScreenConfigProvider)
 			{
 				if (!itfScreenConfigProvider.TryReloadScreens(out string strReloadError))

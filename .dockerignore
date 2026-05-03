@@ -1,0 +1,16 @@
+# Exclude local build outputs so host-specific assets are never copied into container builds
+**/bin/
+**/obj/
+
+# Exclude VCS and editor files
+.git/
+.gitignore
+.vscode/
+
+# Exclude local env and docs from build context
+.env
+Docs/
+Diagrams/
+Other/
+Samples/
+Source/

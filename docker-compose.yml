@@ -1,4 +1,24 @@
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ${APP_SQLSERVER_CONTAINER_NAME}
+    env_file:
+    - .env
+    environment:
+    - ACCEPT_EULA=Y
+    - MSSQL_SA_PASSWORD=${DB_PWD}
+    - MSSQL_PID=Developer
+    ports:
+    - "${APP_SQLSERVER_PORT:-1433}:1433"
+    volumes:
+    - sqlserver_data:/var/opt/mssql
+    restart: unless-stopped
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U "$${DB_ID}" -P "$${DB_PWD}" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
   api:
     build:
       context: .
@@ -9,6 +29,7 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:5074
       - Cors__AllowedOrigins__0=http://localhost:${APP_CLIENT_PORT}
+      - ConnectionStrings__DefaultConnection=Server=${APP_SQLSERVER_CONTAINER_NAME},1433;Database=GenericScreenGenDB;User Id=${DB_ID};Password=${DB_PWD};TrustServerCertificate=True;
     ports:
       - "${APP_API_PORT}:5074"
     volumes:
@@ -28,4 +49,7 @@ services:
 
 volumes:
   datastore_data:
+    driver: local
+
+  sqlserver_data:
     driver: local
