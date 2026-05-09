@@ -1,0 +1,250 @@
+' PlantUML Sequence Diagrams — GenericScreenGenSln
+' This file contains three diagrams separated by @startuml / @enduml.
+' Tools like the VS Code PlantUML extension and IntelliJ render each block
+' as a separate image. Online: https://www.plantuml.com/plantuml
+' Mermaid equivalents: sequences.md
+
+' ═══════════════════════════════════════════════════════════════════════════════
+' DIAGRAM 1 — Application Startup (DI Wiring)
+' ═══════════════════════════════════════════════════════════════════════════════
+@startuml Sequence-1-Startup
+title Sequence 1 — Application Startup (DI Wiring)
+
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBackgroundColor #F0F4FF
+skinparam sequenceGroupBorderColor     #6688CC
+skinparam noteBorderColor              #AA8822
+skinparam noteBackgroundColor          #FFFDE7
+skinparam participantBackgroundColor   #E8F0FE
+skinparam participantBorderColor       #3366CC
+skinparam defaultFontName              Segoe UI
+
+participant "Program.cs"                     as P
+participant "CGenericScreenGenFactory"       as FAC
+participant "CLayoutPolicyRegistry"          as LPR
+participant "CFieldTypeRegistry"             as FTR
+participant "CScreenConfigProvider"          as SCP
+participant "CScreenSchemaValidator"         as SSV
+participant "CScreenRenderModelFactory"      as SRF
+participant "CDataStoreRegistry"             as DSR
+participant "CScreenDataStoreMappingRegistry" as SDM
+participant "File System"                    as FS
+
+P -> FAC : <<new>>
+P -> FAC : Init(screenFolderPath)
+note right of FAC
+  Stores screenFolderPath.
+  Derives schemaFilePath =
+    .../Schemas/ScreenConfigSchema.json
+end note
+
+P -> LPR : <<new>>
+note right of LPR
+  Registers 4 layout policies:
+  per-line · flow · tabular · record-detail
+end note
+
+P -> FTR : <<new>>
+P -> FTR : Init(contentRootPath)
+FTR -> FS : read screen/registry-field-types.json
+FS --> FTR : field type definitions\n(id, parameters, validators)
+
+P -> FAC : TryCreateScreenConfigProvider(lpr, ftr)
+FAC -> SCP : <<new>> CScreenConfigProvider(lpr, ftr)
+FAC -> SCP : Init(screenFolderPath)
+SCP -> FS : GetFiles("Screen-*.json")
+FS --> SCP : screen JSON files
+note right of SCP
+  Deserialises each file.
+  Validates layout-policy values via LPR.
+  Validates field type ids via FTR.
+  Caches IScreenDefinition objects
+  (keyed by file name, case-insensitive).
+end note
+
+P -> FAC : TryCreateScreenSchemaValidator()
+FAC -> SSV : <<new>> CScreenSchemaValidator()
+FAC -> SSV : Init(schemaFilePath)
+SSV -> FS : read Schemas/ScreenConfigSchema.json
+
+P -> FAC : TryCreateScreenRenderModelFactory()
+FAC -> SRF : <<new>> CScreenRenderModelFactory()
+FAC -> SRF : Init("")
+
+P -> DSR : <<new>> CDataStoreRegistry()
+P -> DSR : Init(contentRootPath)
+DSR -> FS : GetFiles("datastore.*.config.json")
+FS --> DSR : config files (id, provider-type, parameters)
+note right of DSR
+  Creates CJsonDataStore or CDbDataStore
+  per config entry; keyed by id.
+end note
+
+P -> SDM : <<new>> CScreenDataStoreMappingRegistry(dsr)
+P -> SDM : Init(contentRootPath)
+SDM -> FS : GetFiles("screen-datastore-mapping.*.json")
+FS --> SDM : mapping files (datastore-id, screen-ids[])
+SDM -> DSR : TryGetDataStore(id) — validate each reference
+note right of SDM
+  Builds screenId → dataStoreId dictionary.
+  Fails at startup if any referenced
+  datastore-id does not exist in DSR.
+end note
+
+P -> P : app.Build() — DI container sealed
+P -> P : app.Run()  — listening on :5074
+
+@enduml
+
+
+' ═══════════════════════════════════════════════════════════════════════════════
+' DIAGRAM 2 — Screen Render Request
+' ═══════════════════════════════════════════════════════════════════════════════
+@startuml Sequence-2-ScreenRender
+title Sequence 2 — GET /api/screens/{fileName}/render
+
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBackgroundColor #F0F8FF
+skinparam sequenceGroupBorderColor     #5588BB
+skinparam noteBorderColor              #AA8822
+skinparam noteBackgroundColor          #FFFDE7
+skinparam participantBackgroundColor   #E8F0FE
+skinparam participantBorderColor       #3366CC
+skinparam defaultFontName              Segoe UI
+
+actor "Client (Browser)"                 as C
+participant "ASP.NET API\n(Program.cs)"  as API
+participant "IScreenConfigProvider\n(CScreenConfigProvider)"          as SCP
+participant "IScreenRenderModelFactory\n(CScreenRenderModelFactory)"  as SRF
+
+C -> API : GET /api/screens/{fileName}/render
+
+API -> SCP : TryGetScreenDefinition(fileName)
+note right of SCP : Dictionary lookup (case-insensitive).\nReturns cached IScreenDefinition.
+
+alt Screen not found
+  SCP --> API : false + error message
+  API --> C : 404 { error }
+end
+
+SCP --> API : IScreenDefinition\n(screenId, displayName, theme, features[], key[], sections[])
+
+API -> SRF : TryCreateRenderModel(screenDefinition)
+note right of SRF
+  Per field:
+  · resolves controlType
+      textarea / select / multiselect / input
+  · resolves inputType
+      text / number / date / datetime-local
+  · parses lookupValues from type-info string
+  · merges registry defaults with field overrides
+  Per section:
+  · computes showBorder
+      (false when name == "default-section")
+end note
+
+alt Render model creation failed
+  SRF --> API : false + error message
+  API --> C : 500 ProblemDetails
+end
+
+SRF --> API : IScreenRenderModel
+
+API --> C : 200 JSON\n{ screenId, displayName, theme, features[],\n  sections[ { name, layoutPolicy, isCollapsible,\n    showBorder, selectionActions[], fields[], sections[] } ] }
+
+note over C
+  Angular SectionRendererComponent
+  switches rendering by layoutPolicy:
+  · per-line      → stacked label + input rows
+  · flow          → wrapping flex row
+  · tabular       → sortable / filterable / paged table
+  · record-detail → 160 px label + full-width input form
+end note
+
+@enduml
+
+
+' ═══════════════════════════════════════════════════════════════════════════════
+' DIAGRAM 3 — Data Read & Write
+' ═══════════════════════════════════════════════════════════════════════════════
+@startuml Sequence-3-DataAccess
+title Sequence 3 — Data Read & Write
+
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceGroupBackgroundColor #F8F8FF
+skinparam sequenceGroupBorderColor     #6666AA
+skinparam noteBorderColor              #AA8822
+skinparam noteBackgroundColor          #FFFDE7
+skinparam participantBackgroundColor   #E8F0FE
+skinparam participantBorderColor       #3366CC
+skinparam defaultFontName              Segoe UI
+
+actor "Client (Browser)"                          as C
+participant "ASP.NET API\n(Program.cs)"           as API
+participant "IScreenConfigProvider"               as SCP
+participant "IScreenDataStoreMappingRegistry"     as SDM
+participant "IDataStoreRegistry"                  as DSR
+participant "IDataStore\n(CJsonDataStore /\nCDbDataStore)" as DS
+database    "File System\nor SQL Server"          as FS
+
+== READ: GET /api/data/{fileName}/{recordId} ==
+
+C -> API : GET /api/data/{fileName}/{recordId}
+
+group TryResolveDataStoreForScreen
+  API -> SCP : TryGetScreenDefinition(fileName)
+  SCP --> API : IScreenDefinition → screenId
+  API -> SDM : TryGetDataStoreIdForScreen(screenId)
+  SDM --> API : dataStoreId
+  alt Screen not mapped to a data store
+    API --> C : 404 { error }
+  end
+  API -> DSR : TryGetDataStore(dataStoreId)
+  DSR --> API : IDataStore instance
+end
+
+API -> DS : TryLoadRows(fileName)
+DS -> FS : read DataStore/{safeKey}.rows.json\n(or SQL SELECT)
+FS --> DS : raw row data
+DS --> API : IReadOnlyList<IReadOnlyDictionary<string,string>>
+
+note right of API : FindRowByRecordId:\nscans for __record-id == recordId
+
+alt Record not found
+  API --> C : 404 { error: "Record not found" }
+end
+
+API --> C : 200\n{ recordId, data: { fieldId: value, … } }
+
+== WRITE: PUT /api/data/{fileName}/{recordId} ==
+
+C -> API : PUT /api/data/{fileName}/{recordId}\nBody: { data: { fieldId: value, … } }
+
+alt Missing or null data body
+  API --> C : 400 { error: "Request body must contain a data object" }
+end
+
+group TryResolveDataStoreForScreen (same chain as READ)
+  API -> SCP : TryGetScreenDefinition(fileName)
+  API -> SDM : TryGetDataStoreIdForScreen(screenId)
+  API -> DSR : TryGetDataStore(dataStoreId)
+end
+
+API -> DS : TryLoadRows(fileName)
+DS --> API : existing rows
+
+note right of API
+  Inject __record-id into data dict.
+  FindRowIndexByRecordId:
+    ≥ 0 → replace row at that index
+    -1  → append as new row
+end note
+
+API -> DS : TrySaveRows(fileName, updatedRows)
+DS -> FS : write DataStore/{safeKey}.rows.json\n(or SQL upsert)
+FS --> DS : OK
+DS --> API : true
+
+API --> C : 200\n{ screenFileName, recordId, savedAtUtc }
+
+@enduml

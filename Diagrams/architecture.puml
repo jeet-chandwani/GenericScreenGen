@@ -1,0 +1,122 @@
+@startuml Architecture — GenericScreenGenSln
+' PlantUML Component Diagram
+' Render with: https://www.plantuml.com/plantuml or the PlantUML VS Code extension
+' Mermaid equivalent: architecture.md
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Segoe UI
+
+skinparam package {
+  BackgroundColor #F5F8FF
+  BorderColor     #6688CC
+  FontStyle       bold
+}
+
+skinparam component {
+  BackgroundColor #DDEEFF
+  BorderColor     #3366AA
+}
+
+skinparam database {
+  BackgroundColor #FFF0CC
+  BorderColor     #CC8800
+}
+
+skinparam file {
+  BackgroundColor #EEFFEE
+  BorderColor     #338833
+}
+
+' ── Browser ──────────────────────────────────────────────────────────────────
+package "Browser" as BrowserPkg {
+  component [Angular 20 App\n(GenericScreenGenClientApp)\n──────────────────────\nScreenApiService\nSectionRendererComponent\nLayoutPolicyService] as AngularApp
+  component [Static Fallback UI\n(wwwroot/index.html)\nvanilla JS screen viewer] as StaticUI
+}
+
+' ── API Process ───────────────────────────────────────────────────────────────
+package "ASP.NET Minimal API (.NET 8)\nGenericScreenGenApp  :5074" as APIPkg {
+
+  component [Program.cs\nDI Composition Root\n10 HTTP endpoints] as EP
+
+  package "GenericScreenGenFactoryLib" as FactoryPkg {
+    component [CGenericScreenGenFactory\ninit with screenFolderPath\nwires all components] as FAC
+  }
+
+  package "GenericScreenGenImplementationsLib\n(all extend ACanInitBase)" as ImplsPkg {
+    component [CScreenConfigProvider\nloads + caches Screen-*.json] as SCP
+    component [CScreenRenderModelFactory\nbuilds render model DTOs] as SRF
+    component [CScreenSchemaValidator\nJSON Schema validation] as SSV
+    component [CLayoutPolicyRegistry\nper-line · flow · tabular · record-detail] as LPR
+    component [CFieldTypeRegistry\nloads registry-field-types.json] as FTR
+    component [CDataStoreRegistry\nloads datastore.*.config.json] as DSR
+    component [CScreenDataStoreMappingRegistry\nloads screen-datastore-mapping.*.json] as SDM
+  }
+
+  package "MyDataStoreProviders" as ProvidersPkg {
+    component [CJsonDataStore\nprovider-type: json] as JSON_DS
+    component [CDbDataStore\nprovider-type: sql-server] as SQL_DS
+  }
+
+  package "GenericScreenGenInterfacesLib" as IntfPkg {
+    interface "IScreenConfigProvider" as ISCP
+    interface "IScreenRenderModelFactory" as ISRF
+    interface "IDataStore" as IDS
+    interface "IDataStoreRegistry" as IDSR
+    interface "IScreenDataStoreMappingRegistry" as ISDM
+  }
+
+  package "GenericScreenGenUtilsLib" as UtilsPkg {
+    component [CScreenGeneratorConstants\nshared folder / file name constants] as CONST
+  }
+}
+
+' ── Config Files ──────────────────────────────────────────────────────────────
+package "Config Files  (GenericScreenGenApp/)" as ConfigPkg {
+  file "screen/Screen-*.json\nscreen definitions" as SC
+  file "screen/registry-field-types.json\nfield type defaults + validators" as FT
+  file "DataStoreConfigs/datastore.*.config.json\nconnection params per store" as DC
+  file "DataStoreMappings/screen-datastore-mapping.*.json\nscreenId → dataStoreId mapping" as DM
+  file "Schemas/*.json\nJSON Schema for validation" as SCH
+}
+
+' ── Persistent Storage ────────────────────────────────────────────────────────
+database "DataStore/*.rows.json\n(one file per screen key)" as JFILE
+database "SQL Server\n(docker: sqlserver service)" as SQLDB
+
+' ── Connections ───────────────────────────────────────────────────────────────
+AngularApp -down-> EP : HTTP /api/*
+StaticUI   -down-> EP : HTTP /api/*
+
+EP -down-> FAC : uses
+FAC ..> SCP : creates
+FAC ..> SRF : creates
+FAC ..> SSV : creates
+EP ..> LPR : DI
+EP ..> FTR : DI
+EP ..> DSR : DI
+EP ..> SDM : DI
+
+SCP --> SC  : reads at startup\n(POST /refresh hot-reloads)
+FTR --> FT  : reads at startup
+SSV --> SCH : validates against
+DSR --> DC  : reads at startup
+SDM --> DM  : reads at startup\ncross-checks DSR
+
+DSR --> JSON_DS : creates
+DSR --> SQL_DS  : creates
+JSON_DS --> JFILE : file I/O
+SQL_DS  --> SQLDB : ADO.NET
+
+SCP ..|> ISCP
+SRF ..|> ISRF
+JSON_DS ..|> IDS
+SQL_DS  ..|> IDS
+DSR ..|> IDSR
+SDM ..|> ISDM
+
+ImplsPkg   ..> CONST : uses
+ProvidersPkg ..> CONST : uses
+
+@enduml
