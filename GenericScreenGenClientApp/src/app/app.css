@@ -330,6 +330,219 @@ button.secondary {
   border-color: rgba(121, 38, 170, 0.35);
 }
 
+/* ── ocean-pro theme ─────────────────────────────────────────────────────── */
+.page-shell[data-theme="ocean-pro"] {
+  --section-card-border: rgba(30, 144, 255, 0.35);
+  --section-card-bg: rgba(255, 255, 255, 0.97);
+  --section-header-bg: linear-gradient(90deg, rgba(10, 90, 156, 0.18), rgba(8, 128, 196, 0.14));
+  --section-input-border: rgba(10, 90, 180, 0.32);
+  --section-input-bg: #ffffff;
+  --section-action-bg: #0854a0;
+  --section-action-fg: #ffffff;
+  --section-tabular-header-bg: linear-gradient(90deg, #1565c0, #0288d1);
+  --section-tabular-header-fg: #ffffff;
+  --section-tabular-filter-bg: #e3f2fd;
+  --section-tabular-hover-bg: rgba(21, 101, 192, 0.08);
+  --section-icon-btn-border: rgba(8, 84, 160, 0.76);
+  --section-icon-btn-bg: #0854a0;
+  --section-icon-btn-bg-hover: #063e80;
+  --section-icon-btn-fg: #ffffff;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.10), transparent 26%),
+    linear-gradient(135deg, #0b1f3a 0%, #0d3464 40%, #0a5a9c 75%, #0880c4 100%);
+  color: #ffffff;
+}
+
+.page-shell[data-theme="ocean-pro"] .page-title-panel {
+  background: linear-gradient(180deg, rgba(11, 31, 58, 0.97) 75%, rgba(11, 31, 58, 0));
+}
+
+.page-shell[data-theme="ocean-pro"] .home-title,
+.page-shell[data-theme="ocean-pro"] .panel-header h2 {
+  color: #111111;
+  text-shadow: none;
+}
+
+.page-shell[data-theme="ocean-pro"] .home-divider {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.28));
+}
+
+.page-shell[data-theme="ocean-pro"] .title-nav-btn {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(8, 52, 100, 0.88);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(5, 20, 50, 0.30);
+}
+
+.page-shell[data-theme="ocean-pro"] .title-nav-btn:hover {
+  background: rgba(6, 38, 78, 0.94);
+}
+
+.page-shell[data-theme="ocean-pro"] .screen-view-panel,
+.page-shell[data-theme="ocean-pro"] .screen-panel,
+.page-shell[data-theme="ocean-pro"] .message-panel {
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0b1f3a;
+  border-radius: 20px;
+  box-shadow: 0 22px 44px rgba(5, 18, 44, 0.28);
+}
+
+.page-shell[data-theme="ocean-pro"] .record-id-pill {
+  border-color: rgba(8, 84, 160, 0.40);
+  background: rgba(227, 242, 253, 0.95);
+  color: #0854a0;
+}
+
+.page-shell[data-theme="ocean-pro"] button.secondary {
+  background: rgba(227, 242, 253, 0.95);
+  color: #0854a0;
+  border-color: rgba(8, 84, 160, 0.32);
+}
+
+/* ── emerald-pro theme ───────────────────────────────────────────────────── */
+.page-shell[data-theme="emerald-pro"] {
+  --section-card-border: rgba(34, 160, 104, 0.35);
+  --section-card-bg: rgba(255, 255, 255, 0.97);
+  --section-header-bg: linear-gradient(90deg, rgba(15, 74, 46, 0.18), rgba(34, 160, 104, 0.14));
+  --section-input-border: rgba(15, 74, 46, 0.32);
+  --section-input-bg: #ffffff;
+  --section-action-bg: #0d6040;
+  --section-action-fg: #ffffff;
+  --section-tabular-header-bg: linear-gradient(90deg, #1b5e38, #2e7d56);
+  --section-tabular-header-fg: #ffffff;
+  --section-tabular-filter-bg: #e8f5ee;
+  --section-tabular-hover-bg: rgba(22, 100, 60, 0.08);
+  --section-icon-btn-border: rgba(13, 96, 64, 0.76);
+  --section-icon-btn-bg: #0d6040;
+  --section-icon-btn-bg-hover: #0a4832;
+  --section-icon-btn-fg: #ffffff;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.12), transparent 28%),
+    radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.09), transparent 26%),
+    linear-gradient(135deg, #0a2e1e 0%, #0f4a2e 40%, #187a4a 75%, #22a068 100%);
+  color: #ffffff;
+}
+
+.page-shell[data-theme="emerald-pro"] .page-title-panel {
+  background: linear-gradient(180deg, rgba(10, 46, 30, 0.97) 75%, rgba(10, 46, 30, 0));
+}
+
+.page-shell[data-theme="emerald-pro"] .home-title,
+.page-shell[data-theme="emerald-pro"] .panel-header h2 {
+  color: #111111;
+  text-shadow: none;
+}
+
+.page-shell[data-theme="emerald-pro"] .home-divider {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.28));
+}
+
+.page-shell[data-theme="emerald-pro"] .title-nav-btn {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(10, 72, 44, 0.88);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(5, 30, 18, 0.30);
+}
+
+.page-shell[data-theme="emerald-pro"] .title-nav-btn:hover {
+  background: rgba(8, 56, 34, 0.94);
+}
+
+.page-shell[data-theme="emerald-pro"] .screen-view-panel,
+.page-shell[data-theme="emerald-pro"] .screen-panel,
+.page-shell[data-theme="emerald-pro"] .message-panel {
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0a2e1e;
+  border-radius: 20px;
+  box-shadow: 0 22px 44px rgba(5, 22, 14, 0.28);
+}
+
+.page-shell[data-theme="emerald-pro"] .record-id-pill {
+  border-color: rgba(13, 96, 64, 0.40);
+  background: rgba(232, 245, 238, 0.95);
+  color: #0d6040;
+}
+
+.page-shell[data-theme="emerald-pro"] button.secondary {
+  background: rgba(232, 245, 238, 0.95);
+  color: #0d6040;
+  border-color: rgba(13, 96, 64, 0.32);
+}
+
+/* ── crimson-elite theme ─────────────────────────────────────────────────── */
+.page-shell[data-theme="crimson-elite"] {
+  --section-card-border: rgba(192, 40, 42, 0.35);
+  --section-card-bg: rgba(255, 255, 255, 0.97);
+  --section-header-bg: linear-gradient(90deg, rgba(122, 21, 21, 0.18), rgba(192, 40, 42, 0.14));
+  --section-input-border: rgba(122, 21, 21, 0.32);
+  --section-input-bg: #ffffff;
+  --section-action-bg: #a01e1e;
+  --section-action-fg: #ffffff;
+  --section-tabular-header-bg: linear-gradient(90deg, #8b1c1c, #c0282a);
+  --section-tabular-header-fg: #ffffff;
+  --section-tabular-filter-bg: #ffeaea;
+  --section-tabular-hover-bg: rgba(160, 30, 30, 0.08);
+  --section-icon-btn-border: rgba(160, 30, 30, 0.76);
+  --section-icon-btn-bg: #a01e1e;
+  --section-icon-btn-bg-hover: #7a1515;
+  --section-icon-btn-fg: #ffffff;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.10), transparent 28%),
+    radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(135deg, #1a0a0a 0%, #3d0c0c 40%, #7a1515 75%, #c0282a 100%);
+  color: #ffffff;
+}
+
+.page-shell[data-theme="crimson-elite"] .page-title-panel {
+  background: linear-gradient(180deg, rgba(26, 10, 10, 0.97) 75%, rgba(26, 10, 10, 0));
+}
+
+.page-shell[data-theme="crimson-elite"] .home-title,
+.page-shell[data-theme="crimson-elite"] .panel-header h2 {
+  color: #111111;
+  text-shadow: none;
+}
+
+.page-shell[data-theme="crimson-elite"] .home-divider {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.28));
+}
+
+.page-shell[data-theme="crimson-elite"] .title-nav-btn {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(80, 14, 14, 0.88);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(30, 5, 5, 0.32);
+}
+
+.page-shell[data-theme="crimson-elite"] .title-nav-btn:hover {
+  background: rgba(62, 10, 10, 0.94);
+}
+
+.page-shell[data-theme="crimson-elite"] .screen-view-panel,
+.page-shell[data-theme="crimson-elite"] .screen-panel,
+.page-shell[data-theme="crimson-elite"] .message-panel {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.96);
+  color: #1a0a0a;
+  border-radius: 20px;
+  box-shadow: 0 22px 44px rgba(26, 5, 5, 0.30);
+}
+
+.page-shell[data-theme="crimson-elite"] .record-id-pill {
+  border-color: rgba(160, 30, 30, 0.40);
+  background: rgba(255, 234, 234, 0.95);
+  color: #a01e1e;
+}
+
+.page-shell[data-theme="crimson-elite"] button.secondary {
+  background: rgba(255, 234, 234, 0.95);
+  color: #a01e1e;
+  border-color: rgba(160, 30, 30, 0.32);
+}
+
 app-section-renderer .lookup-pills-cell {
   display: flex;
   flex-wrap: wrap;
